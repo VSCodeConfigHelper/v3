@@ -12,6 +12,7 @@
             "args": [
                 "build",
                 "${workspaceFolder}/VSCodeConfigHelper3.csproj",
+                "/p:UseAppHost=false",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -24,12 +25,16 @@
             "args": [
                 "publish",
                 "${workspaceFolder}/VSCodeConfigHelper3.csproj",
+                "-c",
+                "Release",
                 "-r",
                 "win-x64",
                 "--self-contained",
                 "true",
                 "/p:PublishSingleFile=true",
                 "/p:IncludeNativeLibrariesForSelfExtract=true",
+                "/p:PublishTrimmed=true",
+                "/p:PublishReadyToRun=true",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
