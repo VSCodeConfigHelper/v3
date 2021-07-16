@@ -19,4 +19,4 @@ Function Open-FolderBrowser($initDir) {
     }
 }
 
-Open-FolderBrowser | Write-Output
+Open-FolderBrowser $args[0] | Write-Output

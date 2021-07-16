@@ -10,6 +10,8 @@
 - 界面美观程度大幅提升
 
 缺点包括：
-- 抛弃了 Windows 7 及 32 位操作系统的支持；
+- 抛弃了 Windows 7 及 32 位操作系统的支持
 - 应用体积大幅增大（因几乎不再依赖于 .NET Framework）
 - 前后端完全分离的设计可能对部分用户造成困扰
+
+## [2.x](https://github.com/Guyutongxue/VSCodeConfigHelper/blob/v2.x/CHANGELOG.md)

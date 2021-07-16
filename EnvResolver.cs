@@ -26,10 +26,10 @@ using Microsoft.Win32;
 namespace VSCodeConfigHelper3 {
 
     class CompilerInfo {
-        public string Path;
-        public string? VersionText = null;
-        public string? VersionNumber = null;
-        public string? PackageString = null;
+        public string Path { get; }
+        public string? VersionText  { get; } = null;
+        public string? VersionNumber { get; } = null;
+        public string? PackageString { get; } = null;
 
         public CompilerInfo(string path, string? versionText) {
             Path = path;
@@ -54,12 +54,12 @@ namespace VSCodeConfigHelper3 {
             foreach (var path in GetPaths()) {
                 var versionText = TestCompiler(path);
                 if (versionText is null) continue;
-                Compilers.Add(new CompilerInfo(path,versionText));
+                Compilers.Add(new CompilerInfo(path, versionText));
             }
 
         }
 
-        private static string? TestCompiler(string path) {
+        public static string? TestCompiler(string path) {
             string compiler = Path.Join(path, "g++.exe");
             if (!File.Exists(compiler)) {
                 return null;

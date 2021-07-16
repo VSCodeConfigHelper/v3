@@ -8,6 +8,7 @@
         "NewLinesForBracesInMethods": false,
         "NewLinesForBracesInObjectCollectionArrayInitializers": false,
         "NewLinesForBracesInProperties": false,
-        "NewLinesForBracesInTypes": false
+        "NewLinesForBracesInTypes": false,
+        "NewLineForElse": false
     }
 }

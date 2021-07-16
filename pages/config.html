@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <link href="https://fonts.proxy.ustclug.org/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+    <meta charset="utf-8">
+    <title>VS Code Config Helper 3</title>
+    <style>
+        code {
+            font-family: Consolas, 'Courier New', Courier, monospace;
+        }
+        .plain-text {
+            color: rgba(0,0,0,.8);
+            font-size: .875rem;
+            font-weight: 400;
+            line-height: 1.375rem;
+            letter-spacing: .0071428571em
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <v-app>
+            <v-main>
+                <v-container>
+                    <v-row justify="center">
+                        <v-col md="9">
+                            <div class="text-h4 text-center pt-2">欢迎使用 VS Code Config Helper！</div>
+                            <div class="subtitle-1 text-center pt-1">谷雨同学制作 · 版本 <code>v3.0.0~alpha</code></div>
+                        </v-col>
+                    </v-row>
+                    <v-row justify="center">
+                        <v-col md="9">
+                            <v-alert dense colored-border border="left" type="info" class="mb-0">
+                                工具已经为您初步检测了系统环境，现在我们需要您提供一些信息。
+                            </v-alert>
+                        </v-col>
+                    </v-row>
+                    <v-row justify="center">
+                        <v-col md="9">
+                            <v-stepper v-model="currentStep" vertical shaped elevation="5" text>
+                                <v-stepper-step :complete="currentStep > 1" step="1">
+                                    VS Code 路径
+                                    <small class="pt-1">确认您的 VS Code 安装情况</small>
+                                </v-stepper-step>
+
+                                <v-stepper-content step="1">
+                                    <v-card flat>
+                                        <v-card-text class="pa-0">
+                                            <v-alert v-if="vscodeStatus === 'resolved'" dense text type="success">
+                                                工具检测到您安装的 VS Code 路径如下。如没有任何问题，请点击下一步。</v-alert>
+                                            <v-alert v-if="vscodeStatus === 'unresolved'" dense text type="warning">
+                                                工具没有检测到您安装 VS Code，请您前往<a href="https://https://update.code.visualstudio.com/latest/win32-x64-user/stable">此处</a>下载安装。如果您安装了，请在下方提供其安装路径。
+                                            </v-alert>
+                                            <v-alert v-if="vscodeStatus === 'invalid'" dense text type="error">
+                                                当前路径下没有检测到 VS Code（<code>Code.exe</code> 不存在）。
+                                            </v-alert>
+                                            <v-alert v-if="vscodeStatus === 'valid'" dense text type="success">
+                                                当前路径下存在 VS Code。点击下一步以继续。
+                                            </v-alert>
+                                            <v-text-field v-model="vscodePath" clearable label="VS Code 安装路径" type="text" append-outer-icon="mdi-folder-open" @click:append-outer="getFolder(vscodePath, 'vscode')">
+                                            </v-text-field>
+                                        </v-card-text>
+                                        <v-card-actions class="pa-0">
+                                            <v-btn color="primary" :disabled="!vscodeOk" @click="next">
+                                                下一步
+                                            </v-btn>
+                                            <v-spacer></v-spacer>
+                                            <v-btn text color="error" @click="cancel">
+                                                取消配置
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-stepper-content>
+
+                                <v-stepper-step :complete="currentStep > 2" step="2">
+                                    MinGW 路径
+                                    <small class="pt-1">下载或确认您的 MinGW</small>
+                                </v-stepper-step>
+
+                                <v-stepper-content step="2">
+                                    <v-card flat>
+                                        <v-card-text class="pa-0">
+                                            <v-alert dense text type="success" v-if="compilers.length > 0">
+                                                工具检测到您已经安装了以下 MinGW 编译环境。您可以选择其中一个，或者输入一个新的。
+                                            </v-alert>
+                                            <v-alert dense text type="warning" v-if="compilers.length === 0">
+                                                工具未检测到您的 MinGW 编译环境。请您先手动下载 MinGW。
+                                            </v-alert>
+                                            <v-radio-group v-model="newCompiler">
+                                                <v-radio label="使用已安装的 MinGW……" :disabled="compilers.length === 0"></v-radio>
+                                                <v-expand-transition>
+                                                    <div v-show="newCompiler === 0" class="mb-2 ml-8">
+                                                        <v-data-table dense hide-default-footer :headers="mingwTableHeader" :items="compilers" item-key="path" show-select single-select v-model="mingwTableSelected">
+                                                        </v-data-table>
+                                                    </div>
+                                                </v-expand-transition>
+                                                <v-radio label="使用新的 MinGW……"></v-radio>
+                                                <v-expand-transition>
+                                                    <div v-show="newCompiler === 1" class="ml-8">
+                                                        <div class="d-flex justify-content-center mb-2">
+                                                            <div class="flex-grow-1 mr-4 plain-text">
+                                                                若您未安装过 MinGW，请点击右侧按钮下载。下载并解压后，您将得到一个 <code>mingw64</code> 文件夹。建议您将它妥善保存在合适的位置（如 <code>C:\mingw64</code>），并在下方输入其路径。
+                                                            </div>
+                                                            <v-btn color="primary" text class="rounded-l-pill rounded-r-0" @click="download(mingwDlLinks[0].url)">
+                                                                下载 MinGW
+                                                            </v-btn>
+                                                            <v-menu open-on-hover bottom offset-y>
+                                                                <template v-slot:activator="{ on, attrs }">
+                                                                    <v-btn v-bind="attrs" v-on="on" color="primary" icon :ripple="false" class="rounded-r-pill rounded-l-0">
+                                                                        <v-icon>mdi-menu-down</v-icon>
+                                                                    </v-btn>
+                                                                </template>
+                                                                <v-list dense two-line>
+                                                                    <v-list-item v-for="(item, index) in mingwDlLinks" :key="index" link @click="download(item.url)">
+                                                                        <v-list-item-content>
+                                                                            <v-list-item-title>
+                                                                                {{item.title}}
+                                                                                <v-chip v-if="index === 0" color="green" pill outlined x-small>
+                                                                                    推荐
+                                                                                </v-chip>
+                                                                            </v-list-item-title>
+                                                                            <v-list-item-subtitle>
+                                                                                {{item.subtitle}}
+                                                                            </v-list-item-subtitle>
+                                                                        </v-list-item-content>
+                                                                    </v-list-item>
+                                                                </v-list>
+                                                            </v-menu>
+                                                        </div>
+                                                        <v-text-field v-model="newCompilerPath" clearable label="MinGW 路径" type="text" append-outer-icon="mdi-folder-open" @click:append-outer="getFolder(newCompilerPath, 'mingw')">
+                                                        </v-text-field>
+                                                        <v-alert v-if="newCompilerValid" dense text type="success">
+                                                            检测到 MinGW：
+                                                            <strong>版本</strong>
+                                                            <code>{{newCompilerInfo.version}}</code>，
+                                                            <strong>包信息</strong>
+                                                            <code>{{newCompilerInfo.packageInfo}}</code>。
+                                                        </v-alert>
+                                                        <v-alert v-if="!newCompilerValid && newCompilerPath !== ''" dense text type="error">此路径下未检测到 MinGW。</v-alert>
+                                                    </div>
+                                                </v-expand-transition>
+                                            </v-radio-group>
+                                        </v-card-text>
+                                        <v-card-actions class="pa-0">
+                                            <v-btn color="primary" :disabled="!mingwOk" @click="next">
+                                                下一步
+                                            </v-btn>
+                                            <v-btn text @click="prev">
+                                                上一步
+                                            </v-btn>
+                                            <v-spacer></v-spacer>
+                                            <v-btn text color="error" @click="cancel">
+                                                取消配置
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-stepper-content>
+
+                                <v-stepper-step :complete="currentStep > 3" step="3">
+                                    选择工作文件夹
+                                </v-stepper-step>
+
+                                <v-stepper-content step="3">
+                                    <v-card flat>
+                                        <v-card-text class="pa-0">
+                                            <div class="plain-text">
+                                                VS Code 的配置大多在特定文件夹下生效，方便您为不同的语言和不同的需求个性化配置。因此，请选择一个<em>工作文件夹</em>，您将来的程序和代码<strong>都需要</strong>存放在此处。
+                                            </div>
+                                            <v-text-field v-model="workspacePath" clearable label="工作文件夹路径" type="text" append-outer-icon="mdi-folder-open" @click:append-outer="getFolder(workspacePath, 'workspace')">
+                                            </v-text-field>
+                                            <v-alert v-if="!isAscii(workspacePath)" dense text type="error">
+                                                路径不能包含中文或特殊字符（仅能使用 ASCII 字符）。
+                                            </v-alert>
+                                        </v-card-text>
+                                        <v-card-actions class="pa-0">
+                                            <v-btn color="primary" :disabled="!workspaceOk" @click="next">
+                                                下一步
+                                            </v-btn>
+                                            <v-btn text @click="prev">
+                                                上一步
+                                            </v-btn>
+                                            <v-spacer></v-spacer>
+                                            <v-btn text color="error" @click="cancel">
+                                                取消配置
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-stepper-content>
+
+                                <v-stepper-step step="4">
+                                    详细设置
+                                    <small class="pt-1">调整您的个性化设置</small>
+                                </v-stepper-step>
+                                <v-stepper-content step="4">
+                                    <v-card flat>
+                                        <v-card-text class="pa-0"></v-card-text>
+                                        <v-card-actions class="pa-0">
+                                            <v-btn color="success" @click="finish">
+                                                开始配置
+                                            </v-btn>
+                                            <v-btn text @click="prev">
+                                                上一步
+                                            </v-btn>
+                                            <v-spacer></v-spacer>
+                                            <v-btn text color="error" @click="cancel">
+                                                取消配置
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-stepper-content>
+                            </v-stepper>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-main>
+        </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/rxjs@6.6.7/bundles/rxjs.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-rx@6.2.0/dist/vue-rx.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script>
+        /**
+         * Get the directory name of path
+         * @param path {string}
+         * @return {string}
+         */
+        function dirname(path) {
+            return path.match(/(.*)[\/\\]/)[1] || '';
+        }
+        /**
+         * Determines whether a string is all ascii characters
+         * @param str {string}
+         * @return {boolean}
+         */
+        function isAscii(str) {
+            return /^[\x20-\x7F]*$/.test(str);
+        }
+        const DEBOUNCE_TIME = 200;
+        const GYTX_LINK = "https://gytx.lanzoux.com/ibibbokvokj";
+        const TDM_LINK = "https://wws.lanzoux.com/iMhd6ge4qkf";
+        const MINGW_LINK = "https://wws.lanzoux.com/iuRLbge4bni";
+        const vm = new Vue({
+            el: '#app',
+            created: function () {
+                fetch('/getEnv', {
+                    method: 'POST'
+                }).then(r => r.json()).then(v => {
+                    console.log(v);
+                    if (v.VscodePath === null) {
+                        this.vscodeStatus = "unresolved";
+                        this.vscodePath = "";
+                    } else {
+                        this.vscodeStatus = "resolved";
+                        // Get folder name (not exe)
+                        this.vscodePath = dirname(v.VscodePath);
+                    }
+                    this.compilers = v.Compilers.map(m => ({
+                        path: dirname(m.Path),
+                        version: m.VersionNumber,
+                        packageInfo: m.PackageString
+                    }));
+                    // select the first one only if there is only one
+                    if (this.compilers.length === 1) {
+                        this.mingwTableSelected.push(this.compilers[0]);
+                    }
+                    this.newCompiler = this.compilers.length === 0 ? 1 : 0;
+                });
+            },
+            data: {
+                currentStep: 1,
+                vscodePath: "",
+                vscodeStatus: "resolved",
+                mingwTableHeader: [
+                    {
+                        text: '路径',
+                        value: 'path'
+                    },
+                    {
+                        text: '版本',
+                        value: 'version'
+                    },
+                    {
+                        text: '包信息',
+                        value: 'packageInfo'
+                    }
+                ],
+                compilers: [],
+                mingwTableSelected: [],
+                newCompiler: 0,
+                newCompilerPath: "",
+                newCompilerValid: false,
+                newCompilerInfo: {},
+                mingwDlLinks: [
+                    {
+                        title: "最新版",
+                        subtitle: "由谷雨同学构建",
+                        url: GYTX_LINK
+                    },
+                    {
+                        title: "TDM-GCC",
+                        subtitle: "经过优化的版本",
+                        url: TDM_LINK
+                    },
+                    {
+                        title: "官方版",
+                        subtitle: "SourceForge 提供",
+                        url: MINGW_LINK
+                    }
+                ],
+                workspacePath: ""
+            },
+            computed: {
+                vscodeOk: function () {
+                    return this.vscodeStatus === 'valid' || this.vscodeStatus === 'resolved';
+                },
+                mingwPath: function () {
+                    if (this.newCompiler === 0) {
+                        return this.mingwTableSelected.length === 1 ? this.mingwTableSelected[0].path : "";
+                    } else {
+                        return this.newCompilerPath;
+                    }
+                },
+                mingwOk: function () {
+                    if (this.newCompiler === 0) {
+                        return this.mingwTableSelected.length === 1;
+                    } else {
+                        return this.newCompilerValid;
+                    }
+                },
+                workspaceOk: function () {
+                    /** @type {string} */
+                    const trimmed = this.workspacePath.trim();
+                    if (trimmed === "") return false;
+                    return isAscii(trimmed);
+                }
+            },
+            subscriptions: function () {
+                this.$watchAsObservable('vscodePath').pipe(
+                    rxjs.operators.debounceTime(DEBOUNCE_TIME),
+                    rxjs.operators.switchMap(() => {
+                        return rxjs.from(fetch('/verifyVscode', {
+                            method: "POST",
+                            body: this.vscodePath
+                        }).then(r => r.text()));
+                    }),
+                    rxjs.operators.tap(console.log)
+                ).subscribe(v => {
+                    if (this.vscodeStatus === "resolved" && v === "valid")
+                        return;
+                    this.vscodeStatus = v;
+                });
+                this.$watchAsObservable('newCompilerPath').pipe(
+                    rxjs.operators.debounceTime(DEBOUNCE_TIME),
+                    rxjs.operators.switchMap(() => {
+                        return rxjs.from(fetch('/verifyCompiler', {
+                            method: 'POST',
+                            body: this.newCompilerPath
+                        }).then(r => r.json()));
+                    }),
+                ).subscribe(v => {
+                    this.newCompilerValid = v.valid;
+                    if (v.valid === true) {
+                        this.newCompilerInfo = {
+                            path: v.info.Path,
+                            version: v.info.VersionNumber,
+                            packageInfo: v.info.PackageString
+                        }
+                    }
+                })
+                return {
+                };
+            },
+            methods: {
+                isAscii: isAscii,
+                download: function (url) {
+                    window.open(url, '_blank');
+                },
+                next: function () {
+                    this.currentStep++;
+                },
+                prev: function () {
+                    this.currentStep--;
+                },
+                cancel: function () {
+                    this.currentStep = 1;
+                },
+                finish: function () {
+                    alert('finish');
+                },
+                getFolder: function (initDir, target) {
+                    fetch('/getFolder', {
+                        method: "POST",
+                        body: initDir ?? ""
+                    }).then(r => r.text()).then(data => {
+                        if (data !== "") {
+                            switch (target) {
+                                case "mingw": this.newCompilerPath = data; break;
+                                case "vscode": this.vscodePath = data; break;
+                                case "workspace": this.workspacePath = data; break;
+                            }
+                        }
+                    });
+                }
+            },
+            vuetify: new Vuetify(),
+        });
+    </script>
+</body>
+
+</html>
