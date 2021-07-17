@@ -126,18 +126,18 @@ namespace VSCodeConfigHelper3 {
                     if (handlers.ContainsKey(req.Url.AbsolutePath)) {
                         RequestHandler handler = handlers[req.Url.AbsolutePath];
                         resBodyStr = handler(reqBodyStr);
-                    }
-                    else {
+                    } else if (req.Url.AbsolutePath == "/shutdown") {
+                        runServer = false;
+                        resBodyStr = "Server shutting down.";
+                    } else {
                         resBodyStr = "unknown api";
                         res.StatusCode = 404;
                     }
                     res.ContentType = "text/plain";
-                }
-                else if (req.Url.AbsolutePath == "/") {
+                } else if (req.Url.AbsolutePath == "/") {
                     resBodyStr = pageData;
                     res.ContentType = "text/html";
-                }
-                else {
+                } else {
                     res.StatusCode = 404;
                     resBodyStr = "not found";
                     res.ContentType = "text/plain";
