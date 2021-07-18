@@ -36,8 +36,8 @@ namespace VSCodeConfigHelper3 {
         bool ShouldSetEnv { get; set; } = true;
         bool UseExternalTerminal { get; set; } = false;
 
-        bool ShouldDisableExtensions { get; set; } = false;
-        List<string> DisabledExtensions { get; set; } = new List<string>{
+        bool ShouldUninstallExtensions { get; set; } = false;
+        List<string> UninstallExtensions { get; set; } = new List<string>{
             "formulahendry.code-runner",
             "austin.code-gnu-global",
             "danielpinto8zz6.c-cpp-compile-run",

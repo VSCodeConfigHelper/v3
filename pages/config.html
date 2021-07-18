@@ -12,8 +12,9 @@
         code {
             font-family: Consolas, 'Courier New', Courier, monospace;
         }
+
         .plain-text {
-            color: rgba(0,0,0,.8);
+            color: rgba(0, 0, 0, .8);
             font-size: .875rem;
             font-weight: 400;
             line-height: 1.375rem;
@@ -84,14 +85,14 @@
 
                                 <v-stepper-content step="2">
                                     <v-card flat>
-                                        <v-card-text class="pa-0">
+                                        <v-card-text class="pa-1">
                                             <v-alert dense text type="success" v-if="compilers.length > 0">
                                                 工具检测到您已经安装了以下 MinGW 编译环境。您可以选择其中一个，或者输入一个新的。
                                             </v-alert>
                                             <v-alert dense text type="warning" v-if="compilers.length === 0">
                                                 工具未检测到您的 MinGW 编译环境。请您先手动下载 MinGW。
                                             </v-alert>
-                                            <v-radio-group v-model="newCompiler">
+                                            <v-radio-group v-model="newCompiler" hide-details>
                                                 <v-radio label="使用已安装的 MinGW……" :disabled="compilers.length === 0"></v-radio>
                                                 <v-expand-transition>
                                                     <div v-show="newCompiler === 0" class="mb-2 ml-8">
@@ -102,7 +103,7 @@
                                                 <v-radio label="使用新的 MinGW……"></v-radio>
                                                 <v-expand-transition>
                                                     <div v-show="newCompiler === 1" class="ml-8">
-                                                        <div class="d-flex justify-content-center mb-2">
+                                                        <div class="d-flex align-center mb-2">
                                                             <div class="flex-grow-1 mr-4 plain-text">
                                                                 若您未安装过 MinGW，请点击右侧按钮下载。下载并解压后，您将得到一个 <code>mingw64</code> 文件夹。建议您将它妥善保存在合适的位置（如 <code>C:\mingw64</code>），并在下方输入其路径。
                                                             </div>
@@ -198,12 +199,107 @@
                                 </v-stepper-step>
                                 <v-stepper-content step="4">
                                     <v-card flat>
-                                        <v-card-text class="pa-0"></v-card-text>
-                                        <v-card-actions class="pa-0">
-                                            <v-btn color="success" @click="finish">
-                                                开始配置
-                                            </v-btn>
-                                            <v-btn text @click="prev">
+                                        <v-card-text class="pa-0">
+                                            <v-btn-toggle rounded dense mandatory class="ma-1" color="primary" v-model="optionsProfile">
+                                                <v-btn @click="applyProfile('default')">
+                                                    <v-icon small class="mr-1">mdi-settings</v-icon>使用默认设置
+                                                </v-btn>
+                                                <v-btn @click="applyProfile('newbie')">
+                                                    <v-icon small class="mr-1">mdi-emoticon</v-icon>使用新手推荐设置
+                                                </v-btn>
+                                                <v-btn>
+                                                    <v-icon small class="mr-1">mdi-format-list-bulleted</v-icon>使用自定义设置
+                                                </v-btn>
+                                            </v-btn-toggle>
+                                            <v-expand-transition>
+                                                <v-card class="ma-1" v-if="optionsProfile === 2">
+                                                    <v-card-text class="pa-2">
+                                                        <v-tabs fixed-tabs v-model="optionsTab" height="36">
+                                                            <v-tab>目标语言</v-tab>
+                                                            <v-tab>编译选项</v-tab>
+                                                            <v-tab>调试设置</v-tab>
+                                                            <v-tab>扩展设置</v-tab>
+                                                            <v-tab>杂项</v-tab>
+                                                        </v-tabs>
+                                                        <v-tabs-items v-model="optionsTab" class="my-3">
+                                                            <v-tab-item>
+                                                                <v-radio-group row label="你将使用什么语言编写代码？" v-model="language">
+                                                                    <v-radio label="C++ 语言"></v-radio>
+                                                                    <v-radio label="C 语言"></v-radio>
+                                                                </v-radio-group>
+                                                                <v-select v-if="language === 0" dense outlined hide-details label="语言标准" :items="cppStandards" v-model="cppStandard"></v-select>
+                                                                <v-select v-if="language === 1" dense outlined hide-details label="语言标准" :items="cStandards" v-model="cStandard"></v-select>
+                                                                <v-switch hide-details class="mt-2" v-model="gnuEx" label="启用 GNU 扩展语法"></v-switch>
+                                                            </v-tab-item>
+                                                            <v-tab-item>
+                                                                <v-select class="mt-5" dense outlined hide-details clearable label="优化级别" :items="['-O1', '-O2', '-O3', '-Ofast', '-Og']" v-model="optimization"></v-select>
+                                                                <v-checkbox hide-details class="mt-2" v-model="wall" label="全部警告（-Wall）"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="wextra" label="额外警告（-Wextra）"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="werror" label="视警告为错误（-Werror）"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="staticStd" label="静态链接标准库（-static-libgcc，-static-libstdc++）"></v-checkbox>
+                                                            </v-tab-item>
+                                                            <v-tab-item>
+                                                                <v-radio-group hide-details label="调试样式" v-model="dbgStyle">
+                                                                    <v-radio label="内置终端样式（默认）"></v-radio>
+                                                                    <v-radio label="外部弹窗样式（仿 VS / Dev-C++）"></v-radio>
+                                                                </v-radio-group>
+                                                                <v-switch hide-details class="mt-2" v-model="nonAsciiCheck" label="调试中文文件名前给出警告"></v-switch>
+                                                            </v-tab-item>
+                                                            <v-tab-item>
+                                                                <v-switch hide-details class="mt-2" v-model="instCnL11n" label="安装中文语言包扩展"></v-switch>
+                                                                <v-switch hide-details class="my-2" v-model="uninstExt" label="卸载多余的 VS Code 扩展"></v-switch>
+                                                                <div>为避免给新手的配置造成不必要的麻烦，我们将<strong class="red--text">卸载</strong>一些扩展。这些扩展要么不提供任何功能，要么会与我们的配置冲突并造成干扰。启用上述开关会卸载的扩展有：</div>
+                                                                <pre>formulahendry.code-runner
+        austin.code-gnu-global
+        danielpinto8zz6.c-cpp-compile-run
+        mitaki28.vscode-clang
+        jaycetyle.vscode-gnu-global
+        franneck94.c-cpp-runner
+        ajshort.include-autocomplete
+        xaver.clang-format
+        jbenden.c-cpp-flylint</pre>
+                                                            </v-tab-item>
+                                                            <v-tab-item>
+                                                                <div class="d-flex align-center">
+                                                                    <span class="v-label mr-3">是否生成测试文件？</span>
+                                                                    <v-chip-group mandatory active-class="primary--text" v-model="genTest" class="flex-grow-1">
+                                                                        <v-chip v-for="(v, i) in genTestVal" :key="i" small>
+                                                                            {{ genTestText[i] }}
+                                                                        </v-chip>
+                                                                    </v-chip-group>
+                                                                </div>
+                                                                <v-checkbox hide-details class="mt-0" v-model="genShortcut" label="生成桌面快捷方式"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="openVscode" label="配置完成后启动 VS Code"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="sendAnalytics" label="发送统计数据"></v-checkbox>
+                                                            </v-tab-item>
+                                                        </v-tabs-items>
+                                                    </v-card-text>
+                                                </v-card>
+                                            </v-expand-transition>
+                                        </v-card-text>
+                                        <v-card-actions class="px-0 pb-0">
+                                            <v-dialog v-model="confirmDiag" width="500">
+                                                <template v-slot:activator="{ on, attrs }">
+                                                    <v-btn color="success" v-bind="attrs" v-on="on">
+                                                        开始配置
+                                                    </v-btn>
+                                                </template>
+                                                <v-card>
+                                                    <v-card-title>确认</v-card-title>
+                                                    <v-card-text>
+                                                    </v-card-text>
+                                                    <v-card-actions>
+                                                        <v-spacer></v-spacer>
+                                                        <v-btn color="success" @click="finish">
+                                                            继续
+                                                        </v-btn>
+                                                        <v-btn text @click="confirmDiag = false">
+                                                            返回
+                                                        </v-btn>
+                                                    </v-card-actions>
+                                                </v-card>
+                                            </v-dialog>
+                                            <v-btn text @click="prev" class="ml-2">
                                                 上一步
                                             </v-btn>
                                             <v-spacer></v-spacer>
@@ -314,7 +410,77 @@
                         url: MINGW_LINK
                     }
                 ],
-                workspacePath: ""
+                workspacePath: "",
+                optionsProfile: 2,
+                optionsTab: 0,
+                language: 0, // 0: C++, 1: C
+                cStandards: [
+                    {
+                        text: '根据编译器自动选择',
+                        value: ''
+                    },
+                    {
+                        text: 'C89',
+                        value: 'c89'
+                    },
+                    {
+                        text: 'C99',
+                        value: 'c99'
+                    },
+                    {
+                        text: 'C11',
+                        value: 'c11'
+                    }
+                ],
+                cppStandards: [
+                    {
+                        text: '根据编译器自动选择',
+                        value: ''
+                    },
+                    {
+                        text: 'C++98',
+                        value: 'c++98'
+                    },
+                    {
+                        text: 'C++03',
+                        value: 'c++03'
+                    },
+                    {
+                        text: 'C++11',
+                        value: 'c++11'
+                    },
+                    {
+                        text: 'C++14',
+                        value: 'c++14'
+                    },
+                    {
+                        text: 'C++17',
+                        value: 'c++17'
+                    },
+                    {
+                        text: 'C++20',
+                        value: 'c++20'
+                    }
+                ],
+                cStandard: '',
+                cppStandard: '',
+                gnuEx: false,
+                optimization: '',
+                wall: false,
+                wextra: false,
+                werror: false,
+                staticStd: false,
+                dbgStyle: 0, // 0: internal, 1: external
+                nonAsciiCheck: false,
+                instCnL11n: false,
+                uninstExt: false,
+                genTest: 'auto',
+                genTestVal: ['auto', 'always', 'never'],
+                genTestText: ['自动', '重新生成', '不生成'],
+                genShortcut: false,
+                openVscode: true,
+                sendAnalytics: true,
+                confirmDiag: false,
             },
             computed: {
                 vscodeOk: function () {
@@ -407,6 +573,46 @@
                             }
                         }
                     });
+                },
+                applyProfile(type) {
+                    if (type === 'default') {
+                        this.language = 0;
+                        this.cppStandard = '';
+                        this.cStandard = '';
+                        this.gnuEx = false;
+                        this.optimization = '';
+                        this.wall = false;
+                        this.wextra = false;
+                        this.werror = false;
+                        this.staticStd = false;
+                        this.dbgStyle = 0;
+                        this.nonAsciiCheck = false;
+                        this.instCnL11n = false;
+                        this.uninstExt = false;
+                        this.genTest = 'auto';
+                        this.genShortcut = false;
+                        this.openVscode = true;
+                        this.sendAnalytics = true;
+                    } else if (type === 'newbie') {
+                        this.language = 0;
+                        this.cppStandard = '';
+                        this.cStandard = '';
+                        this.gnuEx = false;
+                        this.optimization = '';
+                        this.wall = true;
+                        this.wextra = true;
+                        this.staticStd = false;
+                        this.dbgStyle = 1;
+                        this.nonAsciiCheck = true;
+                        this.instCnL11n = true;
+                        this.uninstExt = true;
+                        this.genTest = 'auto';
+                        this.genShortcut = true;
+                        this.openVscode = true;
+                        this.sendAnalytics = true;
+                    } else {
+                        throw new Error(`Unknown profile type: ${type}`);
+                    }
                 }
             },
             vuetify: new Vuetify(),
