@@ -21,23 +21,26 @@ using System.Collections.Generic;
 namespace VSCodeConfigHelper3 {
 
     class ConfigOptions {
-        enum LanguageType {
+        public enum LanguageType {
             Cpp,
             C
         };
-        LanguageType Language { get; set; }
-        string? LanguageStandard { get; set; }
-        List<string> CompilerArgs { get; set; } = new();
+        public string? VscodePath { get; set; }
+        public string? MingwPath { get; set; }
+        public string? WorkspacePath { get; set; }
 
-        string VscodePath { get; set; }
-        string WorkspacePath { get; set; }
-        CompilerInfo Compiler { get; set; }
+        public LanguageType Language { get; set; }
+        public string? LanguageStandard { get; set; }
+        public List<string> CompilerArgs { get; set; } = new();
 
-        bool ShouldSetEnv { get; set; } = true;
-        bool UseExternalTerminal { get; set; } = false;
 
-        bool ShouldUninstallExtensions { get; set; } = false;
-        List<string> UninstallExtensions { get; set; } = new List<string>{
+        public bool ShouldSetEnv { get; set; } = true;
+        public bool UseExternalTerminal { get; set; } = false;
+        public bool ApplyNonAsciiCheck { get; set; } = false;
+
+        public bool ShouldInstallL11n { get; set; } = false;
+        public bool ShouldUninstallExtensions { get; set; } = false;
+        static readonly List<string> uninstallExtensions = new List<string>{
             "formulahendry.code-runner",
             "austin.code-gnu-global",
             "danielpinto8zz6.c-cpp-compile-run",
@@ -49,26 +52,26 @@ namespace VSCodeConfigHelper3 {
             "jbenden.c-cpp-flylint"
         };
 
-        bool ApplyNonAsciiCheck { get; set; } = false;
+        public bool? GenerateTestFile { get; set; } = null;
+        public bool GenerateDesktopShortcut { get; set; } = false;
+        public bool OpenVscodeAfterConfig { get; set; } = true;
 
-        bool GenerateDesktopShortcut { get; set; } = false;
-        bool? GenerateTestFile { get; set; } = null;
-        bool OpenVscodeAfterConfig { get; set; } = true;
-
-        bool SendAnalytics { get; set; } = true;
-
-        ConfigOptions(LanguageType lang, string vscodePath, string workspacePath, CompilerInfo compiler) {
-            Language = lang;
-            VscodePath = vscodePath;
-            WorkspacePath = workspacePath;
-            Compiler = compiler;
-        }
+        public bool SendAnalytics { get; set; } = true;
     };
 
 
     class ConfGenerator {
 
-        ConfGenerator() {
+        ConfigOptions options;
+
+        public ConfGenerator(ConfigOptions options) {
+            this.options = options;
+        }
+
+        public void Generate() {
+            if (options.VscodePath is null || options.MingwPath is null || options.WorkspacePath is null) {
+                throw new Exception("Some necessary paths are null.");
+            }
             
         }
     };

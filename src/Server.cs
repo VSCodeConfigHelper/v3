@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
@@ -39,6 +40,8 @@ namespace VSCodeConfigHelper3 {
 
         Dictionary<string, RequestHandler> handlers = new();
 
+        bool runServer = false;
+
         public Server(out string servingUrl) {
             Assembly current = typeof(Program).GetTypeInfo().Assembly;
             using (var reader = current.GetManifestResourceStream(@"VSCodeConfigHelper3.pages.config.html")) {
@@ -53,11 +56,18 @@ namespace VSCodeConfigHelper3 {
             Console.WriteLine("Listening for connections on {0}", url);
         }
 
-        public void AddHandler(string path, RequestHandler handler) {
+        public void AddHandler(string path, RequestHandler handler, bool shutdown = false) {
             if (handlers.ContainsKey(path)) {
                 throw new Exception("Handler already exists for path: " + path);
             }
-            handlers.Add(path, handler);
+            if (shutdown) {
+                handlers.Add(path, (req) => {
+                    runServer = false;
+                    return handler(req);
+                });
+            } else {
+                handlers.Add(path, handler);
+            }
         }
 
         // Try to start HTTPListener with a free port.
@@ -99,7 +109,7 @@ namespace VSCodeConfigHelper3 {
         }
 
         public async Task HandleIncomingConnections() {
-            bool runServer = true;
+            runServer = true;
 
             // While a user hasn't visited the `shutdown` url, keep on handling requests
             while (runServer && listener is not null) {
@@ -151,6 +161,17 @@ namespace VSCodeConfigHelper3 {
 
                 res.Close();
             }
+        }
+
+        static public void OpenBrowser(string url) {
+            Process.Start(new ProcessStartInfo {
+                FileName = Environment.GetEnvironmentVariable("ComSpec") ?? @"C:\Windows\system32\cmd.exe",
+                ArgumentList = {
+                    "/c",
+                    "start",
+                    url
+                }
+            });
         }
     }
 }

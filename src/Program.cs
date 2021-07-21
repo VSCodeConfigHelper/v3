@@ -23,6 +23,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using CommandLine;
 
 namespace VSCodeConfigHelper3 {
 
@@ -108,10 +109,13 @@ namespace VSCodeConfigHelper3 {
 
     static class Program {
 
-        static EnvResolver? env;
-        static Server? server;
+        static EnvResolver? env = null;
+        static Server? server = null;
+        static ConfGenerator? config = null;
 
         static FolderGetter folderGetter = new();
+
+        #region Handlers definition
 
         static string HandleGetEnv(string _) {
             var json = JsonSerializer.Serialize(env);
@@ -129,8 +133,7 @@ namespace VSCodeConfigHelper3 {
             }
             if (Directory.Exists(path) && File.Exists(Path.Join(path, "Code.exe"))) {
                 return "valid";
-            }
-            else {
+            } else {
                 return "invalid";
             }
         }
@@ -150,23 +153,64 @@ namespace VSCodeConfigHelper3 {
             });
         }
 
+        static string HandleSaveProfile(string profile) {
+            using (var writer = File.CreateText("profile.json")) {
+                writer.Write(profile);
+            }
+            return "ok";
+        }
+
+        static string HandleLoadProfile(string profile) {
+            if (!File.Exists("profile.json")) {
+                return "null";
+            }
+            using (var reader = File.OpenText("profile.json")) {
+                profile = reader.ReadToEnd();
+            }
+            return profile;
+        }
+
+        static string HandleDone(string req) {
+            var document = JsonDocument.Parse(req);
+            var root = document.RootElement;
+            var success = root.GetProperty("success");
+            if (success.ValueKind == JsonValueKind.False) {
+                return "ok";
+            }
+            var configText = root.GetProperty("config").GetRawText();
+            var options = JsonSerializer.Deserialize<ConfigOptions>(configText);
+            if (options is not null) {
+                config = new ConfGenerator(options);
+            }
+            return "ok";
+        }
+
+        #endregion
+
         static void Main(string[] args) {
+            if (Environment.OSVersion.Version.Major < 10) {
+                Console.WriteLine("此程序要求 Windows 10 或更高版本的操作系统。程序将退出。");
+                return;
+            }
+
             env = new EnvResolver();
+
             server = new Server(out string serveUrl);
             server.AddHandler("/getEnv", HandleGetEnv);
             server.AddHandler("/getFolder", HandleGetFolder);
             server.AddHandler("/verifyVscode", HandleVerifyVscode);
             server.AddHandler("/verifyCompiler", HandleVerifyCompiler);
-            // open browser
-            Process.Start(new ProcessStartInfo {
-                FileName = Environment.GetEnvironmentVariable("ComSpec") ?? @"C:\Windows\system32\cmd.exe",
-                ArgumentList = {
-                    "/c",
-                    "start",
-                    serveUrl
-                }
-            });
+            server.AddHandler("/saveProfile", HandleSaveProfile);
+            server.AddHandler("/loadProfile", HandleLoadProfile);
+            server.AddHandler("/done", HandleDone, true);
+            Server.OpenBrowser(serveUrl);
             server.Run();
+
+            if (config is null) {
+                Console.WriteLine("配置中止。程序将退出。");
+                return;
+            }
+            config.Generate();
         }
     }
 }
