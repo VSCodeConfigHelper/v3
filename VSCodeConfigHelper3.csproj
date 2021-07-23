@@ -4,7 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>VSCodeConfigHelper</AssemblyName>
-    
+    <Version>3.0.0</Version>
+    <ApplicationIcon>pages/assets/icon.ico</ApplicationIcon>
 
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -20,10 +21,12 @@
     <EmbeddedResource Include="pages\config.html" />
   </ItemGroup>
 
-
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
   </ItemGroup>
   
 </Project>
