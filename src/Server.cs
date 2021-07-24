@@ -23,6 +23,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace VSCodeConfigHelper3 {
 
@@ -53,7 +54,7 @@ namespace VSCodeConfigHelper3 {
                 throw new Exception("Could not start listener.");
             }
             servingUrl = url;
-            Console.WriteLine("Listening for connections on {0}", url);
+            Log.Information($"开始监听来自 {url} 的请求……");
         }
 
         public void AddHandler(string path, RequestHandler handler, bool shutdown = false) {
@@ -119,10 +120,7 @@ namespace VSCodeConfigHelper3 {
 
                 if (req.Url is null) continue;
 
-                // Print out some info about the request
-                Console.WriteLine("Request");
-                Console.WriteLine(req.Url.ToString());
-                Console.WriteLine(req.HttpMethod);
+                Log.Debug($"Request received: {req.HttpMethod} {req.Url.ToString()}");
 
                 byte[] resBody, reqBody;
                 string resBodyStr, reqBodyStr;
@@ -132,17 +130,15 @@ namespace VSCodeConfigHelper3 {
                 reqBodyStr = Encoding.UTF8.GetString(reqBody);
 
                 if (req.HttpMethod == "POST") {
-                    Console.WriteLine("Body: {0}", reqBodyStr);
+                    Log.Debug($"Request Body: {reqBodyStr}");
                     if (handlers.ContainsKey(req.Url.AbsolutePath)) {
                         RequestHandler handler = handlers[req.Url.AbsolutePath];
                         resBodyStr = handler(reqBodyStr);
-                    } else if (req.Url.AbsolutePath == "/shutdown") {
-                        runServer = false;
-                        resBodyStr = "Server shutting down.";
                     } else {
                         resBodyStr = "unknown api";
                         res.StatusCode = 404;
                     }
+                    Log.Debug($"Response Body: {resBodyStr}");
                     res.ContentType = "text/plain";
                 } else if (req.Url.AbsolutePath == "/") {
                     resBodyStr = pageData;
@@ -164,6 +160,7 @@ namespace VSCodeConfigHelper3 {
         }
 
         static public void OpenBrowser(string url) {
+            Log.Information($"正在启动浏览器，页面 URL：{url}");
             Process.Start(new ProcessStartInfo {
                 FileName = Environment.GetEnvironmentVariable("ComSpec") ?? @"C:\Windows\system32\cmd.exe",
                 ArgumentList = {

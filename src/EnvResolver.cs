@@ -22,16 +22,20 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Microsoft.Win32;
+using Serilog;
 
 namespace VSCodeConfigHelper3 {
 
     class CompilerInfo {
+        /// <summary>
+        /// MinGW binary path. (End with "\bin".)
+        /// </summary>
         public string Path { get; }
-        public string? VersionText  { get; } = null;
+        public string? VersionText { get; } = null;
         public string? VersionNumber { get; } = null;
         public string? PackageString { get; } = null;
 
-        public CompilerInfo(string path, string? versionText) {
+        public CompilerInfo(string path, string versionText) {
             Path = path;
             VersionText = versionText;
             if (VersionText is not null) {
@@ -50,13 +54,15 @@ namespace VSCodeConfigHelper3 {
         public List<CompilerInfo> Compilers { get; } = new List<CompilerInfo>();
 
         public EnvResolver() {
+            Log.Information("解析环境中...");
             VscodePath = GetVscodePath();
             foreach (var path in GetPaths()) {
                 var versionText = TestCompiler(path);
                 if (versionText is null) continue;
                 Compilers.Add(new CompilerInfo(path, versionText));
             }
-
+            Log.Information("解析环境完成。");
+            Log.Debug("Resolve result: {@EnvResolver}", this);
         }
 
         public static string? TestCompiler(string path) {
@@ -90,6 +96,7 @@ namespace VSCodeConfigHelper3 {
         }
 
         private static string? GetVscodePath() {
+            Log.Information("从注册表中尝试获取 VS Code 路径...");
             var rk = Registry.ClassesRoot.OpenSubKey(@"vscode\shell\open\command");
             if (rk is null) return null;
             // The value should be like:
@@ -97,14 +104,22 @@ namespace VSCodeConfigHelper3 {
             // and we just use the string inside the first quotation marks
             string? vscodePath = rk.GetValue("") is string s ? s.Split('"')[1] : null;
             if (!File.Exists(vscodePath)) return null;
+            Log.Debug($"Get vscode Path: {vscodePath}");
             return vscodePath;
         }
 
-        private static List<string> GetPaths() {
-            string path = Environment.GetEnvironmentVariable("Path") ?? "";
-            // https://stackoverflow.com/questions/21261314
-            var paths = Regex.Split(path, ";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-            return paths.Select(str => Environment.ExpandEnvironmentVariables(str)).ToList();
+        private static HashSet<string> GetPaths() {
+            Log.Information("获取环境变量 Path 中的值...");
+            string path = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.User) ?? "";
+            Log.Debug($"User Path: {path}");
+
+            // fetch System enviroment variables either, for some users only add MinGW to here
+            string sysPath = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine) ?? "";
+            Log.Debug($"System Path: {sysPath}");
+
+            // https://stackoverflow.com/a/47923278
+            var paths = Regex.Split(path + ';' + sysPath, ";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+            return paths.Select(str => Environment.ExpandEnvironmentVariables(str.Replace("\"", ""))).ToHashSet();
         }
 
     }

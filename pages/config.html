@@ -448,7 +448,12 @@ jbenden.c-cpp-flylint</pre>
                         value: 'packageInfo'
                     }
                 ],
-                compilers: [],
+                /** @type {{
+                 *  path: string, // Without 'bin'!
+                 *  version: string,
+                 *  packageInfo: string
+                 * }[] }*/
+                compilers: [], 
                 mingwTableSelected: [],
                 newCompiler: 0,
                 newCompilerPath: "",
@@ -813,13 +818,13 @@ jbenden.c-cpp-flylint</pre>
                 getConfigResult: function () {
                     // match 'class ConfigOptions' in backend
                     return {
-                        VscodePath: this.vscodePath,
-                        MingwPath: this.mingw?.path ?? null,
+                        VscodePath: this.vscodePath + "\\Code.exe",
+                        MingwPath: this.mingw?.path + "\\bin" ?? null,
                         WorkspacePath: this.workspacePath,
                         Language: this.language,
                         LanguageStandard: this.standardId,
-                        CompilerArgs: this.compileArgs,
-                        ShouldSetEnv: this.setEnv,
+                        CompileArgs: this.compileArgs,
+                        NoSetEnv: !this.setEnv,
                         UseExternalTerminal: this.dbgStyle === STYLE_EXTERNAL,
                         ApplyNonAsciiCheck: this.nonAsciiCheck,
                         ShouldInstallL11n: this.instL11n,
@@ -827,7 +832,7 @@ jbenden.c-cpp-flylint</pre>
                         GenerateTestFile: this.genTest !== 'auto' ? this.genTest === 'always' ? true : false : null,
                         GenerateDesktopShortcut: this.genShortcut,
                         OpenVscodeAfterConfig: this.openVscode,
-                        SendAnalytics: this.sendAnalytics
+                        NoSendAnalytics: !this.sendAnalytics
                     }
                 },
             },
