@@ -51,6 +51,7 @@ namespace VSCodeConfigHelper3 {
             }
             listener.Prefixes.Add(url);
             if (!StartListener()) {
+                Log.Error("无法启动服务器。");
                 throw new Exception("Could not start listener.");
             }
             servingUrl = url;
@@ -162,7 +163,7 @@ namespace VSCodeConfigHelper3 {
         static public void OpenBrowser(string url) {
             Log.Information($"正在启动浏览器，页面 URL：{url}");
             Process.Start(new ProcessStartInfo {
-                FileName = Environment.GetEnvironmentVariable("ComSpec") ?? @"C:\Windows\system32\cmd.exe",
+                FileName = @"C:\Windows\system32\cmd.exe",
                 ArgumentList = {
                     "/c",
                     "start",

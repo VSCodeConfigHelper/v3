@@ -16,14 +16,12 @@
 // along with VSCodeConfigHelper.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using System.Text;
 using System.Text.Json;
 using CommandLine;
 using Serilog;
@@ -103,8 +101,7 @@ namespace VSCodeConfigHelper3 {
                     return null;
                 }
                 return output.Trim();
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 Debug.WriteLine(ex.ToString());
                 return null;
             }
@@ -118,7 +115,10 @@ namespace VSCodeConfigHelper3 {
         [Option('g', "use-gui", Default = false)]
         public bool UseGui { get; set; }
         [Option('y', "assume-yes", Default = false)]
-        public bool YesToAll { get; set; }
+        public bool AssumeYes { get; set; }
+
+        [Option("remove-scripts")]
+        public bool RemoveScripts { get; set; }
     }
 
     static class Program {
@@ -166,6 +166,14 @@ namespace VSCodeConfigHelper3 {
             });
         }
 
+        static string HandleVerifyWorkspace(string path) {
+            if (Directory.Exists(Path.Join(path, ".vscode"))) {
+                return "warn";
+            } else {
+                return "ok";
+            }
+        }
+
         static string HandleSaveProfile(string profile) {
             using (var writer = File.CreateText("profile.json")) {
                 writer.Write(profile);
@@ -204,6 +212,9 @@ namespace VSCodeConfigHelper3 {
 
         static void RunWithOptions(ProgramOptions options) {
             // Create logger
+            if (File.Exists("VSCH.log")) {
+                File.Delete("VSCH.log");
+            }
             if (options.Verbose) {
                 Log.Logger = new LoggerConfiguration()
                     .MinimumLevel.Debug()
@@ -238,6 +249,7 @@ namespace VSCodeConfigHelper3 {
                 server.AddHandler("/getFolder", HandleGetFolder);
                 server.AddHandler("/verifyVscode", HandleVerifyVscode);
                 server.AddHandler("/verifyCompiler", HandleVerifyCompiler);
+                server.AddHandler("/verifyWorkspace", HandleVerifyWorkspace);
                 server.AddHandler("/saveProfile", HandleSaveProfile);
                 server.AddHandler("/loadProfile", HandleLoadProfile);
                 server.AddHandler("/done", HandleDone, true);
@@ -250,20 +262,6 @@ namespace VSCodeConfigHelper3 {
                 }
             } else {
                 // Launch CLI
-                if (options.VscodePath is null) {
-                    Log.Information($"未从命令行传入 VS Code 路径，将使用自动检测到的路径：{env.VscodePath}");
-                    if (env.VscodePath is null) {
-                        Log.Error("VS Code 路径未找到：命令行参数未传入且未自动检测到。程序将退出。");
-                        Environment.Exit(1);
-                    }
-                    options.VscodePath = env.VscodePath;
-                } else {
-                    Log.Information($"从命令行传入 VS Code 路径 {options.VscodePath}，将使用此路径。");
-                    if (!File.Exists(options.VscodePath)) {
-                        Log.Error($"验证 VS Code 路径失败：{options.VscodePath} 文件不存在。程序将退出。");
-                        Environment.Exit(1);
-                    }
-                }
                 CompilerInfo mingwInfo;
                 if (options.MingwPath is null) {
                     Log.Information($"未从命令行传入 MinGW 路径，将使用自动检测到的路径。");
@@ -275,7 +273,7 @@ namespace VSCodeConfigHelper3 {
                         Log.Information($"选择自动检测到的 MinGW：{env.Compilers[0].Path} - {env.Compilers[0].VersionNumber} ({env.Compilers[0].PackageString})");
                         chosen = 0;
                     } else {
-                        if (options.YesToAll) {
+                        if (options.AssumeYes) {
                             Log.Information($"由于启用了 -y，选择第一个 MinGW。");
                             chosen = 0;
                         } else {
@@ -306,6 +304,39 @@ namespace VSCodeConfigHelper3 {
                     mingwInfo = new CompilerInfo(options.MingwPath, versionText);
                 }
                 options.MingwPath = mingwInfo.Path;
+
+                if (options.RemoveScripts) {
+                    Log.Information("启用了开关 --remove-script，程序将删除所有脚本。");
+                    string[] filenames = new[] {
+                        "check-ascii.ps1",
+                        "pause-console.ps1"
+                    };
+                    foreach (var i in filenames) {
+                        var path = Path.Join(options.MingwPath, i);
+                        if (File.Exists(path)) {
+                            File.Delete(path);
+                            Log.Information($"删除了脚本 {path}。");
+                        }
+                    }
+                    Log.Information("脚本删除操作完成。程序将退出。");
+                    Environment.Exit(0);
+                }
+                
+                if (options.VscodePath is null) {
+                    Log.Information($"未从命令行传入 VS Code 路径，将使用自动检测到的路径：{env.VscodePath}");
+                    if (env.VscodePath is null) {
+                        Log.Error("VS Code 路径未找到：命令行参数未传入且未自动检测到。程序将退出。");
+                        Environment.Exit(1);
+                    }
+                    options.VscodePath = env.VscodePath;
+                } else {
+                    Log.Information($"从命令行传入 VS Code 路径 {options.VscodePath}，将使用此路径。");
+                    if (!File.Exists(options.VscodePath)) {
+                        Log.Error($"验证 VS Code 路径失败：{options.VscodePath} 文件不存在。程序将退出。");
+                        Environment.Exit(1);
+                    }
+                }
+
                 (string, string) getLatestSupportStandardFromCompiler(string? version) {
                     if (version is null) {
                         return ("c++14", "c11");
@@ -361,6 +392,19 @@ namespace VSCodeConfigHelper3 {
                 if (options.WorkspacePath is null) {
                     Log.Error("未从命令行传入工作区文件夹路径。程序将退出。");
                     Environment.Exit(1);
+                } else {
+                    if (Directory.Exists(Path.Join(options.WorkspacePath, ".vscode"))) {
+                        Log.Warning($"工作区文件夹 {options.WorkspacePath} 下已存在配置。若继续则原有配置将被覆盖。");
+                        if (!options.AssumeYes) {
+                            Console.Write("是否继续？[Y/n] ");
+                            var ki = Console.ReadKey();
+                            if (ki.Key != ConsoleKey.Enter && ki.Key != ConsoleKey.Y) {
+                                Log.Error("配置被用户中止。程序将退出。");
+                                Environment.Exit(1);
+                            }
+                            Console.WriteLine();
+                        }
+                    }
                 }
                 config = new ConfGenerator(options);
             }

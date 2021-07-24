@@ -11,7 +11,19 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net5.0/VSCodeConfigHelper.dll",
-            "args": [],
+            "args": [
+                "--verbose",
+                "--use-gui",
+                // "--remove-scripts",
+                // "--mingw-path=C:\\mingw64",
+                // "--assume-yes",
+                // "--workspace-path=bin\\a",
+                // "--no-set-env",
+                // "--external-terminal",
+                // "--generate-shortcut",
+                // "--",
+                // "-Wall",
+            ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",

@@ -90,7 +90,7 @@ namespace VSCodeConfigHelper3 {
                 return output;
             }
             catch (Exception ex) {
-                Debug.WriteLine(ex.ToString());
+                Log.Warning(ex, $"测试编译器 {path} 时失败。");
                 return null;
             }
         }

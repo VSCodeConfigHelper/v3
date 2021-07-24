@@ -200,6 +200,9 @@
                                             <v-alert v-if="!isAscii(workspacePath)" dense text type="error">
                                                 路径不能包含中文或特殊字符（仅能使用 ASCII 字符）。
                                             </v-alert>
+                                            <v-alert v-if="isAscii(workspacePath) && workspaceStatus === 'warn'" dense text type="warning">
+                                                此工作文件夹下已有配置。若继续则旧配置会被覆盖。
+                                            </v-alert>
                                         </v-card-text>
                                         <v-card-actions class="pa-0">
                                             <v-btn color="primary" :disabled="!workspaceOk" @click="next">
@@ -288,8 +291,8 @@ jbenden.c-cpp-flylint</pre>
                                                                 <div class="d-flex align-center">
                                                                     <span class="v-label mr-3">是否生成测试文件？</span>
                                                                     <v-chip-group mandatory active-class="primary--text" v-model="genTest" class="flex-grow-1">
-                                                                        <v-chip v-for="(v, i) in genTestVal" :key="i" small>
-                                                                            {{ genTestText[i] }}
+                                                                        <v-chip v-for="i in genTestText" :key="i" small>
+                                                                            {{ i }}
                                                                         </v-chip>
                                                                     </v-chip-group>
                                                                 </div>
@@ -335,7 +338,7 @@ jbenden.c-cpp-flylint</pre>
                                                             <dt>设置环境变量</dt>
                                                             <dd>{{ setEnv ? '是' : '否' }}</dd>
                                                             <dt>生成测试文件</dt>
-                                                            <dd>{{ genTest !== 'auto' ? genTest === 'always' ? '是' : '否' : '自动' }}</dd>
+                                                            <dd>{{ genTestText[genTest] }}</dd>
                                                             <dt>生成桌面快捷方式</dt>
                                                             <dd>{{ genShortcut ? '是' : '否' }}</dd>
                                                             <dt>稍后启动 VS Code</dt>
@@ -477,6 +480,7 @@ jbenden.c-cpp-flylint</pre>
                     }
                 ],
                 workspacePath: "",
+                workspaceStatus: "ok",
                 optionsProfile: 2,
                 optionsTab: 0,
                 language: 0, // 0: C++, 1: C
@@ -550,8 +554,7 @@ jbenden.c-cpp-flylint</pre>
                 instL11n: false,
                 uninstExt: false,
                 setEnv: true,
-                genTest: 'auto',
-                genTestVal: ['auto', 'always', 'never'],
+                genTest: 0,
                 genTestText: ['自动', '重新生成', '不生成'],
                 genShortcut: false,
                 openVscode: true,
@@ -679,7 +682,19 @@ jbenden.c-cpp-flylint</pre>
                             packageInfo: v.info.PackageString
                         }
                     }
-                })
+                });
+                this.$watchAsObservable('workspacePath').pipe(
+                    rxjs.operators.debounceTime(DEBOUNCE_TIME),
+                    rxjs.operators.filter(v => v !== ""),
+                    rxjs.operators.switchMap(() => {
+                        return rxjs.from(fetch(`${HOST}/verifyWorkspace`, {
+                            method: 'POST',
+                            body: this.workspacePath
+                        }).then(r => r.text()));
+                    })
+                ).subscribe(v => {
+                    this.workspaceStatus = v;
+                });
                 return {
                 };
             },
@@ -754,7 +769,7 @@ jbenden.c-cpp-flylint</pre>
                         this.instL11n = false;
                         this.uninstExt = false;
                         this.setEnv = true;
-                        this.genTest = 'auto';
+                        this.genTest = 0;
                         this.genShortcut = false;
                         this.openVscode = true;
                         this.sendAnalytics = true;
@@ -772,7 +787,7 @@ jbenden.c-cpp-flylint</pre>
                         this.instL11n = true;
                         this.uninstExt = true;
                         this.setEnv = true;
-                        this.genTest = 'auto';
+                        this.genTest = 0;
                         this.genShortcut = true;
                         this.openVscode = true;
                         this.sendAnalytics = true;
@@ -829,11 +844,11 @@ jbenden.c-cpp-flylint</pre>
                         ApplyNonAsciiCheck: this.nonAsciiCheck,
                         ShouldInstallL11n: this.instL11n,
                         ShouldUninstallExtensions: this.uninstExt,
-                        GenerateTestFile: this.genTest !== 'auto' ? this.genTest === 'always' ? true : false : null,
+                        GenerateTestFile: this.genTest !== 0 ? this.genTest === 1 ? true : false : null,
                         GenerateDesktopShortcut: this.genShortcut,
                         OpenVscodeAfterConfig: this.openVscode,
                         NoSendAnalytics: !this.sendAnalytics
-                    }
+                    };
                 },
             },
             vuetify: new Vuetify(),

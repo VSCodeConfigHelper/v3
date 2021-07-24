@@ -1,4 +1,4 @@
-###
+﻿###
 # Generate by VS Code Config Helper 3. Edit it only if you know what you are doing!
 
 Add-Type -AssemblyName System.Windows.Forms
