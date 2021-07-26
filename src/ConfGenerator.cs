@@ -21,13 +21,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Cache;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using CommandLine;
 using Serilog;
 
@@ -50,7 +48,7 @@ namespace VSCodeConfigHelper3 {
         public LanguageType Language { get; set; } = LanguageType.Cpp;
         [Option("language-standard")]
         public string? LanguageStandard { get; set; }
-        [Value(0, HelpText = "-- 之后的所有命令行参数都将作为编译参数传给 GCC。")]
+        [Value(0)]
         public IEnumerable<string> CompileArgs { get; set; } = new string[] { };
 
         [Option("no-set-env")]
@@ -615,8 +613,7 @@ int main(void) {
             Log.Information("启动 VS Code...");
             Process.Start(new ProcessStartInfo {
                 FileName = options.VscodePath,
-                Arguments = filepath is null ? $"\"{folderpath}\"" : $"\"{folderpath}\" -g \"{filepath}:1\"",
-                CreateNoWindow = true
+                Arguments = filepath is null ? $"\"{folderpath}\"" : $"\"{folderpath}\" -g \"{filepath}:1\""
             });
         }
 
@@ -704,7 +701,7 @@ int main(void) {
                 // Logging.Log("Hit a count.");
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 HttpWebRequest request = WebRequest.CreateHttp("https://api.countapi.xyz/hit/guyutongxue.github.io/b54f2252-e54a-4bd0-b4c2-33b47db6aa98");
-                request.UserAgent = $"VSCodeConfigHelper v{Assembly.GetExecutingAssembly().GetName().Version}";
+                request.UserAgent = $"VSCodeConfigHelper v{Program.ProgramVersion()}";
                 request.Method = "GET";
                 request.Timeout = 5000;
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
