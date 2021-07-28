@@ -119,6 +119,11 @@ namespace VSCodeConfigHelper3 {
 
         [Option("remove-scripts")]
         public bool RemoveScripts { get; set; }
+
+        [Option("help")]
+        public bool Help { get; set; }
+        [Option("version")]
+        public bool Version { get; set; }
     }
 
     static class Program {
@@ -228,6 +233,14 @@ namespace VSCodeConfigHelper3 {
                     .WriteTo.File("VSCH.log")
                     .CreateLogger();
             }
+            if (options.Version) {
+                PrintVersion();
+                Environment.Exit(0);
+            }
+            if (options.Help) {
+                PrintHelp();
+                Environment.Exit(0);
+            }
             if (options.UseGui) {
                 isGui = true;
             }
@@ -239,7 +252,7 @@ namespace VSCodeConfigHelper3 {
                 }
                 Environment.Exit(1);
             }
-            Log.Information($"VSCodeConfigHelper 版本v{Assembly.GetExecutingAssembly().GetName().Version} 谷雨同学制作 guyutongxue@163.com");
+            Log.Information($"VSCodeConfigHelper 版本v{ProgramVersion()} 谷雨同学制作 guyutongxue@163.com");
             env = new EnvResolver();
             if (isGui) {
                 // Launch GUI
@@ -321,7 +334,7 @@ namespace VSCodeConfigHelper3 {
                     Log.Information("脚本删除操作完成。程序将退出。");
                     Environment.Exit(0);
                 }
-                
+
                 if (options.VscodePath is null) {
                     Log.Information($"未从命令行传入 VS Code 路径，将使用自动检测到的路径：{env.VscodePath}");
                     if (env.VscodePath is null) {
@@ -412,15 +425,63 @@ namespace VSCodeConfigHelper3 {
             Environment.Exit(0);
         }
 
+        public static Version? ProgramVersion() {
+            return Assembly.GetExecutingAssembly().GetName().Version;
+        }
+
+        static void PrintVersion() {
+            Console.WriteLine("VSCodeConfigHelper v" + ProgramVersion());
+            Console.WriteLine("Copyright (c) 2021 Guyutongxue");
+        }
+
+        static void PrintHelp() {
+            PrintVersion();
+            Console.WriteLine("");
+            Console.WriteLine("Usage: VSCodeConfigHelper.exe [<options>...] [-- <compile args>...]");
+            Console.WriteLine("");
+            // Width indicator (help message should not be wider than 80 chars)
+            //567890123456789012345678901234567890123456789012345678901234567890
+            Console.WriteLine(@"Options:
+-V, --verbose                   显示详细的输出信息
+-g, --use-gui                   使用 GUI 进行配置。当不提供任何命令行参数时，此
+                                选项将被默认使用
+-y, --assume-yes                关闭命令行交互操作，总是假设选择“是”
+--vscode-path=<path>            指定 VS Code 安装路径。若不提供，则工具自动从注
+                                册表获取
+--mingw-path=<path>             指定 MinGW 的安装路径。若不提供，则工具自动从环
+                                境变量获取
+--workspace-path=<path>         指定工作区文件夹路径。若使用 CLI 则必须提供
+--language=<Cpp|C>              指定配置目标语言。默认为 Cpp （大小写敏感）
+--language-standard=<standard>  指定语言标准。默认根据 MinGW 编译器版本选取
+--no-set-env                    不设置用户环境变量
+--external-terminal             使用外部终端进行运行和调试
+--apply-non-ascii-check         在调试前进行文件名中非 ASCII 字符的检查
+--install-chinese               为 VS Code 安装中文语言包
+--uninstall-extensions          卸载多余的 VS Code 扩展
+--generate-test=<true|false>    指定是否强制或强制不生成测试文件。若不提供此参数
+                                则自动选择
+--generate-shortcut             是否生成指向工作区文件夹的桌面快捷方式
+--open-vscode                   是否在配置完成后自动打开 VS Code
+--no-send-analytics             不发送统计信息
+
+--help                          显示此帮助信息并退出
+--version                       显示程序版本并退出
+--remove-scripts                从 MinGW 删除此程序注入的所有脚本并退出
+");
+            Console.WriteLine(@"Compile Args:
+-- <any gcc options>...         -- 之后的所有命令行参数将作为编译参数传递给 GCC
+");
+        }
+
+
         static void Main(string[] args) {
             if (args.Length != 0) {
                 isGui = false;
             }
 
             var result = new Parser(with => {
-                with.AutoHelp = true;
-                with.HelpWriter = Console.Error;
-                with.AutoVersion = true;
+                with.AutoHelp = false;
+                with.AutoVersion = false;
                 with.EnableDashDash = true;
             })
                 .ParseArguments<ProgramOptions>(args)
