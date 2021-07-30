@@ -1,0 +1,10 @@
+[requires]
+boost/1.76.0
+cpp-httplib/0.9.0
+
+[generators]
+cmake
+
+[options]
+# https://github.com/conan-io/conan-center-index/issues/4764
+boost:without_fiber=True
