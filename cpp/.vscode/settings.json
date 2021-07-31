@@ -1,0 +1,4 @@
+{
+    // MSVC only recognizes UTF-8 file with BOM
+    "files.encoding": "utf8bom"
+}

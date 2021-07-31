@@ -1,4 +1,4 @@
-
+﻿
 #include "logger.h"
 
 #include <fcntl.h>
@@ -22,7 +22,6 @@ namespace keywords = boost::log::keywords;
 
 namespace {
 
-
 const char* const levelText[]{"TRC", "DBG", "INF", "WRN", "ERR", "FTL"};
 
 void consoleFormatter(const logging::record_view& rec, logging::wformatting_ostream& strm) {
@@ -43,9 +42,8 @@ void fileFormatter(const logging::record_view& rec, logging::formatting_ostream&
     auto level{rec[trivial::severity]};
     auto date_time_formatter{expr::stream << expr::format_date_time<boost::posix_time::ptime>(
                                  "TimeStamp", "%Y-%m-%d %H:%M:%S.%f")};
-    strm << "[";
     date_time_formatter(rec, strm);
-    strm << " " << levelText[level.get()] << "] " << rec[expr::wmessage];
+    strm << " [" << levelText[level.get()] << "] " << rec[expr::wmessage];
 }
 
 }  // namespace
