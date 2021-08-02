@@ -1,12 +1,15 @@
-﻿#include "native.h"
+#include "native.h"
 
 #include <shlobj.h>
+#include <boost/nowide/convert.hpp>
 
 namespace Native {
 
-std::optional<std::wstring> browseFolder(const std::wstring& initDir) {
+using namespace boost::nowide;
+
+std::optional<std::string> browseFolder(const std::string& initDir) {
     wchar_t path[MAX_PATH];
-    const wchar_t* lParam{initDir.c_str()};
+    const wchar_t* lParam{widen(initDir).c_str()};
     static BFFCALLBACK browseCallback{
         [](HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData) -> int {
             if (uMsg == BFFM_INITIALIZED) {
@@ -27,14 +30,14 @@ std::optional<std::wstring> browseFolder(const std::wstring& initDir) {
             malloc->Free(result);
             malloc->Release();
         }
-        return std::wstring(path);
+        return std::string(narrow(path));
     } else {
         return std::nullopt;
     }
 }
 
-bool createLink(const std::wstring& link, const std::wstring& target,
-                const std::wstring& description, const std::wstring& args) {
+bool createLink(const std::string& link, const std::string& target,
+                const std::string& description, const std::string& args) {
     HRESULT result = CoInitialize(nullptr);
     if (FAILED(result)) {
         return false;
@@ -44,12 +47,12 @@ bool createLink(const std::wstring& link, const std::wstring& target,
                               reinterpret_cast<LPVOID*>(&shellLink));
     if (SUCCEEDED(result)) {
         IPersistFile* persist{0};
-        shellLink->SetPath(target.c_str());
-        shellLink->SetArguments(args.c_str());
-        shellLink->SetDescription(description.c_str());
+        shellLink->SetPath(widen(target).c_str());
+        shellLink->SetArguments(widen(args).c_str());
+        shellLink->SetDescription(widen(description).c_str());
         result = shellLink->QueryInterface(IID_IPersistFile, reinterpret_cast<LPVOID*>(&persist));
         if (SUCCEEDED(result)) {
-            result = persist->Save(link.c_str(), TRUE);
+            result = persist->Save(widen(link).c_str(), TRUE);
             persist->Release();
         }
         shellLink->Release();
@@ -58,40 +61,41 @@ bool createLink(const std::wstring& link, const std::wstring& target,
     return SUCCEEDED(result);
 }
 
-std::optional<std::wstring> getRegistry(HKEY hkey, const std::wstring& path,
-                                        const std::wstring& key) {
+std::optional<std::string> getRegistry(HKEY hkey, const std::string& path,
+                                        const std::string& key) {
     HKEY keyPath;
-    auto result{RegOpenKeyEx(hkey, path.c_str(), 0, KEY_READ, &keyPath)};
+    auto result{RegOpenKeyEx(hkey, widen(path).c_str(), 0, KEY_READ, &keyPath)};
     if (result != ERROR_SUCCESS) {
         return std::nullopt;
     }
     DWORD bufsize{1024};
     wchar_t buffer[1024];
-    result = RegGetValue(keyPath, NULL, key.c_str(), RRF_RT_REG_SZ, NULL, buffer, &bufsize);
+    result = RegGetValue(keyPath, NULL, widen(key).c_str(), RRF_RT_REG_SZ, NULL, buffer, &bufsize);
     RegCloseKey(keyPath);
     if (result != ERROR_SUCCESS) {
         return std::nullopt;
     } else {
-        return std::wstring(buffer);
+        return std::string(narrow(buffer));
     }
 }
 
-bool setRegistry(HKEY hkey, const std::wstring& path, const std::wstring& key,
-                 const std::wstring& value) {
+bool setRegistry(HKEY hkey, const std::string& path, const std::string& key,
+                 const std::string& value) {
     HKEY keyPath;
-    auto result{RegOpenKeyEx(hkey, path.c_str(), 0, KEY_WRITE, &keyPath)};
+    auto result{RegOpenKeyEx(hkey, widen(path).c_str(), 0, KEY_WRITE, &keyPath)};
     if (result != ERROR_SUCCESS) {
         return false;
     }
-    auto data{reinterpret_cast<const BYTE*>(value.c_str())};
-    auto datalen{value.size() * sizeof(wchar_t)};
-    result = RegSetValueEx(keyPath, key.c_str(), 0, REG_SZ, data, datalen);
+    auto widenVal{widen(value)};
+    auto data{reinterpret_cast<const BYTE*>(widenVal.c_str())};
+    auto datalen{widenVal.size() * sizeof(wchar_t)};
+    result = RegSetValueEx(keyPath, widen(key).c_str(), 0, REG_SZ, data, datalen);
     RegCloseKey(keyPath);
     return result == ERROR_SUCCESS;
 }
 
-void setCurrentUserEnv(const std::wstring& key, const std::wstring& value) {
-    setRegistry(HKEY_CURRENT_USER, L"Environment", key, value);
+void setCurrentUserEnv(const std::string& key, const std::string& value) {
+    setRegistry(HKEY_CURRENT_USER, "Environment", key, value);
 }
 
 }  // namespace Native

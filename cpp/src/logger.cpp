@@ -1,4 +1,4 @@
-﻿
+
 #include "logger.h"
 
 #include <fcntl.h>
@@ -9,6 +9,8 @@
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/utility/setup.hpp>
+
+#include <boost/nowide/iostream.hpp>
 
 namespace Log {
 
@@ -22,12 +24,12 @@ namespace keywords = boost::log::keywords;
 
 namespace {
 
-const char* const levelText[]{"TRC", "DBG", "INF", "WRN", "ERR", "FTL"};
+constexpr const char* const levelText[]{"TRC", "DBG", "INF", "WRN", "ERR", "FTL"};
 
-void consoleFormatter(const logging::record_view& rec, logging::wformatting_ostream& strm) {
+void consoleFormatter(const logging::record_view& rec, logging::formatting_ostream& strm) {
     auto level{rec[trivial::severity]};
     auto date_time_formatter{
-        expr::stream << expr::format_date_time<boost::posix_time::ptime>("TimeStamp", L"%H:%M:%S")};
+        expr::stream << expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S")};
 
     strm << "[";
     date_time_formatter(rec, strm);
@@ -35,7 +37,7 @@ void consoleFormatter(const logging::record_view& rec, logging::wformatting_ostr
         strm << " " << levelText[level.get()];
     }
     strm << "] ";
-    strm << rec[expr::wmessage];
+    strm << rec[expr::smessage];
 }
 
 void fileFormatter(const logging::record_view& rec, logging::formatting_ostream& strm) {
@@ -43,26 +45,25 @@ void fileFormatter(const logging::record_view& rec, logging::formatting_ostream&
     auto date_time_formatter{expr::stream << expr::format_date_time<boost::posix_time::ptime>(
                                  "TimeStamp", "%Y-%m-%d %H:%M:%S.%f")};
     date_time_formatter(rec, strm);
-    strm << " [" << levelText[level.get()] << "] " << rec[expr::wmessage];
+    strm << " [" << levelText[level.get()] << "] " << rec[expr::smessage];
 }
 
 }  // namespace
 
-src::wseverity_logger<trivial::severity_level> logger{};
+src::severity_logger<trivial::severity_level> logger{};
 
 void init(bool verbose) {
     logging::add_common_attributes();
 
     auto fileSink{boost::log::add_file_log("vscch.log")};
-    std::locale loc = boost::locale::generator()("en_US.UTF-8");
-    fileSink->imbue(loc);
+    // std::locale loc = boost::locale::generator()("en_US.UTF-8");
+    // fileSink->imbue(loc);
     fileSink->set_formatter(&fileFormatter);
 
-    boost::shared_ptr<sinks::synchronous_sink<sinks::wtext_ostream_backend>> consoleSink{
-        logging::add_console_log(std::wcout)};
+    boost::shared_ptr<sinks::synchronous_sink<sinks::text_ostream_backend>> consoleSink{
+        logging::add_console_log(boost::nowide::cout)};
 
     consoleSink->set_formatter(&consoleFormatter);
-    _setmode(_fileno(stdout), _O_WTEXT);
 
     if (verbose) {
         consoleSink->set_filter(trivial::severity >= trivial::info);

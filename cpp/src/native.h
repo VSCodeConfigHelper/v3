@@ -1,21 +1,21 @@
-﻿#include <windows.h>
+#include <windows.h>
 
 #include <optional>
 #include <string>
 
 namespace Native {
 
-std::optional<std::wstring> browseFolder(const std::wstring& initDir);
+std::optional<std::string> browseFolder(const std::string& initDir);
 
-bool createLink(const std::wstring& link, const std::wstring& target,
-                const std::wstring& description = L"", const std::wstring& args = L"");
+bool createLink(const std::string& link, const std::string& target,
+                const std::string& description = "", const std::string& args = "");
 
-std::optional<std::wstring> getRegistry(HKEY hkey, const std::wstring& path,
-                                        const std::wstring& key);
+std::optional<std::string> getRegistry(HKEY hkey, const std::string& path,
+                                        const std::string& key);
 
-bool setRegistry(HKEY hkey, const std::wstring& path, const std::wstring& key,
-                 const std::wstring& value);
+bool setRegistry(HKEY hkey, const std::string& path, const std::string& key,
+                 const std::string& value);
 
-void setCurrentUserEnv(const std::wstring& key, const std::wstring& value);
+void setCurrentUserEnv(const std::string& key, const std::string& value);
 
 }  // namespace Native

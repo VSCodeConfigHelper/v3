@@ -1,26 +1,45 @@
-﻿#include <iostream>
+#include <iostream>
 
+#include "env_resolver.h"
+#include "server.h"
 #include "logger.h"
 #include "native.h"
 
-int main() {
+#include <boost/nowide/iostream.hpp>
+#include <boost/nowide/filesystem.hpp>
+
+int main(int argc, char** argv) {
+    boost::nowide::nowide_filesystem();
     Log::init(true);
-    LOG_INF(L"程序启动");
-    LOG_WRN(L"Here is 中国");
+    // LOG_INF("程序启动");
+    // LOG_WRN("Here is 中国");
 
-    auto v{Native::getRegistry(HKEY_CLASSES_ROOT, L"vscode\\shell\\open\\command", L"")};
-    if (v)
-        std::wcout << v.value() << std::endl;
-    Native::setCurrentUserEnv(L"TTTT", L"test");
+    // auto v{Native::getRegistry(HKEY_CLASSES_ROOT, "vscode\\shell\\open\\command", "")};
+    // if (v)
+    //     boost::nowide::cout << v.value() << std::endl;
+    // Native::setCurrentUserEnv("TTTT", "hello中国");
 
-    auto f{Native::browseFolder(L"")};
-    if (f)
-        std::wcout << f.value() << std::endl;
+    // auto f{Native::browseFolder("")};
+    // if (f)
+    //     boost::nowide::cout << f.value() << std::endl;
 
-    auto r = Native::createLink(
-        L"C:\\Users\\Guyutongxue\\Desktop\\Visual Studio Code.lnk",
-        L"C:\\Users\\Guyutongxue\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
-        L"Visual Studio Code", L"\"E:\\DIY\\Code\\CSharp\\VSCodeConfigHelper3\\bin\\a\"");
+    // auto r = Native::createLink(
+    //     "C:\\Users\\Guyutongxue\\Desktop\\Visual Studio Code.lnk",
+    //     "C:\\Users\\Guyutongxue\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+    //     "Visual Studio Code", "\"C:\\Users\\Guyutongxue\\Documents\\MyFiles\\VSCodeConfigHelper3\\bin\\a\"");
 
-    std::wcout << r << std::endl;
+    // boost::nowide::cout << r << std::endl;
+
+    // Server s;
+    // int port{s.prepare()};
+    // boost::nowide::cout << port << std::endl;
+    // s.start();
+
+    // auto r{EnvResolver::testCompiler("C:\\mingw64\\bin")};
+    // if (r) {
+    //     boost::nowide::cout << r.value() << std::endl;
+    // } else {
+    //     boost::nowide::cout << "nul" << std::endl;
+    // }
+    EnvResolver env;
 }

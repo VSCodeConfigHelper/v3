@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <windows.h>
 
@@ -7,11 +7,11 @@
 
 namespace Log {
 
-extern boost::log::sources::wseverity_logger<boost::log::trivial::severity_level> logger;
+extern boost::log::sources::severity_logger<boost::log::trivial::severity_level> logger;
 void init(bool verbose);
 
 template <typename... Ts>
-void log(boost::log::trivial::severity_level level, Ts... content) {
+void log(boost::log::trivial::severity_level level, const Ts&... content) {
     using namespace boost::log;
     WORD color{0x0F};
     switch (level) {
@@ -28,7 +28,7 @@ void log(boost::log::trivial::severity_level level, Ts... content) {
     SetConsoleTextAttribute(hstdout, color);
     record rec = logger.open_record(keywords::severity = level);
     if (rec) {
-        wrecord_ostream strm(rec);
+        record_ostream strm(rec);
         (strm << ... << content);
         strm.flush();
         logger.push_record(std::move(rec));
