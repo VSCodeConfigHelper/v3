@@ -2,7 +2,6 @@
 <html lang="zh-CN">
 
 <head>
-    <link href="https://fonts.proxy.ustclug.org/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
@@ -401,7 +400,7 @@ jbenden.c-cpp-flylint</pre>
         const GYTX_LINK = "https://gytx.lanzoux.com/ibibbokvokj";
         const TDM_LINK = "https://wws.lanzoux.com/iMhd6ge4qkf";
         const MINGW_LINK = "https://wws.lanzoux.com/iuRLbge4bni";
-        const HOST = "";
+        const HOST = "http://localhost:8000";
         const LANG_CPP = 0;
         const LANG_C = 1;
         const STYLE_INTERNAL = 0;
@@ -844,7 +843,7 @@ jbenden.c-cpp-flylint</pre>
                         ApplyNonAsciiCheck: this.nonAsciiCheck,
                         ShouldInstallL11n: this.instL11n,
                         ShouldUninstallExtensions: this.uninstExt,
-                        GenerateTestFile: this.genTest !== 0 ? this.genTest === 1 ? true : false : null,
+                        GenerateTestFile: this.genTest,
                         GenerateDesktopShortcut: this.genShortcut,
                         OpenVscodeAfterConfig: this.openVscode,
                         NoSendAnalytics: !this.sendAnalytics

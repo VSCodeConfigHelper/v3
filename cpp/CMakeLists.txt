@@ -18,9 +18,14 @@ add_definitions(-DUNICODE -D_UNICODE)
 # https://github.com/boostorg/process/issues/96
 # BOOST_USE_WINDOWS_H also required by Boost.Nowide
 add_definitions(-DBOOST_USE_WINDOWS_H -DWIN32_LEAN_AND_MEAN)
+add_definitions(-DJSON_USE_IMPLICIT_CONVERSIONS)
 
 aux_source_directory(src SOURCES)
 add_executable(VSCodeConfigHelper ${SOURCES})
+
+# load script files into string
+file(READ scripts/pause-console.ps1 PAUSE_CONSOLE_PS1_SRC)
+file(READ scripts/check-ascii.ps1 CHECK_ASCII_PS1_SRC)
 
 configure_file(config.h.in ${CMAKE_BINARY_DIR}/include/config.h)
 target_include_directories(VSCodeConfigHelper PRIVATE ${CMAKE_BINARY_DIR}/include)

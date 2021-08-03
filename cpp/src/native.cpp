@@ -1,6 +1,7 @@
 #include "native.h"
 
 #include <shlobj.h>
+
 #include <boost/nowide/convert.hpp>
 
 namespace Native {
@@ -36,8 +37,8 @@ std::optional<std::string> browseFolder(const std::string& initDir) {
     }
 }
 
-bool createLink(const std::string& link, const std::string& target,
-                const std::string& description, const std::string& args) {
+bool createLink(const std::string& link, const std::string& target, const std::string& description,
+                const std::string& args) {
     HRESULT result = CoInitialize(nullptr);
     if (FAILED(result)) {
         return false;
@@ -61,28 +62,37 @@ bool createLink(const std::string& link, const std::string& target,
     return SUCCEEDED(result);
 }
 
-std::optional<std::string> getRegistry(HKEY hkey, const std::string& path,
-                                        const std::string& key) {
+std::optional<std::string> getRegistry(HKEY hkey, const std::string& path, const std::string& key,
+                                       bool expand) {
     HKEY keyPath;
-    auto result{RegOpenKeyEx(hkey, widen(path).c_str(), 0, KEY_READ, &keyPath)};
+    LSTATUS result{RegOpenKeyEx(hkey, widen(path).c_str(), 0, KEY_READ, &keyPath)};
     if (result != ERROR_SUCCESS) {
         return std::nullopt;
     }
-    DWORD bufsize{1024};
-    wchar_t buffer[1024];
-    result = RegGetValue(keyPath, NULL, widen(key).c_str(), RRF_RT_REG_SZ, NULL, buffer, &bufsize);
+    unsigned int MAX_BUFSIZE{1024};
+    DWORD bufsize{MAX_BUFSIZE};
+    wchar_t buffer[MAX_BUFSIZE];
+    result =
+        RegGetValue(keyPath, nullptr, widen(key).c_str(), RRF_RT_REG_SZ, nullptr, buffer, &bufsize);
     RegCloseKey(keyPath);
     if (result != ERROR_SUCCESS) {
         return std::nullopt;
     } else {
-        return std::string(narrow(buffer));
+        if (expand) {
+            wchar_t buffer2[MAX_BUFSIZE];
+            if (ExpandEnvironmentStrings(buffer, buffer2, MAX_BUFSIZE) == 0)
+                return narrow(buffer);
+            else
+                return narrow(buffer2);
+        }
+        return narrow(buffer);
     }
 }
 
 bool setRegistry(HKEY hkey, const std::string& path, const std::string& key,
                  const std::string& value) {
     HKEY keyPath;
-    auto result{RegOpenKeyEx(hkey, widen(path).c_str(), 0, KEY_WRITE, &keyPath)};
+    LSTATUS result{RegOpenKeyEx(hkey, widen(path).c_str(), 0, KEY_WRITE, &keyPath)};
     if (result != ERROR_SUCCESS) {
         return false;
     }
@@ -94,8 +104,30 @@ bool setRegistry(HKEY hkey, const std::string& path, const std::string& key,
     return result == ERROR_SUCCESS;
 }
 
+std::optional<std::string> getCurrentUserEnv(const std::string& key) {
+    return getRegistry(HKEY_CURRENT_USER, "Environment", key, true);
+}
+
 void setCurrentUserEnv(const std::string& key, const std::string& value) {
     setRegistry(HKEY_CURRENT_USER, "Environment", key, value);
+}
+
+std::optional<std::string> getLocalMachineEnv(const std::string& key) {
+    return getRegistry(HKEY_LOCAL_MACHINE,
+                       "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", key,
+                       true);
+}
+
+std::string getAppdata() {
+    PWSTR path{nullptr};
+    if (SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_DEFAULT, nullptr, &path) != S_OK) {
+        CoTaskMemFree(path);
+        throw std::runtime_error("Failed to get Appdata folder.");
+    } else {
+        std::string result(narrow(path));
+        CoTaskMemFree(path);
+        return result;
+    }
 }
 
 }  // namespace Native

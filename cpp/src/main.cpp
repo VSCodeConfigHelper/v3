@@ -1,12 +1,15 @@
 #include <iostream>
 
-#include "env_resolver.h"
+#include "environment.h"
 #include "server.h"
 #include "logger.h"
 #include "native.h"
 
 #include <boost/nowide/iostream.hpp>
 #include <boost/nowide/filesystem.hpp>
+
+void gui(const Environment& env);
+void cli(const Environment& env);
 
 int main(int argc, char** argv) {
     boost::nowide::nowide_filesystem();
@@ -30,16 +33,16 @@ int main(int argc, char** argv) {
 
     // boost::nowide::cout << r << std::endl;
 
-    // Server s;
-    // int port{s.prepare()};
-    // boost::nowide::cout << port << std::endl;
-    // s.start();
+    // auto r = Native::getAppdata();
+    // boost::nowide::cout << r << std::endl;
 
-    // auto r{EnvResolver::testCompiler("C:\\mingw64\\bin")};
-    // if (r) {
-    //     boost::nowide::cout << r.value() << std::endl;
-    // } else {
-    //     boost::nowide::cout << "nul" << std::endl;
-    // }
-    EnvResolver env;
+    Environment env;
+    gui(env);
+
+}
+
+void gui(const Environment& env) {
+    Server s(env);
+    boost::nowide::cout << s.Port() << std::endl;
+    s.startListen();
 }

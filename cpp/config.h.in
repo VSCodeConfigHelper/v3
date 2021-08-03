@@ -1,3 +1,10 @@
 #pragma once
 
 #define PROJECT_VERSION "@PROJECT_VERSION@"
+
+namespace Embed {
+
+constexpr const char PAUSE_CONSOLE_PS1[]{R"CppRawStr(@PAUSE_CONSOLE_PS1_SRC@)CppRawStr"};
+constexpr const char CHECK_ASCII_PS1[]{R"CppRawStr(@CHECK_ASCII_PS1_SRC@)CppRawStr"};
+
+}
