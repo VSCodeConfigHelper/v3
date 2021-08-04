@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    <head></head>
+    <body>
+        <script>
+            function config() {
+                const port = document.querySelector("#port").value;
+                window.location = `/config.html?port=${port}`;
+            }
+        </script>
+        <input type="text" id="port">
+        <button onclick="config()">start config</button>
+    </body>
+</html>

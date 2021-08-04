@@ -77,7 +77,8 @@
                                             <v-alert v-if="vscodeStatus === 'resolved'" dense text type="success">
                                                 工具检测到您安装的 VS Code 路径如下。如没有任何问题，请点击下一步。</v-alert>
                                             <v-alert v-if="vscodeStatus === 'unresolved'" dense text type="warning">
-                                                工具没有检测到您安装 VS Code，请您前往<a href="https://https://update.code.visualstudio.com/latest/win32-x64-user/stable">此处</a>下载安装。如果您安装了，请在下方提供其安装路径。
+                                                工具没有检测到您安装 VS Code，请您前往<a
+                                                    href="https://https://update.code.visualstudio.com/latest/win32-x64-user/stable">此处</a>下载安装。如果您安装了，请在下方提供其安装路径。
                                             </v-alert>
                                             <v-alert v-if="vscodeStatus === 'invalid'" dense text type="error">
                                                 当前路径下没有检测到 VS Code（<code>Code.exe</code> 不存在）。
@@ -85,7 +86,9 @@
                                             <v-alert v-if="vscodeStatus === 'valid'" dense text type="success">
                                                 当前路径下存在 VS Code。点击下一步以继续。
                                             </v-alert>
-                                            <v-text-field v-model="vscodePath" clearable label="VS Code 安装路径" type="text" append-outer-icon="mdi-folder-open" @click:append-outer="getFolder(vscodePath, 'vscode')">
+                                            <v-text-field v-model="vscodePath" clearable label="VS Code 安装路径"
+                                                type="text" append-outer-icon="mdi-folder-open"
+                                                @click:append-outer="getFolder(vscodePath, 'vscode')">
                                             </v-text-field>
                                         </v-card-text>
                                         <v-card-actions class="pa-0">
@@ -115,10 +118,14 @@
                                                 工具未检测到您的 MinGW 编译环境。请您先手动下载 MinGW。
                                             </v-alert>
                                             <v-radio-group v-model="newCompiler" hide-details>
-                                                <v-radio label="使用已安装的 MinGW……" :disabled="compilers.length === 0"></v-radio>
+                                                <v-radio label="使用已安装的 MinGW……" :disabled="compilers.length === 0">
+                                                </v-radio>
                                                 <v-expand-transition>
                                                     <div v-show="newCompiler === 0" class="mb-2 ml-8">
-                                                        <v-data-table dense hide-default-footer :headers="mingwTableHeader" :items="compilers" item-key="path" show-select single-select v-model="mingwTableSelected">
+                                                        <v-data-table dense hide-default-footer
+                                                            :headers="mingwTableHeader" :items="compilers"
+                                                            item-key="path" show-select single-select
+                                                            v-model="mingwTableSelected">
                                                         </v-data-table>
                                                     </div>
                                                 </v-expand-transition>
@@ -127,23 +134,31 @@
                                                     <div v-show="newCompiler === 1" class="ml-8">
                                                         <div class="d-flex align-center mb-2">
                                                             <div class="flex-grow-1 mr-4 plain-text">
-                                                                若您未安装过 MinGW，请点击右侧按钮下载。下载并解压后，您将得到一个 <code>mingw64</code> 文件夹。建议您将它妥善保存在合适的位置（如 <code>C:\mingw64</code>），并在下方输入其路径。
+                                                                若您未安装过 MinGW，请点击右侧按钮下载。下载并解压后，您将得到一个
+                                                                <code>mingw64</code> 文件夹。建议您将它妥善保存在合适的位置（如
+                                                                <code>C:\mingw64</code>），并在下方输入其路径。
                                                             </div>
-                                                            <v-btn color="primary" text class="rounded-l-pill rounded-r-0" @click="download(mingwDlLinks[0].url)">
+                                                            <v-btn color="primary" text
+                                                                class="rounded-l-pill rounded-r-0"
+                                                                @click="download(mingwDlLinks[0].url)">
                                                                 下载 MinGW
                                                             </v-btn>
                                                             <v-menu open-on-hover bottom offset-y>
                                                                 <template v-slot:activator="{ on, attrs }">
-                                                                    <v-btn v-bind="attrs" v-on="on" color="primary" icon :ripple="false" class="rounded-r-pill rounded-l-0">
+                                                                    <v-btn v-bind="attrs" v-on="on" color="primary" icon
+                                                                        :ripple="false"
+                                                                        class="rounded-r-pill rounded-l-0">
                                                                         <v-icon>mdi-menu-down</v-icon>
                                                                     </v-btn>
                                                                 </template>
                                                                 <v-list dense two-line>
-                                                                    <v-list-item v-for="(item, index) in mingwDlLinks" :key="index" link @click="download(item.url)">
+                                                                    <v-list-item v-for="(item, index) in mingwDlLinks"
+                                                                        :key="index" link @click="download(item.url)">
                                                                         <v-list-item-content>
                                                                             <v-list-item-title>
                                                                                 {{item.title}}
-                                                                                <v-chip v-if="index === 0" color="green" pill outlined x-small>
+                                                                                <v-chip v-if="index === 0" color="green"
+                                                                                    pill outlined x-small>
                                                                                     推荐
                                                                                 </v-chip>
                                                                             </v-list-item-title>
@@ -155,7 +170,10 @@
                                                                 </v-list>
                                                             </v-menu>
                                                         </div>
-                                                        <v-text-field v-model="newCompilerPath" clearable label="MinGW 路径" type="text" append-outer-icon="mdi-folder-open" @click:append-outer="getFolder(newCompilerPath, 'mingw')">
+                                                        <v-text-field v-model="newCompilerPath" clearable
+                                                            label="MinGW 路径" type="text"
+                                                            append-outer-icon="mdi-folder-open"
+                                                            @click:append-outer="getFolder(newCompilerPath, 'mingw')">
                                                         </v-text-field>
                                                         <v-alert v-if="newCompilerValid" dense text type="success">
                                                             检测到 MinGW：
@@ -164,7 +182,8 @@
                                                             <strong>包信息</strong>
                                                             <code>{{newCompilerInfo?.packageInfo}}</code>。
                                                         </v-alert>
-                                                        <v-alert v-if="!newCompilerValid && newCompilerPath !== ''" dense text type="error">此路径下未检测到 MinGW。</v-alert>
+                                                        <v-alert v-if="!newCompilerValid && newCompilerPath !== ''"
+                                                            dense text type="error">{{ newCompilerInvalidReason }}</v-alert>
                                                     </div>
                                                 </v-expand-transition>
                                             </v-radio-group>
@@ -192,14 +211,18 @@
                                     <v-card flat>
                                         <v-card-text class="pa-0">
                                             <div class="plain-text">
-                                                VS Code 的配置大多在特定文件夹下生效，方便您为不同的语言和不同的需求个性化配置。因此，请选择一个<em>工作文件夹</em>，您将来的程序和代码<strong>都需要</strong>存放在此处。
+                                                VS Code
+                                                的配置大多在特定文件夹下生效，方便您为不同的语言和不同的需求个性化配置。因此，请选择一个<em>工作文件夹</em>，您将来的程序和代码<strong>都需要</strong>存放在此处。
                                             </div>
-                                            <v-text-field v-model="workspacePath" clearable label="工作文件夹路径" type="text" append-outer-icon="mdi-folder-open" @click:append-outer="getFolder(workspacePath, 'workspace')">
+                                            <v-text-field v-model="workspacePath" clearable label="工作文件夹路径" type="text"
+                                                append-outer-icon="mdi-folder-open"
+                                                @click:append-outer="getFolder(workspacePath, 'workspace')">
                                             </v-text-field>
                                             <v-alert v-if="!isAscii(workspacePath)" dense text type="error">
                                                 路径不能包含中文或特殊字符（仅能使用 ASCII 字符）。
                                             </v-alert>
-                                            <v-alert v-if="isAscii(workspacePath) && workspaceStatus === 'warn'" dense text type="warning">
+                                            <v-alert v-if="isAscii(workspacePath) && workspaceStatus === 'warn'" dense
+                                                text type="warning">
                                                 此工作文件夹下已有配置。若继续则旧配置会被覆盖。
                                             </v-alert>
                                         </v-card-text>
@@ -225,7 +248,8 @@
                                 <v-stepper-content step="4">
                                     <v-card flat>
                                         <v-card-text class="pa-0">
-                                            <v-btn-toggle rounded dense mandatory class="ma-1" color="primary" v-model="optionsProfile">
+                                            <v-btn-toggle rounded dense mandatory class="ma-1" color="primary"
+                                                v-model="optionsProfile">
                                                 <v-btn @click="applyProfile('default')">
                                                     <v-icon small class="mr-1">mdi-settings</v-icon>使用默认设置
                                                 </v-btn>
@@ -248,33 +272,57 @@
                                                         </v-tabs>
                                                         <v-tabs-items v-model="optionsTab" class="my-3">
                                                             <v-tab-item>
-                                                                <v-radio-group row label="你将使用什么语言编写代码？" v-model="language">
+                                                                <v-radio-group row label="你将使用什么语言编写代码？"
+                                                                    v-model="language">
                                                                     <v-radio label="C++ 语言"></v-radio>
                                                                     <v-radio label="C 语言"></v-radio>
                                                                 </v-radio-group>
-                                                                <v-select v-if="language === 0" dense outlined hide-details label="语言标准" :items="cppStandards" v-model="cppStandard"></v-select>
-                                                                <v-select v-if="language === 1" dense outlined hide-details label="语言标准" :items="cStandards" v-model="cStandard"></v-select>
-                                                                <v-switch hide-details class="mt-2" v-model="gnuEx" label="启用 GNU 扩展语法"></v-switch>
+                                                                <v-select v-if="language === 0" dense outlined
+                                                                    hide-details label="语言标准" :items="cppStandards"
+                                                                    v-model="cppStandard"></v-select>
+                                                                <v-select v-if="language === 1" dense outlined
+                                                                    hide-details label="语言标准" :items="cStandards"
+                                                                    v-model="cStandard"></v-select>
+                                                                <v-switch hide-details class="mt-2" v-model="gnuEx"
+                                                                    label="启用 GNU 扩展语法"></v-switch>
                                                             </v-tab-item>
                                                             <v-tab-item>
-                                                                <v-select class="mt-5" dense outlined hide-details clearable label="优化级别" :items="['-O1', '-O2', '-O3', '-Ofast', '-Og']" v-model="optimization"></v-select>
-                                                                <v-checkbox hide-details class="mt-2" v-model="wall" label="全部警告（-Wall）"></v-checkbox>
-                                                                <v-checkbox hide-details class="mt-2" v-model="wextra" label="额外警告（-Wextra）"></v-checkbox>
-                                                                <v-checkbox hide-details class="mt-2" v-model="werror" label="视警告为错误（-Werror）"></v-checkbox>
-                                                                <v-checkbox hide-details class="mt-2" v-model="staticStd" label="静态链接标准库（-static-libgcc，-static-libstdc++）"></v-checkbox>
-                                                                <v-combobox dense outlined hide-details class="mt-2" v-model="customOptions" label="其它自定义选项" multiple small-chips></v-combobox>
+                                                                <v-select class="mt-5" dense outlined hide-details
+                                                                    clearable label="优化级别"
+                                                                    :items="['-O1', '-O2', '-O3', '-Ofast', '-Og']"
+                                                                    v-model="optimization"></v-select>
+                                                                <v-checkbox hide-details class="mt-2" v-model="wall"
+                                                                    label="全部警告（-Wall）"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="wextra"
+                                                                    label="额外警告（-Wextra）"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="werror"
+                                                                    label="视警告为错误（-Werror）"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2"
+                                                                    v-model="staticStd"
+                                                                    label="静态链接标准库（-static-libgcc，-static-libstdc++）">
+                                                                </v-checkbox>
+                                                                <v-combobox dense outlined hide-details class="mt-2"
+                                                                    v-model="customOptions" label="其它自定义选项" multiple
+                                                                    small-chips></v-combobox>
                                                             </v-tab-item>
                                                             <v-tab-item>
-                                                                <v-radio-group hide-details label="调试样式" v-model="dbgStyle">
+                                                                <v-radio-group hide-details label="调试样式"
+                                                                    v-model="dbgStyle">
                                                                     <v-radio label="内置终端样式（默认）"></v-radio>
                                                                     <v-radio label="外部弹窗样式（仿 VS / Dev-C++）"></v-radio>
                                                                 </v-radio-group>
-                                                                <v-switch hide-details class="mt-2" v-model="nonAsciiCheck" label="调试中文文件名前给出警告"></v-switch>
+                                                                <v-switch hide-details class="mt-2"
+                                                                    v-model="nonAsciiCheck" label="调试中文文件名前给出警告">
+                                                                </v-switch>
                                                             </v-tab-item>
                                                             <v-tab-item>
-                                                                <v-switch hide-details class="mt-2" v-model="instL11n" label="安装中文语言包扩展"></v-switch>
-                                                                <v-switch hide-details class="my-2" v-model="uninstExt" label="卸载多余的 VS Code 扩展"></v-switch>
-                                                                <div>为避免给新手的配置造成不必要的麻烦，我们将<strong class="red--text">卸载</strong>一些扩展。这些扩展要么不提供任何功能，要么会与我们的配置冲突并造成干扰。启用上述开关会卸载的扩展有：</div>
+                                                                <v-switch hide-details class="mt-2" v-model="instL11n"
+                                                                    label="安装中文语言包扩展"></v-switch>
+                                                                <v-switch hide-details class="my-2" v-model="uninstExt"
+                                                                    label="卸载多余的 VS Code 扩展"></v-switch>
+                                                                <div>为避免给新手的配置造成不必要的麻烦，我们将<strong
+                                                                        class="red--text">卸载</strong>一些扩展。这些扩展要么不提供任何功能，要么会与我们的配置冲突并造成干扰。启用上述开关会卸载的扩展有：
+                                                                </div>
                                                                 <pre>formulahendry.code-runner
 austin.code-gnu-global
 danielpinto8zz6.c-cpp-compile-run
@@ -286,18 +334,24 @@ xaver.clang-format
 jbenden.c-cpp-flylint</pre>
                                                             </v-tab-item>
                                                             <v-tab-item>
-                                                                <v-checkbox hide-details class="mt-2" v-model="setEnv" label="添加 MinGW 到 Path 环境变量"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="setEnv"
+                                                                    label="添加 MinGW 到 Path 环境变量"></v-checkbox>
                                                                 <div class="d-flex align-center">
                                                                     <span class="v-label mr-3">是否生成测试文件？</span>
-                                                                    <v-chip-group mandatory active-class="primary--text" v-model="genTest" class="flex-grow-1">
+                                                                    <v-chip-group mandatory active-class="primary--text"
+                                                                        v-model="genTest" class="flex-grow-1">
                                                                         <v-chip v-for="i in genTestText" :key="i" small>
                                                                             {{ i }}
                                                                         </v-chip>
                                                                     </v-chip-group>
                                                                 </div>
-                                                                <v-checkbox hide-details class="mt-0" v-model="genShortcut" label="生成桌面快捷方式"></v-checkbox>
-                                                                <v-checkbox hide-details class="mt-2" v-model="openVscode" label="配置完成后启动 VS Code"></v-checkbox>
-                                                                <v-checkbox hide-details class="mt-2" v-model="sendAnalytics" label="发送统计数据"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-0"
+                                                                    v-model="genShortcut" label="生成桌面快捷方式"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2"
+                                                                    v-model="openVscode" label="配置完成后启动 VS Code">
+                                                                </v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2"
+                                                                    v-model="sendAnalytics" label="发送统计数据"></v-checkbox>
                                                             </v-tab-item>
                                                         </v-tabs-items>
                                                     </v-card-text>
@@ -333,7 +387,8 @@ jbenden.c-cpp-flylint</pre>
                                                             <dt>安装中文语言包扩展</dt>
                                                             <dd>{{ instL11n ? '是' : '否' }}</dd>
                                                             <dt>卸载多余扩展</dt>
-                                                            <dd :class="{ 'red--text' : uninstExt }">{{ uninstExt ? '是' : '否' }}</dd>
+                                                            <dd :class="{ 'red--text' : uninstExt }">{{ uninstExt ? '是'
+                                                                : '否' }}</dd>
                                                             <dt>设置环境变量</dt>
                                                             <dd>{{ setEnv ? '是' : '否' }}</dd>
                                                             <dt>生成测试文件</dt>
@@ -370,6 +425,9 @@ jbenden.c-cpp-flylint</pre>
                             </v-stepper>
                         </v-col>
                     </v-row>
+                    <v-overlay :value="configuring" :z-index="300">
+                        <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                    </v-overlay>
                 </v-container>
             </v-main>
         </v-app>
@@ -379,480 +437,7 @@ jbenden.c-cpp-flylint</pre>
     <script src="https://cdn.jsdelivr.net/npm/rxjs@6.6.7/bundles/rxjs.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue-rx@6.2.0/dist/vue-rx.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
-    <script>
-        /**
-         * Get the directory name of path
-         * @param path {string}
-         * @return {string}
-         */
-        function dirname(path) {
-            return path.match(/(.*)[\/\\]/)[1] || '';
-        }
-        /**
-         * Determines whether a string is all ascii characters
-         * @param str {string}
-         * @return {boolean}
-         */
-        function isAscii(str) {
-            return /^[\x20-\x7F]*$/.test(str);
-        }
-        const DEBOUNCE_TIME = 200;
-        const GYTX_LINK = "https://gytx.lanzoux.com/ibibbokvokj";
-        const TDM_LINK = "https://wws.lanzoux.com/iMhd6ge4qkf";
-        const MINGW_LINK = "https://wws.lanzoux.com/iuRLbge4bni";
-        const HOST = "http://localhost:8000";
-        const LANG_CPP = 0;
-        const LANG_C = 1;
-        const STYLE_INTERNAL = 0;
-        const STYLE_EXTERNAL = 1;
-        const vm = new Vue({
-            el: '#app',
-            created: function () {
-                fetch(`${HOST}/getEnv`, {
-                    method: 'POST'
-                }).then(r => r.json()).then(v => {
-                    console.log(v);
-                    if (v.VscodePath === null) {
-                        this.vscodeStatus = "unresolved";
-                        this.vscodePath = "";
-                    } else {
-                        this.vscodeStatus = "resolved";
-                        // Get folder name (not exe)
-                        this.vscodePath = dirname(v.VscodePath);
-                    }
-                    this.compilers = v.Compilers.map(m => ({
-                        path: dirname(m.Path),
-                        version: m.VersionNumber,
-                        packageInfo: m.PackageString
-                    }));
-                    // select the first one only if there is only one
-                    if (this.compilers.length === 1) {
-                        this.mingwTableSelected.push(this.compilers[0]);
-                    }
-                    this.newCompiler = this.compilers.length === 0 ? 1 : 0;
-                }).then(() => this.loadProfile());
-            },
-            data: {
-                currentStep: 1,
-                vscodePath: "",
-                vscodeStatus: "resolved",
-                mingwTableHeader: [
-                    {
-                        text: '路径',
-                        value: 'path'
-                    },
-                    {
-                        text: '版本',
-                        value: 'version'
-                    },
-                    {
-                        text: '包信息',
-                        value: 'packageInfo'
-                    }
-                ],
-                /** @type {{
-                 *  path: string, // Without 'bin'!
-                 *  version: string,
-                 *  packageInfo: string
-                 * }[] }*/
-                compilers: [], 
-                mingwTableSelected: [],
-                newCompiler: 0,
-                newCompilerPath: "",
-                newCompilerValid: false,
-                newCompilerInfo: {},
-                mingwDlLinks: [
-                    {
-                        title: "最新版",
-                        subtitle: "由谷雨同学构建",
-                        url: GYTX_LINK
-                    },
-                    {
-                        title: "TDM-GCC",
-                        subtitle: "经过优化的版本",
-                        url: TDM_LINK
-                    },
-                    {
-                        title: "官方版",
-                        subtitle: "SourceForge 提供",
-                        url: MINGW_LINK
-                    }
-                ],
-                workspacePath: "",
-                workspaceStatus: "ok",
-                optionsProfile: 2,
-                optionsTab: 0,
-                language: 0, // 0: C++, 1: C
-                cStandards: [
-                    {
-                        text: '根据编译器自动选择',
-                        value: ''
-                    },
-                    {
-                        text: 'C89',
-                        value: 'c89'
-                    },
-                    {
-                        text: 'C99',
-                        value: 'c99'
-                    },
-                    {
-                        text: 'C11',
-                        value: 'c11'
-                    },
-                    {
-                        text: 'C18',
-                        value: 'c18'
-                    }
-                ],
-                cppStandards: [
-                    {
-                        text: '根据编译器自动选择',
-                        value: ''
-                    },
-                    {
-                        text: 'C++98',
-                        value: 'c++98'
-                    },
-                    {
-                        text: 'C++03',
-                        value: 'c++03'
-                    },
-                    {
-                        text: 'C++11',
-                        value: 'c++11'
-                    },
-                    {
-                        text: 'C++14',
-                        value: 'c++14'
-                    },
-                    {
-                        text: 'C++17',
-                        value: 'c++17'
-                    },
-                    {
-                        text: 'C++20',
-                        value: 'c++20'
-                    },
-                    {
-                        text: 'C++23',
-                        value: 'c++23'
-                    }
-                ],
-                cStandard: '',
-                cppStandard: '',
-                gnuEx: false,
-                optimization: '',
-                wall: false,
-                wextra: false,
-                werror: false,
-                staticStd: false,
-                customOptions: [],
-                dbgStyle: 0, // 0: internal, 1: external
-                nonAsciiCheck: false,
-                instL11n: false,
-                uninstExt: false,
-                setEnv: true,
-                genTest: 0,
-                genTestText: ['自动', '重新生成', '不生成'],
-                genShortcut: false,
-                openVscode: true,
-                sendAnalytics: true,
-                confirmDiag: false,
-            },
-            computed: {
-                vscodeOk: function () {
-                    return this.vscodeStatus === 'valid' || this.vscodeStatus === 'resolved';
-                },
-                mingw: function () {
-                    if (this.newCompiler === 0) {
-                        return this.mingwTableSelected.length === 1 ? this.mingwTableSelected[0] : null;
-                    } else {
-                        return this.newCompilerInfo;
-                    }
-                },
-                mingwOk: function () {
-                    if (this.newCompiler === 0) {
-                        return this.mingwTableSelected.length === 1;
-                    } else {
-                        return this.newCompilerValid;
-                    }
-                },
-                workspaceOk: function () {
-                    /** @type {string} */
-                    const trimmed = this.workspacePath.trim();
-                    if (trimmed === "") return false;
-                    return isAscii(trimmed);
-                },
-                standardId: function () {
-                    function getLatestSupportStandardFromCompiler(version) {
-                        if (!version) return ['c++14', 'c11'];
-                        const majorVersion = parseInt(version.split('.')[0]);
-                        if (majorVersion < 5) {
-                            const minorVersion = parseInt(version.split('.')[1]);
-                            if (majorVersion === 4 && minorVersion > 7) {
-                                return ['c++11', 'c11'];
-                            } else {
-                                return ['c++98', 'c99'];
-                            }
-                        } else {
-                            switch (majorVersion) {
-                                case 5: return ['c++14', 'c11'];
-                                case 6: return ['c++14', 'c11'];
-                                case 7: return ['c++14', 'c11'];
-                                case 8: return ['c++17', 'c18'];
-                                case 9: return ['c++17', 'c18'];
-                                case 10: return ['c++20', 'c18'];
-                                case 11: return ['c++23', 'c18'];
-
-                                default: return ['c++14', 'c11'];
-                            }
-                        }
-                    }
-                    if (this.language === LANG_CPP) {
-                        const standard = this.cppStandard === "" ? getLatestSupportStandardFromCompiler(this.mingw?.version)[0] : this.cppStandard;
-                        if (this.gnuEx === true) {
-                            return standard.replace("c++", "gnu++");
-                        } else {
-                            return standard;
-                        }
-                    } else {
-                        const standard = this.cStandard === "" ? getLatestSupportStandardFromCompiler(this.mingw?.version)[1] : this.cStandard;
-                        if (this.gnuEx === true) {
-                            return standard.replace("c", "gnu");
-                        } else {
-                            return standard;
-                        }
-                    }
-                },
-                compileArgs: function () {
-                    const args = [];
-                    args.push("-std=" + this.standardId);
-                    if (this.optimization !== "") {
-                        args.push(this.optimization);
-                    }
-                    if (this.wall === true) {
-                        args.push("-Wall");
-                    }
-                    if (this.wextra === true) {
-                        args.push("-Wextra");
-                    }
-                    if (this.werror === true) {
-                        args.push("-Werror");
-                    }
-                    if (this.staticStd === true) {
-                        args.push("-static-libgcc");
-                        if (this.language === LANG_CPP) {
-                            args.push("-static-libstdc++");
-                        }
-                    }
-                    return args.concat(this.customOptions);
-                }
-            },
-            subscriptions: function () {
-                this.$watchAsObservable('vscodePath').pipe(
-                    rxjs.operators.debounceTime(DEBOUNCE_TIME),
-                    rxjs.operators.switchMap(() => {
-                        return rxjs.from(fetch(`${HOST}/verifyVscode`, {
-                            method: "POST",
-                            body: this.vscodePath
-                        }).then(r => r.text()));
-                    }),
-                    rxjs.operators.tap(console.log)
-                ).subscribe(v => {
-                    if (this.vscodeStatus === "resolved" && v === "valid")
-                        return;
-                    this.vscodeStatus = v;
-                });
-                this.$watchAsObservable('newCompilerPath').pipe(
-                    rxjs.operators.debounceTime(DEBOUNCE_TIME),
-                    rxjs.operators.switchMap(() => {
-                        return rxjs.from(fetch(`${HOST}/verifyCompiler`, {
-                            method: 'POST',
-                            body: this.newCompilerPath
-                        }).then(r => r.json()));
-                    }),
-                ).subscribe(v => {
-                    this.newCompilerValid = v.valid;
-                    if (v.valid === true) {
-                        this.newCompilerInfo = {
-                            path: dirname(v.info.Path),
-                            version: v.info.VersionNumber,
-                            packageInfo: v.info.PackageString
-                        }
-                    }
-                });
-                this.$watchAsObservable('workspacePath').pipe(
-                    rxjs.operators.debounceTime(DEBOUNCE_TIME),
-                    rxjs.operators.filter(v => v !== ""),
-                    rxjs.operators.switchMap(() => {
-                        return rxjs.from(fetch(`${HOST}/verifyWorkspace`, {
-                            method: 'POST',
-                            body: this.workspacePath
-                        }).then(r => r.text()));
-                    })
-                ).subscribe(v => {
-                    this.workspaceStatus = v;
-                });
-                return {
-                };
-            },
-            methods: {
-                isAscii: isAscii,
-                download: function (url) {
-                    window.open(url, '_blank');
-                },
-                next: function () {
-                    this.currentStep++;
-                },
-                prev: function () {
-                    this.currentStep--;
-                },
-                cancel: async function () {
-                    // this.currentStep = 1;
-                    try {
-                        await this.saveProfile();
-                    } catch (_) { }
-                    if (confirm('确定中止本次配置吗？')) {
-                        fetch(`${HOST}/done`, {
-                            method: "POST",
-                            body: JSON.stringify({
-                                success: false
-                            })
-                        }).then(r => r.text()).then(console.log).finally(() => {
-                            alert("配置已中止，您可以关闭此页面了。");
-                            window.location = "about:blank";
-                        });
-                    }
-                },
-                finish: async function () {
-                    await this.saveProfile();
-                    const result = this.getConfigResult();
-                    fetch(`${HOST}/done`, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            success: true,
-                            config: result
-                        })
-                    }).then(r => r.text()).then(console.log).then(() => {
-                        window.location = "about:blank";
-                    });
-                },
-                getFolder: function (initDir, target) {
-                    fetch(`${HOST}/getFolder`, {
-                        method: "POST",
-                        body: initDir ?? ""
-                    }).then(r => r.text()).then(data => {
-                        if (data !== "") {
-                            switch (target) {
-                                case "mingw": this.newCompilerPath = data; break;
-                                case "vscode": this.vscodePath = data; break;
-                                case "workspace": this.workspacePath = data; break;
-                            }
-                        }
-                    });
-                },
-                applyProfile: function (type) {
-                    if (type === 'default') {
-                        this.language = LANG_CPP;
-                        this.cppStandard = '';
-                        this.cStandard = '';
-                        this.gnuEx = false;
-                        this.optimization = '';
-                        this.wall = false;
-                        this.wextra = false;
-                        this.werror = false;
-                        this.staticStd = false;
-                        this.dbgStyle = STYLE_INTERNAL;
-                        this.nonAsciiCheck = false;
-                        this.instL11n = false;
-                        this.uninstExt = false;
-                        this.setEnv = true;
-                        this.genTest = 0;
-                        this.genShortcut = false;
-                        this.openVscode = true;
-                        this.sendAnalytics = true;
-                    } else if (type === 'newbie') {
-                        this.language = LANG_CPP;
-                        this.cppStandard = '';
-                        this.cStandard = '';
-                        this.gnuEx = false;
-                        this.optimization = '';
-                        this.wall = true;
-                        this.wextra = true;
-                        this.staticStd = false;
-                        this.dbgStyle = STYLE_EXTERNAL;
-                        this.nonAsciiCheck = true;
-                        this.instL11n = true;
-                        this.uninstExt = true;
-                        this.setEnv = true;
-                        this.genTest = 0;
-                        this.genShortcut = true;
-                        this.openVscode = true;
-                        this.sendAnalytics = true;
-                    } else {
-                        throw new Error(`Unknown profile type: ${type}`);
-                    }
-                },
-                saveProfile: function () {
-                    return fetch(`${HOST}/saveProfile`, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            language: this.language,
-                            cppStandard: this.cppStandard,
-                            cStandard: this.cStandard,
-                            gnuEx: this.gnuEx,
-                            optimization: this.optimization,
-                            wall: this.wall,
-                            wextra: this.wextra,
-                            werror: this.werror,
-                            staticStd: this.staticStd,
-                            dbgStyle: this.dbgStyle,
-                            nonAsciiCheck: this.nonAsciiCheck,
-                            instL11n: this.instL11n,
-                            uninstExt: this.uninstExt,
-                            setEnv: this.setEnv,
-                            genTest: this.genTest,
-                            genShortcut: this.genShortcut,
-                            openVscode: this.openVscode,
-                            sendAnalytics: this.sendAnalytics
-                        })
-                    }).then(r => r.text()).then(console.log);
-                },
-                loadProfile: function () {
-                    fetch(`${HOST}/loadProfile`, {
-                        method: 'POST',
-                    }).then(r => r.json()).then(data => {
-                        if (data === null) return;
-                        for (const key in data) {
-                            this[key] = data[key];
-                        }
-                    });
-                },
-                getConfigResult: function () {
-                    // match 'class ConfigOptions' in backend
-                    return {
-                        VscodePath: this.vscodePath + "\\Code.exe",
-                        MingwPath: this.mingw?.path + "\\bin" ?? null,
-                        WorkspacePath: this.workspacePath,
-                        Language: this.language,
-                        LanguageStandard: this.standardId,
-                        CompileArgs: this.compileArgs,
-                        NoSetEnv: !this.setEnv,
-                        UseExternalTerminal: this.dbgStyle === STYLE_EXTERNAL,
-                        ApplyNonAsciiCheck: this.nonAsciiCheck,
-                        ShouldInstallL11n: this.instL11n,
-                        ShouldUninstallExtensions: this.uninstExt,
-                        GenerateTestFile: this.genTest,
-                        GenerateDesktopShortcut: this.genShortcut,
-                        OpenVscodeAfterConfig: this.openVscode,
-                        NoSendAnalytics: !this.sendAnalytics
-                    };
-                },
-            },
-            vuetify: new Vuetify(),
-        });
-    </script>
+    <script src="config.js"></script>
 </body>
 
 </html>
