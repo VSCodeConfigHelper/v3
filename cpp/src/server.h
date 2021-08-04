@@ -26,4 +26,6 @@ public:
 
     int Port() const;
     void startListen();
+
+    static void runGui(const Environment& env);
 };

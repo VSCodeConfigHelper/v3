@@ -1,6 +1,7 @@
 #include "native.h"
 
 #include <shlobj.h>
+#include <conio.h>
 
 #include <boost/nowide/convert.hpp>
 
@@ -128,6 +129,10 @@ std::string getAppdata() {
         CoTaskMemFree(path);
         return result;
     }
+}
+
+char getch() {
+    return static_cast<char>(std::tolower(_getch()));
 }
 
 }  // namespace Native

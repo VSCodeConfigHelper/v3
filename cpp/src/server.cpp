@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <iostream>
 #include <iterator>
 #include <sstream>
 
@@ -29,7 +30,7 @@ void Server::setHandlers() {
     }});
     handlers.insert({"/getFolder", [](const std::string& initDir) {
         auto result{Native::browseFolder(initDir)};
-        return result ? result.value() : "";
+        return result ? *result : "";
     }});
     handlers.insert({"/verifyVscode", [](const std::string& p) {
         fs::path path(p);
@@ -48,8 +49,8 @@ void Server::setHandlers() {
             path = path / "bin";
         }
         auto versionText{Environment::testCompiler(path)};
-        if (versionText.has_value()) {
-            CompilerInfo info(path.string(), versionText.value());
+        if (versionText) {
+            CompilerInfo info(path.string(), *versionText);
             return nlohmann::json({
                 { "valid", true },
                 { "info", info }
@@ -123,4 +124,10 @@ int Server::Port() const {
 
 void Server::startListen() {
     server.listen_after_bind();
+}
+
+void Server::runGui(const Environment& env) {
+    Server s(env);
+    std::cout << s.port << std::endl;
+    s.startListen();
 }

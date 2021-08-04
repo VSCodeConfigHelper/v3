@@ -6,7 +6,7 @@
 #include <boost/process.hpp>
 #include <sstream>
 
-#include "logger.h"
+#include "log.h"
 #include "native.h"
 
 namespace bp = boost::process;
@@ -26,11 +26,11 @@ Environment::Environment() {
     for (auto&& path : getPaths()) {
         auto versionText{testCompiler(path)};
         if (versionText) {
-            compilers.push_back(CompilerInfo(path, versionText.value()));
+            compilers.push_back(CompilerInfo(path, *versionText));
         }
     }
     LOG_INF("解析环境完成。");
-    LOG_DBG("Resolved vscode path: ", vscodePath ? vscodePath.value() : "null");
+    LOG_DBG("Resolved vscode path: ", vscodePath ? *vscodePath : "null");
     LOG_DBG("Resolved compilers: ");
     for (auto&& compiler : compilers) {
         LOG_DBG("  ", compiler.Path, ": ", compiler.VersionText);
@@ -45,10 +45,10 @@ std::optional<std::string> Environment::getVscodePath() {
     // "C:\Program Files\Microsoft VS Code\Code.exe" --open-url -- "%1"
     // and we just use the string inside the first quotation marks
     std::vector<std::string> parts;
-    boost::split(parts, result.value(), boost::is_any_of("\""));
+    boost::split(parts, *result, boost::is_any_of("\""));
     if (parts.size() < 2) return std::nullopt;
     const std::string& vscodePath = parts.at(1);
-    if (result.has_value() && fs::exists(vscodePath)) {
+    if (fs::exists(vscodePath)) {
         LOG_DBG("Found VS Code path: ", vscodePath);
         return vscodePath;
     }
@@ -60,13 +60,13 @@ std::unordered_set<std::string> Environment::getPaths() {
 
     auto usrPath{Native::getCurrentUserEnv("Path")};
     auto sysPath{Native::getLocalMachineEnv("Path")};
-    LOG_DBG("User Path: ", usrPath ? usrPath.value() : "");
-    LOG_DBG("System Path: ", sysPath ? sysPath.value() : "");
+    LOG_DBG("User Path: ", usrPath ? *usrPath : "");
+    LOG_DBG("System Path: ", sysPath ? *sysPath : "");
 
     std::ostringstream allPath;
-    if (usrPath.has_value()) allPath << usrPath.value();
+    if (usrPath) allPath << *usrPath;
     allPath << ';';
-    if (sysPath.has_value()) allPath << sysPath.value();
+    if (sysPath) allPath << *sysPath;
 
     // https://stackoverflow.com/a/47923278
     boost::regex pathSplitter(";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");

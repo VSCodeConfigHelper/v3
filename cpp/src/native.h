@@ -1,3 +1,5 @@
+#pragma once
+
 #include <windows.h>
 
 #include <optional>
@@ -21,5 +23,7 @@ void setCurrentUserEnv(const std::string& key, const std::string& value);
 std::optional<std::string> getLocalMachineEnv(const std::string& key);
 
 std::string getAppdata();
+
+char getch();
 
 }  // namespace Native

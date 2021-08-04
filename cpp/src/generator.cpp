@@ -1,14 +1,15 @@
 #include "generator.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
 #include <boost/assign.hpp>
-#include <boost/nowide/iostream.hpp>
 #include <boost/process.hpp>
+#include <iostream>
 #include <nlohmann/json.hpp>
 #include <sstream>
 
 #include "config.h"
-#include "logger.h"
+#include "log.h"
 #include "native.h"
 
 namespace bp = boost::process;
@@ -131,7 +132,26 @@ void Generator::addKeybinding(const std::string& key, const std::string& command
     fs::save_string_file(filepath, resultStr);
 }
 
-void Generator::addToPath(const fs::path& path) {}
+void Generator::addToPath(const fs::path& path) {
+    auto newPath{path.string()};
+    LOG_INF("将 ", newPath, " 添加到环境变量 Path 中...");
+    auto origin{Native::getCurrentUserEnv("Path")};
+    auto originalPath{origin ? *origin : ""};
+    std::list<std::string> paths;
+    boost::regex pathSplitter(";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+    boost::split_regex(paths, originalPath, pathSplitter);
+    if (auto it{std::find(paths.begin(), paths.end(), newPath)}; it != paths.end()) {
+        LOG_INF("环境变量 Path 已经包含 ", newPath, "。将其移动到最前。");
+        paths.erase(it);
+        paths.push_front(newPath);
+    } else {
+        LOG_INF("环境变量 Path 中未包含 ", newPath, "。将其添加。");
+        paths.push_front(newPath);
+    }
+    auto result{boost::join(paths, ";")};
+    LOG_DBG("Final Path: ", result);
+    Native::setCurrentUserEnv("Path", result);
+}
 
 void Generator::generateTasksJson(const fs::path& path) {
     using json = nlohmann::json;
@@ -139,35 +159,161 @@ void Generator::generateTasksJson(const fs::path& path) {
     auto args{options.CompileArgs};
     args += "-g", "${file}", "-o", "${fileDirname}\\${fileBasenameNoExtension}.exe";
     // clang-format off
+    auto sfbTask(json::object({
+        {"type", "cppbuild"},
+        {"label", "gcc single file build"},
+        {"command", (fs::path(options.MingwPath) / compilerExe()).string()},
+        {"args", args},
+        {"group", json::object({
+            {"kind", "build"},
+            {"isDefault", true}
+        })},
+        {"presentation", json::object({
+            {"reveal", "silent"},
+            {"focus", false},
+            {"echo", false},
+            {"showReuseMessage", false},
+            {"panel", "shared"},
+            {"clear", true}
+        })},
+        {"problemMatcher", "$gcc"}
+    }));
+    auto pauseTask(json::object({
+        {"type", "shell"},
+        {"label", "run and pause"},
+        {"command", "START"},
+        {"dependsOn", "gcc single file build"},
+        {"args", json::array({
+            "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            "-ExecutionPolicy",
+            "ByPass",
+            "-NoProfile",
+            "-File",
+            (fs::path(options.MingwPath) / "pause-console.ps1").string(),
+            "${fileDirname}\\${fileBasenameNoExtension}.exe"
+        })},
+        {"presentation", json::object({
+            {"reveal", "never"},
+            {"focus", false},
+            {"echo", false},
+            {"showReuseMessage", false},
+            {"panel", "shared"},
+            {"clear", true}
+        })},
+        {"problemMatcher", json::array()}
+    }));
+    auto asciiTask(json::object({
+        {"type", "process"},
+        {"label", "check ascii"},
+        {"command", "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe"},
+        {"dependsOn", "gcc single file build"},
+        {"args", json::array({
+            "-ExecutionPolicy",
+            "ByPass",
+            "-NoProfile",
+            "-File",
+            (fs::path(options.MingwPath) / "check-ascii.ps1").string(),
+            "${fileDirname}\\${fileBasenameNoExtension}.exe"
+        })},
+        {"presentation", json::object({
+            {"reveal", "never"},
+            {"focus", false},
+            {"echo", false},
+            {"showReuseMessage", false},
+            {"panel", "shared"},
+            {"clear", true}
+        })},
+        {"problemMatcher", json::array()}
+    }));
+    auto allTasks(json::array({sfbTask}));
+    if (options.UseExternalTerminal)
+        allTasks += pauseTask;
+    if (options.ApplyNonAsciiCheck)
+        allTasks += asciiTask;
     auto result(json::object({
         {"version", "2.0.0"},
-        {"tasks", json::array({
+        {"tasks", allTasks},
+        {"options", json::object({
+            {"shell", json::object({
+                {"executable", "C:\\Windows\\System32\\cmd.exe"},
+                {"args", json::array({
+                    "/C"
+                })}
+            })},
+            {"env", json::object({
+                {"Path", options.MingwPath + ";${env:Path}"}
+            })}
+        })}
+    }));
+    // clang-format on
+    auto resultStr{result.dump(2)};
+    LOG_DBG(resultStr);
+    fs::save_string_file(path, resultStr);
+}
+
+void Generator::generateLaunchJson(const fs::path& path) {
+    using json = nlohmann::json;
+    LOG_INF("生成 ", path.string(), " ...");
+    // clang-format off
+    auto result(json::object({
+        {"version", "0.2.0"},
+        {"configurations", json::array({
             json::object({
-                {"type", "cppbuild"},
-                {"label", "gcc single file build"},
-                {"command", (fs::path(options.MingwPath) / compilerExe()).string()},
-                {"args", args},
-                {"group", json::object({
-                    {"kind", "build"},
-                    {"isDefault", true}
+                {"name", "gcc single file debug"},
+                {"type", "cppdbg"},
+                {"request", "launch"},
+                {"program", "${fileDirname}\\${fileBasenameNoExtension}.exe"},
+                {"args", json::array({})},
+                {"stopAtEntry", false},
+                {"cwd", "${fileDirname}"},
+                {"environment", json::array({})},
+                {"externalConsole", options.UseExternalTerminal},
+                {"MIMode", "gdb"},
+                {"miDebuggerPath", (fs::path(options.MingwPath) / "gdb.exe").string()},
+                {"setupCommands", json::array({
+                    json::object({
+                        {"text", "-enable-pretty-printing"},
+                        {"ignoreFailures", true}
+                    })
                 })},
-                {"presentation", json::object({
-                    {"reveal", "silent"},
-                    {"focus", false},
-                    {"showReuseMessage", false},
-                    {"panel", "shared"},
-                    {"clear", true}
-                })},
-                {"problemMatcher", "$gcc"}
+                {"preLaunchTask", options.ApplyNonAsciiCheck ? "check ascii" : "gcc single file build"},
+                {"internalConsoleOptions", "neverOpen"}
             })
         })}
     }));
     // clang-format on
-    LOG_DBG(result.dump());
+    auto resultStr{result.dump(2)};
+    LOG_DBG(resultStr);
+    fs::save_string_file(path, resultStr);
 }
-
-void Generator::generateLaunchJson(const fs::path& path) {}
-void Generator::generatePropertiesJson(const fs::path& path) {}
+void Generator::generatePropertiesJson(const fs::path& path) {
+    using json = nlohmann::json;
+    LOG_INF("生成 ", path.string(), " ...");
+    // clang-format off
+    auto result(json::object({
+        {"version", 4},
+        {"configurations", json::array({
+            json::object({
+                {"name", "gcc"},
+                {"includePath", json::array({
+                    "${workspaceFolder}/**"
+                })},
+                {"compilerPath", (fs::path(options.MingwPath) / compilerExe()).string()},
+                {options.Language == ConfigOptions::LanguageType::Cpp ? 
+                    "cppStandard" : 
+                    "cStandard",
+                options.LanguageStandard == "c++23" ?
+                    "c++20" :
+                    options.LanguageStandard},
+                {"intelliSenseMode", "windows-gcc-x64"}
+            })
+        })}
+    }));
+    // clang-format on
+    auto resultStr{result.dump(2)};
+    LOG_DBG(resultStr);
+    fs::save_string_file(path, resultStr);
+}
 
 std::string Generator::generateTestFile() {}
 void Generator::openVscode(const std::optional<std::string>& filepath) {}

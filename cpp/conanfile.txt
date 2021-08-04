@@ -1,7 +1,6 @@
 [requires]
 boost/1.76.0
 cpp-httplib/0.9.0
-argparse/2.1
 nlohmann_json/3.9.1
 
 [generators]

@@ -18,7 +18,7 @@ void log(boost::log::trivial::severity_level level, const Ts&... content) {
         case trivial::trace: color = 0x08; break;
         case trivial::debug: color = 0x07; break;
         case trivial::info: color = 0x0F; break;
-        case trivial::warning: color = 0x06; break;
+        case trivial::warning: color = 0x0E; break;
         case trivial::error: color = 0x0C; break;
         case trivial::fatal: color = 0x04; break;
     }

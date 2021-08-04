@@ -1,5 +1,5 @@
 
-#include "logger.h"
+#include "log.h"
 
 #include <fcntl.h>
 #include <io.h>
@@ -9,8 +9,7 @@
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/utility/setup.hpp>
-
-#include <boost/nowide/iostream.hpp>
+#include <iostream>
 
 namespace Log {
 
@@ -61,9 +60,11 @@ void init(bool verbose) {
     fileSink->set_formatter(&fileFormatter);
 
     boost::shared_ptr<sinks::synchronous_sink<sinks::text_ostream_backend>> consoleSink{
-        logging::add_console_log(boost::nowide::cout)};
+        logging::add_console_log(std::cout)};
 
     consoleSink->set_formatter(&consoleFormatter);
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 
     if (verbose) {
         consoleSink->set_filter(trivial::severity >= trivial::info);
