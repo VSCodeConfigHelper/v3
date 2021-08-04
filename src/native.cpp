@@ -1,9 +1,10 @@
 #include "native.h"
 
-#include <shlobj.h>
 #include <conio.h>
+#include <shlobj.h>
 
 #include <boost/nowide/convert.hpp>
+#include <stdexcept>
 
 namespace Native {
 
@@ -70,7 +71,7 @@ std::optional<std::string> getRegistry(HKEY hkey, const std::string& path, const
     if (result != ERROR_SUCCESS) {
         return std::nullopt;
     }
-    unsigned int MAX_BUFSIZE{1024};
+    const unsigned int MAX_BUFSIZE{1024};
     DWORD bufsize{MAX_BUFSIZE};
     wchar_t buffer[MAX_BUFSIZE];
     result =
@@ -119,16 +120,24 @@ std::optional<std::string> getLocalMachineEnv(const std::string& key) {
                        true);
 }
 
-std::string getAppdata() {
+static std::string getSpecialFolder(const GUID folderId) {
     PWSTR path{nullptr};
-    if (SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_DEFAULT, nullptr, &path) != S_OK) {
+    if (SHGetKnownFolderPath(folderId, KF_FLAG_DEFAULT, nullptr, &path) != S_OK) {
         CoTaskMemFree(path);
-        throw std::runtime_error("Failed to get Appdata folder.");
+        throw std::runtime_error("Failed to get special folder.");
     } else {
         std::string result(narrow(path));
         CoTaskMemFree(path);
         return result;
     }
+}
+
+std::string getAppdata() {
+    return getSpecialFolder(FOLDERID_RoamingAppData);
+}
+
+std::string getDesktop() {
+    return getSpecialFolder(FOLDERID_Desktop);
 }
 
 char getch() {

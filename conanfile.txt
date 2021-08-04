@@ -1,0 +1,27 @@
+[requires]
+boost/1.76.0
+cpp-httplib/0.9.0
+nlohmann_json/3.9.1
+
+[generators]
+cmake
+
+[options]
+boost:without_context=True
+boost:without_contract=True
+boost:without_coroutine=True
+boost:without_fiber=True
+boost:without_graph=True
+boost:without_graph_parallel=True
+boost:without_iostreams=True
+boost:without_json=True # use nlohmann_json for convenience
+boost:without_math=True
+boost:without_mpi=True
+boost:without_python=True
+boost:without_serialization=True
+boost:without_stacktrace=True
+boost:without_test=True
+boost:without_timer=True
+boost:without_type_erasure=True
+boost:without_wave=True
+cpp-httplib:with_openssl=True

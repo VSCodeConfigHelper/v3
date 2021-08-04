@@ -301,8 +301,7 @@ const vm = new Vue({
                     method: "POST",
                     body: this.vscodePath
                 }).then(r => r.text()));
-            }),
-            rxjs.operators.tap(console.log)
+            })
         ).subscribe(v => {
             if (this.vscodeStatus === "resolved" && v === "valid")
                 return;
@@ -369,7 +368,7 @@ const vm = new Vue({
                     body: JSON.stringify({
                         success: false
                     })
-                }).then(r => r.text()).then(console.log).finally(() => {
+                }).then(r => r.text()).finally(() => {
                     alert("配置已中止，您可以关闭此页面了。");
                     window.location = "about:blank";
                 });
@@ -385,8 +384,9 @@ const vm = new Vue({
                     success: true,
                     config: result
                 })
-            }).then(r => r.text()).then(console.log).then(() => {
+            }).then(r => r.text()).then((v) => {
                 alert("配置完成，您可以关闭此页面了。");
+                console.log("result: ", v);
                 window.location = "about:blank";
             });
         },
@@ -469,7 +469,7 @@ const vm = new Vue({
                     openVscode: this.openVscode,
                     sendAnalytics: this.sendAnalytics
                 })
-            }).then(r => r.text()).then(console.log);
+            }).then(r => r.text());
         },
         loadProfile: function () {
             fetch(`${HOST}/loadProfile`, {

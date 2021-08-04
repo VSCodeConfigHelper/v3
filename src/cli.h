@@ -10,6 +10,8 @@ struct ProgramOptions : ConfigOptions {
     bool AssumeYes;
 
     bool RemoveScripts;
+    bool NoOpenBrowser;
+    std::string GuiAddress;
 
     bool Help;
     bool Version;

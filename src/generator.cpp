@@ -15,6 +15,7 @@
 namespace bp = boost::process;
 namespace fs = boost::filesystem;
 using namespace boost::assign;
+using namespace std::literals;
 
 std::string ExtensionManager::runScript(const std::string& args) {
     bp::ipstream is;
@@ -46,7 +47,7 @@ std::unordered_set<std::string> ExtensionManager::list() {
 void ExtensionManager::install(const std::string& id_orig) {
     auto id{boost::to_lower_copy(id_orig)};
     if (installedExtensions.find(id) != installedExtensions.end()) {
-        LOG_INF("扩展 ", id, " 已安装");
+        LOG_INF("扩展 ", id, " 已安装。");
         return;
     }
     try {
@@ -83,6 +84,21 @@ void ExtensionManager::uninstallAll() {
     }
 }
 
+namespace {
+
+boost::regex splitPathRegex(";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+
+template <template <typename> typename ContainerT>
+ContainerT<std::string> splitPath(std::optional<std::string> (*getter)(const std::string&)) {
+    auto origin{getter("Path")};
+    auto originalPath{origin ? *origin : ""};
+    ContainerT<std::string> container;
+    boost::split_regex(container, originalPath, splitPathRegex);
+    return container;
+}
+
+}  // namespace
+
 Generator::Generator(const ConfigOptions& options) : options{options} {}
 
 const char* Generator::compilerExe() {
@@ -93,9 +109,9 @@ const char* Generator::fileExt() {
 }
 
 void Generator::saveFile(const fs::path& path, const char* content) {
-    LOG_INF("写入脚本 ", path.string(), " 中...");
+    LOG_INF("写入脚本 ", path, " 中...");
     if (fs::exists(path)) {
-        LOG_INF("脚本 ", path.string(), " 已存在，无需写入。");
+        LOG_INF("脚本 ", path, " 已存在，无需写入。");
     } else {
         fs::save_string_file(path, content);
         LOG_INF("写入完成。");
@@ -106,7 +122,7 @@ void Generator::addKeybinding(const std::string& key, const std::string& command
                               const std::string& args) {
     using json = nlohmann::json;
     auto filepath(fs::path(Native::getAppdata()) / "Code\\User\\keybindings.json");
-    LOG_INF("将快捷键 ", key, " (", command, " ", args, ") 添加到 ", filepath.string(), " 中...");
+    LOG_INF("将快捷键 ", key, " (", command, " ", args, ") 添加到 ", filepath, " 中...");
     auto result(json::array());
     if (fs::exists(filepath)) {
         LOG_INF("快捷键设置已经存在，尝试合并...");
@@ -134,18 +150,21 @@ void Generator::addKeybinding(const std::string& key, const std::string& command
 
 void Generator::addToPath(const fs::path& path) {
     auto newPath{path.string()};
-    LOG_INF("将 ", newPath, " 添加到环境变量 Path 中...");
-    auto origin{Native::getCurrentUserEnv("Path")};
-    auto originalPath{origin ? *origin : ""};
-    std::list<std::string> paths;
-    boost::regex pathSplitter(";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-    boost::split_regex(paths, originalPath, pathSplitter);
+
+    auto sysPaths{splitPath<std::unordered_set>(Native::getLocalMachineEnv)};
+    if (sysPaths.find(newPath) != sysPaths.end()) {
+        LOG_WRN("系统环境变量 Path 已包含 ", newPath, "。不会将其添加到用户环境变量 Path 中。");
+        return;
+    }
+
+    LOG_INF("将 ", newPath, " 添加到用户环境变量 Path 中...");
+    auto paths{splitPath<std::list>(Native::getCurrentUserEnv)};
     if (auto it{std::find(paths.begin(), paths.end(), newPath)}; it != paths.end()) {
-        LOG_INF("环境变量 Path 已经包含 ", newPath, "。将其移动到最前。");
+        LOG_INF("用户环境变量 Path 已经包含 ", newPath, "。将其移动到最前。");
         paths.erase(it);
         paths.push_front(newPath);
     } else {
-        LOG_INF("环境变量 Path 中未包含 ", newPath, "。将其添加。");
+        LOG_INF("用户环境变量 Path 中未包含 ", newPath, "。将其添加。");
         paths.push_front(newPath);
     }
     auto result{boost::join(paths, ";")};
@@ -155,7 +174,7 @@ void Generator::addToPath(const fs::path& path) {
 
 void Generator::generateTasksJson(const fs::path& path) {
     using json = nlohmann::json;
-    LOG_INF("生成 ", path.string(), " ...");
+    LOG_INF("生成 ", path, " ...");
     auto args{options.CompileArgs};
     args += "-g", "${file}", "-o", "${fileDirname}\\${fileBasenameNoExtension}.exe";
     // clang-format off
@@ -253,7 +272,7 @@ void Generator::generateTasksJson(const fs::path& path) {
 
 void Generator::generateLaunchJson(const fs::path& path) {
     using json = nlohmann::json;
-    LOG_INF("生成 ", path.string(), " ...");
+    LOG_INF("生成 ", path, " ...");
     // clang-format off
     auto result(json::object({
         {"version", "0.2.0"},
@@ -288,7 +307,7 @@ void Generator::generateLaunchJson(const fs::path& path) {
 }
 void Generator::generatePropertiesJson(const fs::path& path) {
     using json = nlohmann::json;
-    LOG_INF("生成 ", path.string(), " ...");
+    LOG_INF("生成 ", path, " ...");
     // clang-format off
     auto result(json::object({
         {"version", 4},
@@ -315,10 +334,107 @@ void Generator::generatePropertiesJson(const fs::path& path) {
     fs::save_string_file(path, resultStr);
 }
 
-std::string Generator::generateTestFile() {}
-void Generator::openVscode(const std::optional<std::string>& filepath) {}
-void Generator::generateShortcut() {}
-void Generator::sendAnalytics() {}
+std::string Generator::generateTestFile() {
+    auto filepath{fs::path(options.WorkspacePath) / ("helloworld"s + fileExt())};
+    for (int i{1}; fs::exists(filepath); i++) {
+        filepath =
+            fs::path(options.WorkspacePath) / ("helloworld(" + std::to_string(i) + ")" + fileExt());
+    }
+    LOG_INF("正在生成测试文件 ", filepath, "...");
+    const std::string compileHotkeyComment{
+        "按下 "s + (options.UseExternalTerminal ? "F6" : "Ctrl + F5") + " 编译运行"};
+    const std::string compileResultComment{"按下 "s +
+                                           (options.UseExternalTerminal
+                                                ? "F5 后，您将在下方弹出的终端（Terminal）"
+                                                : "F6 后，您将在弹出的") +
+                                           "窗口中看到这一行字。"};
+    bool isCpp{options.Language == ConfigOptions::LanguageType::Cpp};
+    std::string (*c)(const std::string&){nullptr};
+    if (isCpp)  // I'm wonder why MSVC IntelliSense doesn't support Lambda in ?:.
+        c = [](const std::string& s) { return "// " + s; };
+    else
+        c = [](const std::string& s) { return "/* " + s + " */"; };
+    std::ostringstream oss;
+    oss << c("VS Code C/C++ 测试代码 \"Hello World\"") << '\n';
+    oss << c("由 VSCodeConfigHelper 生成") << '\n';
+    oss << '\n';
+    oss << c("您可以在当前的文件夹（工作文件夹）下编写代码。") << '\n';
+    oss << '\n';
+    oss << c(compileHotkeyComment) << '\n';
+    oss << c("按下 F5 编译调试。") << '\n';
+    oss << c("按下 Ctrl + Shift + B 编译，但不运行。") << '\n';
+    if (isCpp) {
+        oss << R"(
+#include <iostream>
+
+/**
+ * 程序执行的入口点。
+ */
+int main() {
+    // 在标准输出中打印 "Hello, world!"
+    std::cout << "Hello, world!" << std::endl;
+}
+)";
+    } else {
+        oss << R"(
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * 程序执行的入口点。
+ */
+int main(void) {
+    /* 在标准输出中打印 "Hello, world!" */
+    printf("Hello, world!");
+    return EXIT_SUCCESS;
+}
+)";
+    }
+    oss << '\n';
+    oss << c("此文件编译运行将输出 \"Hello, world!\"。") << '\n';
+    oss << c(compileResultComment) << '\n';
+    oss << c("** 重要提示：您以后编写其它代码时，请务必确保文件名不包含中文或特殊字符，切记！**")
+        << '\n';
+    oss << c("如果遇到了问题，请您浏览") << '\n';
+    oss << c("https://github.com/Guyutongxue/VSCodeConfigHelper/blob/master/TroubleShooting.md")
+        << '\n';
+    oss << c("获取帮助。如果问题未能得到解决，请联系开发者 guyutongxue@163.com。") << '\n';
+
+    fs::save_string_file(filepath, oss.str());
+    LOG_INF("测试文件写入完成。");
+    return filepath.string();
+}
+
+void Generator::openVscode(const std::optional<std::string>& filename) {
+    const auto& folderPath{fs::absolute(options.WorkspacePath).string()};
+
+    std::vector args{folderPath};
+    if (filename) {
+        args += "--goto", *filename;
+    }
+    LOG_INF("启动 VS Code...");
+    LOG_DBG(options.VscodePath, " ", boost::join(args, " "));
+    try {
+        bp::spawn(options.VscodePath, bp::args = args, bp::std_out > bp::null);
+    } catch (std::exception& e) {
+        LOG_WRN("启动 VS Code 失败：", e.what());
+    }
+}
+void Generator::generateShortcut() {
+    fs::path shortcutPath{fs::path(Native::getDesktop()) / "Visual Studio Code.lnk"};
+    if (fs::exists(shortcutPath)) {
+        LOG_WRN("快捷方式 ", shortcutPath, " 已存在，将被覆盖。");
+        fs::remove(shortcutPath);
+    }
+    auto targetPath{fs::absolute(options.WorkspacePath).string()};
+    auto result{Native::createLink(shortcutPath.string(), options.VscodePath,
+                                   "Open VS Code at " + targetPath, "\"" + targetPath + "\"")};
+    if (result) {
+        LOG_INF("快捷方式 ", shortcutPath, " 已生成。");
+    } else {
+        LOG_WRN("快捷方式 ", shortcutPath, " 生成失败。");
+    }
+}
 
 void Generator::generate() {
     try {
@@ -354,6 +470,27 @@ void Generator::generate() {
         if (!options.NoSetEnv) {
             addToPath(mingwPath);
         }
+        if (options.GenerateTestFile == ConfigOptions::GenTestType::Auto) {
+            if (fs::exists(fs::path(options.WorkspacePath) / "helloworld.cpp")) {
+                options.GenerateTestFile = ConfigOptions::GenTestType::Never;
+            } else {
+                options.GenerateTestFile = ConfigOptions::GenTestType::Always;
+            }
+        }
+        std::optional<std::string> testFilename;
+        if (options.GenerateTestFile == ConfigOptions::GenTestType::Always) {
+            testFilename = generateTestFile();
+        }
+        if (options.OpenVscodeAfterConfig) {
+            openVscode(testFilename);
+        }
+        if (options.GenerateDesktopShortcut) {
+            generateShortcut();
+        }
+        if (!options.NoSendAnalytics) {
+            sendAnalytics();
+        }
+        LOG_INF("配置完成。");
     } catch (std::exception& e) {
         LOG_ERR(e.what());
         throw;

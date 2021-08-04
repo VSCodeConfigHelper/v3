@@ -24,7 +24,7 @@ namespace {
 static void preprocessOptions(const po::options_description& desc) {
     Log::init(options.Verbose);
     if (options.Help) {
-        std::cout << desc << std::endl;
+        desc.print(std::cout, 30);
         std::exit(0);
     }
     if (options.Version) {
@@ -81,39 +81,40 @@ bool contains(const T& c, const U& v) {
     return std::find(std::begin(c), std::end(c), v) != std::end(c);
 }
 
+constexpr const char DEFAULT_GUI_ADDRESS[]{"https://guyutongxue.gitee.io/VSCodeConfigHelper3/config.html"};
+
 }  // namespace
 
 void init(int argc, char** argv) {
-    if (argc == 1) {
-        options.UseGui = true;
-        return;
-    }
-    po::options_description generalOpt("General Options");
-    po::options_description configOpt("Configuration Options");
-    po::options_description advancedOpt("Advanced Options");
+    po::options_description generalOpt("General Options", 79);
+    po::options_description configOpt("Configuration Options", 79);
+    po::options_description advancedOpt("Advanced Options", 79);
 #define ADD_OPTION_G(name, property, info) addOption(generalOpt, name, options.property, info)
 #define ADD_OPTION_C(name, property, info) addOption(configOpt, name, options.property, info)
 #define ADD_OPTION_A(name, property, info) addOption(advancedOpt, name, options.property, info)
 
+    // IMPORTANT NOTE:
+    // The length of the ASCII string must be a multiple of 3, otherwise the help message may fail
+    // to print
     ADD_OPTION_G("verbose,V", Verbose, "显示详细的输出信息");
     ADD_OPTION_G("use-gui,g", UseGui,
-                 "使用 GUI 进行配置。当不提供任何 命令行参数时，此选项将被默认使用");
-    ADD_OPTION_G("assume-yes,y", AssumeYes, "关闭命令行交互操作，总是假设选择 “是”");
+                 "使用 GUI  进行配置。当不提供任何命令行参数时，此选项将被默认使用");
+    ADD_OPTION_G("assume-yes,y", AssumeYes, "关闭命令行交互操作，总是假设选择“是”");
     ADD_OPTION_G("help,h", Help, "显示此帮助信息并退出");
     ADD_OPTION_G("version,v", Version, "显示程序版本信息并退出");
     ADD_OPTION_C("vscode-path", VscodePath,
-                 "指定 VS Code 安装路径。若不提供， 则工具自动从注册表获取");
+                 "指定 VS Code 安装路径。若不提供，则工具自动从注册表获取");
     ADD_OPTION_C("mingw-path", MingwPath,
-                 "指定 MinGW 的安装路径。若不提供， 则工具自动从环境变量获取");
-    ADD_OPTION_C("workspace-path", WorkspacePath, "指定工作区文件夹路径。若使用 CLI 则必须提供");
+                 "指定  MinGW  的安装路径。若不提供，则工具自动从环境变量获取");
+    ADD_OPTION_C("workspace-path", WorkspacePath, "指定工作区文件夹路径。若使用 CLI  则必须提供");
     // ADD_OPTION_C("language", Language, "");
     decltype(options.LanguageStandard) a;
     ADD_OPTION_C("language-standard", LanguageStandard,
                  "指定语言标准。若不提供，则工具根据 MinGW 编译器版本选取");
     ADD_OPTION_C("no-set-env", NoSetEnv, "不设置用户环境变量");
     ADD_OPTION_C("external-terminal", UseExternalTerminal, "使用外部终端进行运行和调试");
-    ADD_OPTION_C("apply-non-ascii-check", ApplyNonAsciiCheck,
-                 "在调试前进行文件名中非 ASCII 字符的检查");
+    ADD_OPTION_C("apply-nonascii-check", ApplyNonAsciiCheck,
+                 "在调试前进行文件名中非 ASCII   字符的检查");
     ADD_OPTION_C("install-chinese", ShouldInstallL11n, "为 VS Code 安装中文语言包");
     ADD_OPTION_C("uninstall-extensions", ShouldUninstallExtensions, "卸载多余的 VS Code 扩展");
     // ADD_OPTION_C("generate-test", GenerateTestFile, "");
@@ -121,17 +122,20 @@ void init(int argc, char** argv) {
                  "生成指向工作区文件夹的桌面快捷方式");
     ADD_OPTION_C("open-vscode", OpenVscodeAfterConfig, "在配置完成后自动打开 VS Code");
     ADD_OPTION_C("no-send-analytics", NoSendAnalytics, "不发送统计信息");
-    ADD_OPTION_A("remove-scripts", RemoveScripts, "从 MinGW 删除此程序注入的所有脚本 并退出");
+    ADD_OPTION_A("remove-scripts", RemoveScripts, "从  MinGW  删除此程序注入的所有脚本 并退出");
+    ADD_OPTION_A("no-open-browser", NoOpenBrowser, "使用 GUI  时不自动打开浏览器");
+    ADD_OPTION_A("gui-address", GuiAddress, "指定使用 GUI  时自动打开的网页");
 
     // other options that cannot be parsed directly
     std::string languageText;
     // clang-format off
     configOpt.add_options()
-        ("language", po::value<std::string>(), "指定配置目标语言。可为 c++ 或 c，默认为 c++")
+        ("language", po::value<std::string>(&languageText)->default_value("c++"), "指定配置目标语言。可为 c++  或 c")
         ("generate-test", "强制生成测试文件")
         ("no-generate-test", "不生成测试文件")
     ;
     // clang-format on
+
     po::options_description allOpts;
     allOpts.add(generalOpt).add(configOpt).add(advancedOpt);
     po::variables_map vm;
@@ -143,6 +147,9 @@ void init(int argc, char** argv) {
         parseError = e.what();
     }
 
+    if (argc == 1) {
+        options.UseGui = true;
+    }
     preprocessOptions(allOpts);
 
     if (parseError) {
@@ -150,17 +157,17 @@ void init(int argc, char** argv) {
     }
 
     // parse other options
-    if (vm.count("language")) {
-        auto languageText{vm["language"].as<std::string>()};
-        boost::to_lower(languageText);
-        if (languageText == "c++") {
-            options.Language = ConfigOptions::LanguageType::Cpp;
-        } else if (languageText == "c") {
-            options.Language = ConfigOptions::LanguageType::C;
-        } else {
-            LOG_ERR(languageText, "是不支持的目标语言。程序将退出");
-            std::exit(1);
-        }
+    boost::to_lower(languageText);
+    if (languageText == "c++") {
+        options.Language = ConfigOptions::LanguageType::Cpp;
+    } else if (languageText == "c") {
+        options.Language = ConfigOptions::LanguageType::C;
+    } else {
+        LOG_ERR(languageText, "是不支持的目标语言。程序将退出");
+        std::exit(1);
+    }
+    if (options.GuiAddress.empty()) {
+        options.GuiAddress = DEFAULT_GUI_ADDRESS;
     }
     if (vm.count("generate-test")) {
         options.GenerateTestFile = ConfigOptions::GenTestType::Always;
