@@ -1,5 +1,8 @@
 {
     "cmake.buildDirectory": "${workspaceFolder}/build",
+    "licenser.license": "GPLv3",
+    "licenser.author": "Guyutongxue",
+    "licenser.projectName": "VS Code Config Helper",
     "files.associations": {
         "*.bf": "brainfuck",
         "cctype": "cpp",
