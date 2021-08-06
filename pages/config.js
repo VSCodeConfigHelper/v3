@@ -81,7 +81,7 @@ const vm = new Vue({
 
     },
     data: {
-        currentStep: 1,
+        currentStep: 4,
         vscodePath: "",
         vscodeStatus: "resolved",
         mingwTableHeader: [
@@ -200,7 +200,19 @@ const vm = new Vue({
         dbgStyle: 0, // 0: internal, 1: external
         nonAsciiCheck: false,
         instL11n: false,
+        offlineExt: false,
         uninstExt: false,
+        uninstList: [
+            "formulahendry.code-runner",
+            "austin.code-gnu-global",
+            "danielpinto8zz6.c-cpp-compile-run",
+            "mitaki28.vscode-clang",
+            "jaycetyle.vscode-gnu-global",
+            "franneck94.c-cpp-runner",
+            "ajshort.include-autocomplete",
+            "xaver.clang-format",
+            "jbenden.c-cpp-flylint"
+        ],
         setEnv: true,
         genTest: 0,
         genTestText: ['自动', '重新生成', '不生成'],
@@ -359,6 +371,13 @@ const vm = new Vue({
         download: function (url) {
             window.open(url, '_blank');
         },
+        getVscode: function () {
+            alert("即将跳转到下载地址。请您在安装完 VS Code 后先启动一次再使用本工具。");
+            window.location = "https://update.code.visualstudio.com/latest/win32-x64-user/stable";
+        },
+        showUninstList: function () {
+            alert(this.uninstList.join("\n"));  
+        },
         next: function () {
             this.currentStep++;
         },
@@ -426,6 +445,7 @@ const vm = new Vue({
                 this.dbgStyle = STYLE_INTERNAL;
                 this.nonAsciiCheck = false;
                 this.instL11n = false;
+                this.offlineExt = false;
                 this.uninstExt = false;
                 this.setEnv = true;
                 this.genTest = 0;
@@ -444,6 +464,7 @@ const vm = new Vue({
                 this.dbgStyle = STYLE_EXTERNAL;
                 this.nonAsciiCheck = true;
                 this.instL11n = true;
+                this.offlineExt = true;
                 this.uninstExt = true;
                 this.setEnv = true;
                 this.genTest = 0;
@@ -471,6 +492,7 @@ const vm = new Vue({
                     dbgStyle: this.dbgStyle,
                     nonAsciiCheck: this.nonAsciiCheck,
                     instL11n: this.instL11n,
+                    offlineExt: this.offlineExt,
                     uninstExt: this.uninstExt,
                     setEnv: this.setEnv,
                     genTest: this.genTest,
@@ -503,6 +525,7 @@ const vm = new Vue({
                 UseExternalTerminal: this.dbgStyle === STYLE_EXTERNAL,
                 ApplyNonAsciiCheck: this.nonAsciiCheck,
                 ShouldInstallL11n: this.instL11n,
+                OfflineInstallCCpp: this.offlineExt,
                 ShouldUninstallExtensions: this.uninstExt,
                 GenerateTestFile: this.genTest,
                 GenerateDesktopShortcut: this.genShortcut,

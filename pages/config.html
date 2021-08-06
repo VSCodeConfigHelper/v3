@@ -78,8 +78,7 @@
                                             <v-alert v-if="vscodeStatus === 'resolved'" dense text type="success">
                                                 工具检测到您安装的 VS Code 路径如下。如没有任何问题，请点击下一步。</v-alert>
                                             <v-alert v-if="vscodeStatus === 'unresolved'" dense text type="warning">
-                                                工具没有检测到您安装 VS Code，请您前往<a
-                                                    href="https://https://update.code.visualstudio.com/latest/win32-x64-user/stable">此处</a>下载安装。如果您安装了，请在下方提供其安装路径。
+                                                工具没有检测到您安装 VS Code，请您前往<a href="javascript:undefined" @click="getVscode">此处</a>下载安装。如果您安装了，请在下方提供其安装路径。
                                             </v-alert>
                                             <v-alert v-if="vscodeStatus === 'invalid'" dense text type="error">
                                                 当前路径下没有检测到 VS Code（<code>Code.exe</code> 不存在）。
@@ -87,9 +86,7 @@
                                             <v-alert v-if="vscodeStatus === 'valid'" dense text type="success">
                                                 当前路径下存在 VS Code。点击下一步以继续。
                                             </v-alert>
-                                            <v-text-field v-model="vscodePath" clearable label="VS Code 安装路径"
-                                                type="text" append-outer-icon="mdi-folder-open"
-                                                @click:append-outer="getFolder(vscodePath, 'vscode')">
+                                            <v-text-field v-model="vscodePath" clearable label="VS Code 安装路径" type="text" append-outer-icon="mdi-folder-open" @click:append-outer="getFolder(vscodePath, 'vscode')">
                                             </v-text-field>
                                         </v-card-text>
                                         <v-card-actions class="pa-0">
@@ -123,10 +120,7 @@
                                                 </v-radio>
                                                 <v-expand-transition>
                                                     <div v-show="newCompiler === 0" class="mb-2 ml-8">
-                                                        <v-data-table dense hide-default-footer
-                                                            :headers="mingwTableHeader" :items="compilers"
-                                                            item-key="path" show-select single-select
-                                                            v-model="mingwTableSelected">
+                                                        <v-data-table dense hide-default-footer :headers="mingwTableHeader" :items="compilers" item-key="path" show-select single-select v-model="mingwTableSelected">
                                                         </v-data-table>
                                                     </div>
                                                 </v-expand-transition>
@@ -139,27 +133,21 @@
                                                                 <code>mingw64</code> 文件夹。建议您将它妥善保存在合适的位置（如
                                                                 <code>C:\mingw64</code>），并在下方输入其路径。
                                                             </div>
-                                                            <v-btn color="primary" text
-                                                                class="rounded-l-pill rounded-r-0"
-                                                                @click="download(mingwDlLinks[0].url)">
+                                                            <v-btn color="primary" text class="rounded-l-pill rounded-r-0" @click="download(mingwDlLinks[0].url)">
                                                                 下载 MinGW
                                                             </v-btn>
                                                             <v-menu open-on-hover bottom offset-y>
                                                                 <template v-slot:activator="{ on, attrs }">
-                                                                    <v-btn v-bind="attrs" v-on="on" color="primary" icon
-                                                                        :ripple="false"
-                                                                        class="rounded-r-pill rounded-l-0">
+                                                                    <v-btn v-bind="attrs" v-on="on" color="primary" icon :ripple="false" class="rounded-r-pill rounded-l-0">
                                                                         <v-icon>mdi-menu-down</v-icon>
                                                                     </v-btn>
                                                                 </template>
                                                                 <v-list dense two-line>
-                                                                    <v-list-item v-for="(item, index) in mingwDlLinks"
-                                                                        :key="index" link @click="download(item.url)">
+                                                                    <v-list-item v-for="(item, index) in mingwDlLinks" :key="index" link @click="download(item.url)">
                                                                         <v-list-item-content>
                                                                             <v-list-item-title>
                                                                                 {{item.title}}
-                                                                                <v-chip v-if="index === 0" color="green"
-                                                                                    pill outlined x-small>
+                                                                                <v-chip v-if="index === 0" color="green" pill outlined x-small>
                                                                                     推荐
                                                                                 </v-chip>
                                                                             </v-list-item-title>
@@ -171,10 +159,7 @@
                                                                 </v-list>
                                                             </v-menu>
                                                         </div>
-                                                        <v-text-field v-model="newCompilerPath" clearable
-                                                            label="MinGW 路径" type="text"
-                                                            append-outer-icon="mdi-folder-open"
-                                                            @click:append-outer="getFolder(newCompilerPath, 'mingw')">
+                                                        <v-text-field v-model="newCompilerPath" clearable label="MinGW 路径" type="text" append-outer-icon="mdi-folder-open" @click:append-outer="getFolder(newCompilerPath, 'mingw')">
                                                         </v-text-field>
                                                         <v-alert v-if="newCompilerValid" dense text type="success">
                                                             检测到 MinGW：
@@ -183,8 +168,8 @@
                                                             <strong>包信息</strong>
                                                             <code>{{newCompilerInfo?.packageInfo}}</code>。
                                                         </v-alert>
-                                                        <v-alert v-if="!newCompilerValid && newCompilerPath !== ''"
-                                                            dense text type="error">{{ newCompilerInvalidReason }}</v-alert>
+                                                        <v-alert v-if="!newCompilerValid && newCompilerPath !== ''" dense text type="error">{{ newCompilerInvalidReason }}
+                                                        </v-alert>
                                                     </div>
                                                 </v-expand-transition>
                                             </v-radio-group>
@@ -215,15 +200,12 @@
                                                 VS Code
                                                 的配置大多在特定文件夹下生效，方便您为不同的语言和不同的需求个性化配置。因此，请选择一个<em>工作文件夹</em>，您将来的程序和代码<strong>都需要</strong>存放在此处。
                                             </div>
-                                            <v-text-field v-model="workspacePath" clearable label="工作文件夹路径" type="text"
-                                                append-outer-icon="mdi-folder-open"
-                                                @click:append-outer="getFolder(workspacePath, 'workspace')">
+                                            <v-text-field v-model="workspacePath" clearable label="工作文件夹路径" type="text" append-outer-icon="mdi-folder-open" @click:append-outer="getFolder(workspacePath, 'workspace')">
                                             </v-text-field>
                                             <v-alert v-if="!isAscii(workspacePath)" dense text type="error">
                                                 路径不能包含中文或特殊字符（仅能使用 ASCII 字符）。
                                             </v-alert>
-                                            <v-alert v-if="isAscii(workspacePath) && workspaceStatus === 'warn'" dense
-                                                text type="warning">
+                                            <v-alert v-if="isAscii(workspacePath) && workspaceStatus === 'warn'" dense text type="warning">
                                                 此工作文件夹下已有配置。若继续则旧配置会被覆盖。
                                             </v-alert>
                                         </v-card-text>
@@ -249,8 +231,7 @@
                                 <v-stepper-content step="4">
                                     <v-card flat>
                                         <v-card-text class="pa-0">
-                                            <v-btn-toggle rounded dense mandatory class="ma-1" color="primary"
-                                                v-model="optionsProfile">
+                                            <v-btn-toggle rounded dense mandatory class="ma-1" color="primary" v-model="optionsProfile">
                                                 <v-btn @click="applyProfile('default')">
                                                     <v-icon small class="mr-1">mdi-settings</v-icon>使用默认设置
                                                 </v-btn>
@@ -273,86 +254,57 @@
                                                         </v-tabs>
                                                         <v-tabs-items v-model="optionsTab" class="my-3">
                                                             <v-tab-item>
-                                                                <v-radio-group row label="你将使用什么语言编写代码？"
-                                                                    v-model="language">
+                                                                <v-radio-group row label="你将使用什么语言编写代码？" v-model="language">
                                                                     <v-radio label="C++ 语言"></v-radio>
                                                                     <v-radio label="C 语言"></v-radio>
                                                                 </v-radio-group>
-                                                                <v-select v-if="language === 0" dense outlined
-                                                                    hide-details label="语言标准" :items="cppStandards"
-                                                                    v-model="cppStandard"></v-select>
-                                                                <v-select v-if="language === 1" dense outlined
-                                                                    hide-details label="语言标准" :items="cStandards"
-                                                                    v-model="cStandard"></v-select>
-                                                                <v-switch hide-details class="mt-2" v-model="gnuEx"
-                                                                    label="启用 GNU 扩展语法"></v-switch>
+                                                                <v-select v-if="language === 0" dense outlined hide-details label="语言标准" :items="cppStandards" v-model="cppStandard"></v-select>
+                                                                <v-select v-if="language === 1" dense outlined hide-details label="语言标准" :items="cStandards" v-model="cStandard"></v-select>
+                                                                <v-switch hide-details class="mt-2" v-model="gnuEx" label="启用 GNU 扩展语法"></v-switch>
                                                             </v-tab-item>
                                                             <v-tab-item>
-                                                                <v-select class="mt-5" dense outlined hide-details
-                                                                    clearable label="优化级别"
-                                                                    :items="['-O1', '-O2', '-O3', '-Ofast', '-Og']"
-                                                                    v-model="optimization"></v-select>
-                                                                <v-checkbox hide-details class="mt-2" v-model="wall"
-                                                                    label="全部警告（-Wall）"></v-checkbox>
-                                                                <v-checkbox hide-details class="mt-2" v-model="wextra"
-                                                                    label="额外警告（-Wextra）"></v-checkbox>
-                                                                <v-checkbox hide-details class="mt-2" v-model="werror"
-                                                                    label="视警告为错误（-Werror）"></v-checkbox>
-                                                                <v-checkbox hide-details class="mt-2"
-                                                                    v-model="staticStd"
-                                                                    label="静态链接标准库（-static-libgcc，-static-libstdc++）">
+                                                                <v-select class="mt-5" dense outlined hide-details clearable label="优化级别" :items="['-O1', '-O2', '-O3', '-Ofast', '-Og']" v-model="optimization"></v-select>
+                                                                <v-checkbox hide-details class="mt-2" v-model="wall" label="全部警告（-Wall）"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="wextra" label="额外警告（-Wextra）"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="werror" label="视警告为错误（-Werror）"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="staticStd" label="静态链接标准库（-static-libgcc，-static-libstdc++）">
                                                                 </v-checkbox>
-                                                                <v-combobox dense outlined hide-details class="mt-2"
-                                                                    v-model="customOptions" label="其它自定义选项" multiple
-                                                                    small-chips></v-combobox>
+                                                                <v-combobox dense outlined hide-details class="mt-2" v-model="customOptions" label="其它自定义选项" multiple small-chips></v-combobox>
                                                             </v-tab-item>
                                                             <v-tab-item>
-                                                                <v-radio-group hide-details label="调试样式"
-                                                                    v-model="dbgStyle">
+                                                                <v-radio-group hide-details label="调试样式" v-model="dbgStyle">
                                                                     <v-radio label="内置终端样式（默认）"></v-radio>
                                                                     <v-radio label="外部弹窗样式（仿 VS / Dev-C++）"></v-radio>
                                                                 </v-radio-group>
-                                                                <v-switch hide-details class="mt-2"
-                                                                    v-model="nonAsciiCheck" label="调试中文文件名前给出警告">
+                                                                <v-switch hide-details class="mt-2" v-model="nonAsciiCheck" label="调试中文文件名前给出警告">
                                                                 </v-switch>
                                                             </v-tab-item>
                                                             <v-tab-item>
-                                                                <v-switch hide-details class="mt-2" v-model="instL11n"
-                                                                    label="安装中文语言包扩展"></v-switch>
-                                                                <v-switch hide-details class="my-2" v-model="uninstExt"
-                                                                    label="卸载多余的 VS Code 扩展"></v-switch>
-                                                                <div>为避免给新手的配置造成不必要的麻烦，我们将<strong
-                                                                        class="red--text">卸载</strong>一些扩展。这些扩展要么不提供任何功能，要么会与我们的配置冲突并造成干扰。启用上述开关会卸载的扩展有：
+                                                                <v-switch hide-details class="mt-2" v-model="instL11n" label="安装中文语言包扩展"></v-switch>
+                                                                <v-switch hide-details class="my-2" v-model="offlineExt" label="离线安装 C/C++ 扩展"></v-switch>
+                                                                <div>
+                                                                    在线安装 C/C++ 扩展会在第一次启用时从 GitHub 获取组件。如果您所在的地区访问 GitHub 存在困难，则建议启用该选项。
                                                                 </div>
-                                                                <pre>formulahendry.code-runner
-austin.code-gnu-global
-danielpinto8zz6.c-cpp-compile-run
-mitaki28.vscode-clang
-jaycetyle.vscode-gnu-global
-franneck94.c-cpp-runner
-ajshort.include-autocomplete
-xaver.clang-format
-jbenden.c-cpp-flylint</pre>
+                                                                <v-switch hide-details class="my-2" v-model="uninstExt" label="卸载多余的 VS Code 扩展"></v-switch>
+                                                                <div>
+                                                                    为避免给新手的配置造成不必要的麻烦，我们将<strong class="red--text">卸载</strong>一些扩展。这些扩展要么不提供任何功能，要么会与我们的配置冲突并造成干扰。
+                                                                    <a href="javascript:undefined" @click="showUninstList">卸载扩展列表</a>
+                                                                </div>
                                                             </v-tab-item>
                                                             <v-tab-item>
-                                                                <v-checkbox hide-details class="mt-2" v-model="setEnv"
-                                                                    label="添加 MinGW 到 Path 环境变量"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="setEnv" label="添加 MinGW 到 Path 环境变量"></v-checkbox>
                                                                 <div class="d-flex align-center">
                                                                     <span class="v-label mr-3">是否生成测试文件？</span>
-                                                                    <v-chip-group mandatory active-class="primary--text"
-                                                                        v-model="genTest" class="flex-grow-1">
+                                                                    <v-chip-group mandatory active-class="primary--text" v-model="genTest" class="flex-grow-1">
                                                                         <v-chip v-for="i in genTestText" :key="i" small>
                                                                             {{ i }}
                                                                         </v-chip>
                                                                     </v-chip-group>
                                                                 </div>
-                                                                <v-checkbox hide-details class="mt-0"
-                                                                    v-model="genShortcut" label="生成桌面快捷方式"></v-checkbox>
-                                                                <v-checkbox hide-details class="mt-2"
-                                                                    v-model="openVscode" label="配置完成后启动 VS Code">
+                                                                <v-checkbox hide-details class="mt-0" v-model="genShortcut" label="生成桌面快捷方式"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="openVscode" label="配置完成后启动 VS Code">
                                                                 </v-checkbox>
-                                                                <v-checkbox hide-details class="mt-2"
-                                                                    v-model="sendAnalytics" label="发送统计数据"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="sendAnalytics" label="发送统计数据"></v-checkbox>
                                                             </v-tab-item>
                                                         </v-tabs-items>
                                                     </v-card-text>
@@ -387,6 +339,8 @@ jbenden.c-cpp-flylint</pre>
                                                             <dd>{{ nonAsciiCheck ? '是' : '否' }}</dd>
                                                             <dt>安装中文语言包扩展</dt>
                                                             <dd>{{ instL11n ? '是' : '否' }}</dd>
+                                                            <dt>离线安装 C/C++ 扩展</dt>
+                                                            <dd>{{ offlineExt ? '是' : '否' }}</dd>
                                                             <dt>卸载多余扩展</dt>
                                                             <dd :class="{ 'red--text' : uninstExt }">{{ uninstExt ? '是'
                                                                 : '否' }}</dd>
