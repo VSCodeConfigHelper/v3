@@ -81,7 +81,7 @@ const vm = new Vue({
 
     },
     data: {
-        currentStep: 4,
+        currentStep: 1,
         vscodePath: "",
         vscodeStatus: "resolved",
         mingwTableHeader: [
