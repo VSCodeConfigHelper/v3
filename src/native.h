@@ -44,4 +44,6 @@ std::string getDesktop();
 
 char getch();
 
+void checkSystemVersion();
+
 }  // namespace Native

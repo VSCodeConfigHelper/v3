@@ -85,7 +85,13 @@
         "*.in": "cpp",
         "slist": "cpp",
         "ranges": "cpp",
-        "xtr1common": "cpp"
+        "xtr1common": "cpp",
+        "format": "cpp",
+        "xlocmes": "cpp",
+        "xlocmon": "cpp",
+        "xlocnum": "cpp",
+        "xloctime": "cpp",
+        "xutility": "cpp"
     },
     "cmake.debugConfig": {
         "args": [

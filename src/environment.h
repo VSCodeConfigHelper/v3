@@ -55,6 +55,10 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CompilerInfo, Path, VersionText, VersionNumbe
 inline void to_json(nlohmann::json& j, const Environment& e) {
     j = nlohmann::json::object();
     auto&& VscodePath{e.VscodePath()};
-    j["VscodePath"] = VscodePath ? *VscodePath : nullptr;
+    if (VscodePath) {
+        j["vscodePath"] = *VscodePath;
+    } else {
+        j["vscodePath"] = nullptr;
+    }
     j["Compilers"] = e.Compilers();
 }

@@ -98,7 +98,7 @@ bool contains(const T& c, const U& v) {
     return std::find(std::begin(c), std::end(c), v) != std::end(c);
 }
 
-constexpr const char DEFAULT_GUI_ADDRESS[]{"https://guyutongxue.gitee.io/VSCodeConfigHelper3/config.html"};
+constexpr const char DEFAULT_GUI_ADDRESS[]{"https://vscch3.21cloudbox.com/config.html"};
 
 }  // namespace
 
@@ -172,6 +172,7 @@ void init(int argc, char** argv) {
     if (parseError) {
         LOG_ERR("命令行参数存在错误：", *parseError);
     }
+    Native::checkSystemVersion();    
 
     // parse other options
     boost::to_lower(languageText);

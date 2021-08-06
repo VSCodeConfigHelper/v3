@@ -15,8 +15,8 @@ add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 # Use Unicode Win32 API (-W ver) instead of ANSI
 add_definitions(-DUNICODE -D_UNICODE)
-# https://github.com/boostorg/process/issues/96
-# BOOST_USE_WINDOWS_H also required by Boost.Nowide
+# https://github.com/boostorg/process/issues/96 BOOST_USE_WINDOWS_H also
+# required by Boost.Nowide
 add_definitions(-DBOOST_USE_WINDOWS_H -DWIN32_LEAN_AND_MEAN)
 add_definitions(-DJSON_USE_IMPLICIT_CONVERSIONS)
 
@@ -27,8 +27,11 @@ add_executable(VSCodeConfigHelper ${SOURCES})
 file(READ scripts/pause-console.ps1 PAUSE_CONSOLE_PS1_SRC)
 file(READ scripts/check-ascii.ps1 CHECK_ASCII_PS1_SRC)
 
-configure_file(config.h.in ${CMAKE_BINARY_DIR}/include/config.h)
-target_include_directories(VSCodeConfigHelper PRIVATE ${CMAKE_BINARY_DIR}/include)
+configure_file(configs/config.h.in ${CMAKE_BINARY_DIR}/include/config.h)
+configure_file(configs/resource.rc.in ${CMAKE_BINARY_DIR}/resource.rc)
+target_include_directories(VSCodeConfigHelper
+                           PRIVATE ${CMAKE_BINARY_DIR}/include)
+target_sources(VSCodeConfigHelper PRIVATE ${CMAKE_BINARY_DIR}/resource.rc)
 
 target_link_libraries(VSCodeConfigHelper ${CONAN_LIBS})
 
@@ -40,3 +43,6 @@ elseif(MSVC)
     TARGET VSCodeConfigHelper PROPERTY MSVC_RUNTIME_LIBRARY
                                        "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
+
+set_property(TARGET VSCodeConfigHelper
+             PROPERTY OUTPUT_NAME "VSCodeConfigHelper_v${PROJECT_VERSION}")

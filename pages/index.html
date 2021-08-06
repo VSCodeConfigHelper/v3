@@ -1,14 +1,103 @@
 <!DOCTYPE html>
 <html>
-    <head></head>
-    <body>
-        <script>
-            function config() {
-                const port = document.querySelector("#port").value;
-                window.location = `/config.html?port=${port}`;
+
+<head>
+    <link rel="shortcut icon" href="assets/icon.ico" type="image/x-icon" />
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+    <meta charset="utf-8">
+    <title>VS Code Config Helper 3</title>
+</head>
+
+<body>
+    <main id="app">
+        <v-app>
+            <v-container>
+                <v-row justify="center">
+                    <v-col md="9">
+                        <div class="text-h4 text-center pt-2">
+                            <v-badge content="v3.x" color="red">
+                                VS Code Config Helper
+                            </v-badge>
+                        </div>
+                        <div class="subtitle-1 text-center pt-1">简单、快捷的 VS Code C++ 配置工具</div>
+                    </v-col>
+                </v-row>
+                <v-row justify="center">
+                    <v-col md="9">
+                        <v-row justify="center">
+                            <v-col cols="4">
+                                <v-btn x-large rounded @click="downloadLanzou" color="primary" block>
+                                    <v-icon>mdi-download</v-icon>
+                                    <span class="text-h5 px-1 pb-1">网盘下载</span>
+                                </v-btn>
+                            </v-col>
+                            <v-col cols="3" class="d-flex flex-row justify-center align-center">
+                                <span>
+                                    密码
+                                    <code id="lanzouPasscode">5sjw</code>
+                                    <v-btn icon depressed data-clipboard-target="#lanzouPasscode" id="copyPasscode">
+                                        <v-icon small>mdi-content-copy</v-icon>
+                                        </a>
+                                </span>
+                            </v-col>
+                        </v-row>
+                        <v-row justify="center">
+                            <v-col cols="4">
+                                <v-btn large rounded @click="downloadGithub" color="normal" depressed block>
+                                    <v-icon>fa-github</v-icon>
+                                    <span class="text-capitalize px-2">GitHub 下载</span>
+                                </v-btn>
+                            </v-col>
+                            <v-col cols="3" class="d-flex flex-row justify-center align-center">
+                                <span>
+                                    版本
+                                    <code>3.0.0</code>
+                                </span>
+                            </v-col>
+                        </v-row>
+                    </v-col>
+                </v-row>
+                <v-row justify="center" class="mt-12 text-center">
+                    <v-col cols="9">
+                        <img src="assets/icon.ico" width="50" height="50">
+                        <div class="grey--text text--darken-2">
+                            此项目基于 <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPLv3</a> 开源许可发布。
+                        </div>
+                    </v-col>
+                </v-row>
+                <v-footer fixed="70px">
+                    <v-row justify="center">
+                        <v-col cols="9">
+                            <a href="https://guyutongxue.gitee.io/VSCodeConfigHelper" target="_blank">版本 2.x 主页</a>
+                            <a href="https://guyutongxue.github.io" target="_blank">Guyutongxue</a>
+                        </v-col>
+                    </v-row>
+                </v-footer>
+            </v-container>
+        </v-app>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <script>
+        const vm = new Vue({
+            el: "#app",
+            vuetify: new Vuetify(),
+
+            methods: {
+                downloadLanzou: function () {
+                    window.open("https://gytx.lanzoui.com/b01cl900j")
+                },
+                downloadGithub: function () {
+                    window.open("https://github.com/Guyutongxue/VSCodeConfigHelper3")
+                }
             }
-        </script>
-        <input type="text" id="port">
-        <button onclick="config()">start config</button>
-    </body>
+        });
+        const clipboard = new ClipboardJS("#copyPasscode");
+    </script>
+</body>
+
 </html>

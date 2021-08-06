@@ -19,9 +19,12 @@
 
 #include <conio.h>
 #include <shlobj.h>
+#include <VersionHelpers.h>
 
 #include <boost/nowide/convert.hpp>
 #include <stdexcept>
+
+#include "log.h"
 
 namespace Native {
 
@@ -159,6 +162,12 @@ std::string getDesktop() {
 
 char getch() {
     return static_cast<char>(std::tolower(_getch()));
+}
+
+void checkSystemVersion() {
+    if (!IsWindows10OrGreater()) {
+        LOG_WRN("此程序未在低于 Windows 10 的操作系统上测试过。程序可能出现问题。");
+    } 
 }
 
 }  // namespace Native

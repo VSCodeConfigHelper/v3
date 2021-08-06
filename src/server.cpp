@@ -1,17 +1,17 @@
 // Copyright (C) 2021 Guyutongxue
-// 
+//
 // This file is part of VS Code Config Helper.
-// 
+//
 // VS Code Config Helper is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // VS Code Config Helper is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with VS Code Config Helper.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -167,7 +167,11 @@ void Server::runGui(const Environment& env) {
     LOG_INF("本地服务器已启动，即将开始监听 ", s.port, " 端口...");
     auto openAddress{Cli::options.GuiAddress + "?port=" + std::to_string(s.port)};
     if (!Cli::options.NoOpenBrowser) {
+        LOG_WRN("已打开网页 ", openAddress, "，请在浏览器中继续操作。请不要关闭此窗口。");
         std::system(("START " + openAddress).c_str());
+    } else {
+        LOG_WRN("--no-open-browser 选项禁用了浏览器启动。请与 localhost:", s.port,
+                " 端口通信完成配置。");
     }
     s.startListen();
 }

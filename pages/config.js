@@ -73,6 +73,12 @@ const vm = new Vue({
             }
             this.newCompiler = this.compilers.length === 0 ? 1 : 0;
         }).then(() => this.loadProfile());
+        fetch("mingw.json").then(r => r.json()).then((/** @type {string[]} */ v) => {
+            v.forEach((link, idx) => {
+                this.mingwDlLinks[idx].url = link;
+            });
+        });
+
     },
     data: {
         currentStep: 1,
@@ -450,6 +456,7 @@ const vm = new Vue({
             return fetch(`${HOST}/saveProfile`, {
                 method: 'POST',
                 body: JSON.stringify({
+                    workspacePath: this.workspacePath,
                     language: this.language,
                     cppStandard: this.cppStandard,
                     cStandard: this.cStandard,
