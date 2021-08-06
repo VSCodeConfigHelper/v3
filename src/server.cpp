@@ -87,9 +87,7 @@ void Server::setHandlers() {
         return fs::exists(fs::path(p) / ".vscode") ? "warn" : "ok";
     }});
     handlers.insert({"/saveProfile", [](const std::string& profile) {
-        try { 
-            fs::save_string_file(PROFILE_JSON_PATH, profile);
-        } catch (...) {}
+        fs::save_string_file(PROFILE_JSON_PATH, profile);
         return "ok";
     }});
     handlers.insert({"/loadProfile", [](const std::string& _){
@@ -105,27 +103,27 @@ void Server::setHandlers() {
     handlers.insert({"/done", [](const std::string& body) {
         // brace-init causes bug, see https://github.com/nlohmann/json/issues/2311
         auto j(nlohmann::json::parse(body));
-        try {
-            if (j.at("success").get<bool>()) {
-                auto config(j.at("config"));
-                auto options{config.get<ConfigOptions>()};
-                Generator g(options);
-                g.generate();
-            }
-            return "ok"s;
-        } catch (std::exception& e) {
-            LOG_ERR(e.what());
-            return "error"s;
+        if (j.at("success").get<bool>()) {
+            auto config(j.at("config"));
+            auto options{config.get<ConfigOptions>()};
+            Generator g(options);
+            g.generate();
         }
+        return "ok"s;
     }});
     // clang-format on
     for (auto&& [path, handler] : handlers) {
         server.Post(path.c_str(), [&](const Request& req, Response& res) {
-            LOG_DBG("Req body: ", req.body);
-            auto resBody{handler(req.body)};
-            LOG_DBG("Res body: ", resBody);
             res.set_header("Access-Control-Allow-Origin", "*");
-            res.set_content(resBody, "text/plain");
+            try {
+                LOG_DBG("Req body: ", req.body);
+                auto resBody{handler(req.body)};
+                LOG_DBG("Res body: ", resBody);
+                res.set_content(resBody, "text/plain");
+            } catch (std::exception& e) {
+                LOG_ERR(e.what());
+                res.set_content("\"Internal error: "s + e.what() + "\"", "text/plain");
+            }
             if (path == "/done") shouldShutdownServer = true;
         });
     }

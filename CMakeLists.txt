@@ -28,10 +28,12 @@ file(READ scripts/pause-console.ps1 PAUSE_CONSOLE_PS1_SRC)
 file(READ scripts/check-ascii.ps1 CHECK_ASCII_PS1_SRC)
 
 configure_file(configs/config.h.in ${CMAKE_BINARY_DIR}/include/config.h)
-configure_file(configs/resource.rc.in ${CMAKE_BINARY_DIR}/resource.rc)
 target_include_directories(VSCodeConfigHelper
                            PRIVATE ${CMAKE_BINARY_DIR}/include)
-target_sources(VSCodeConfigHelper PRIVATE ${CMAKE_BINARY_DIR}/resource.rc)
+target_sources(VSCodeConfigHelper PRIVATE configs/resource.rc)
+if(MSVC)
+  target_sources(VSCodeConfigHelper PRIVATE configs/app.manifest)
+endif()
 
 target_link_libraries(VSCodeConfigHelper ${CONAN_LIBS})
 

@@ -311,6 +311,8 @@ const vm = new Vue({
         ).subscribe(v => {
             if (this.vscodeStatus === "resolved" && v === "valid")
                 return;
+            if (this.vscodeStatus === "unresolved" && v === "invalid")
+                return;
             this.vscodeStatus = v;
         });
         this.$watchAsObservable('newCompilerPath').pipe(

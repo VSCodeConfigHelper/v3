@@ -91,7 +91,9 @@
         "xlocmon": "cpp",
         "xlocnum": "cpp",
         "xloctime": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "*.rh": "cpp",
+        "xstring": "cpp"
     },
     "cmake.debugConfig": {
         "args": [
