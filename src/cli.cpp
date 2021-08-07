@@ -98,7 +98,7 @@ bool contains(const T& c, const U& v) {
     return std::find(std::begin(c), std::end(c), v) != std::end(c);
 }
 
-constexpr const char DEFAULT_GUI_ADDRESS[]{"https://vscch3.21cloudbox.com/config.html"};
+constexpr const char DEFAULT_GUI_ADDRESS[]{"https://vscch3.vercel.app/config.html"};
 
 }  // namespace
 
@@ -133,6 +133,7 @@ void init(int argc, char** argv) {
     ADD_OPTION_C("apply-nonascii-check", ApplyNonAsciiCheck,
                  "在调试前进行文件名中非 ASCII   字符的检查");
     ADD_OPTION_C("install-chinese", ShouldInstallL11n, "为 VS Code 安装中文语言包");
+    ADD_OPTION_C("offline-cpptools", OfflineInstallCCpp, "离线安装  C/C++  扩展");
     ADD_OPTION_C("uninstall-extensions", ShouldUninstallExtensions, "卸载多余的 VS Code 扩展");
     // ADD_OPTION_C("generate-test", GenerateTestFile, "");
     ADD_OPTION_C("generate-shortcut", GenerateDesktopShortcut,

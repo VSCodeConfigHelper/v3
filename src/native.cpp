@@ -160,6 +160,13 @@ std::string getDesktop() {
     return getSpecialFolder(FOLDERID_Desktop);
 }
 
+boost::filesystem::path getTempFilePath(const std::string& filename) {
+    wchar_t path[MAX_PATH];
+    GetTempPath(MAX_PATH, path);
+    boost::filesystem::path tempDir{narrow(path)};
+    return tempDir / filename;
+}
+
 char getch() {
     return static_cast<char>(std::tolower(_getch()));
 }

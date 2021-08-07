@@ -19,6 +19,7 @@
 
 #include <windows.h>
 
+#include <boost/filesystem.hpp>
 #include <optional>
 #include <string>
 
@@ -41,6 +42,7 @@ std::optional<std::string> getLocalMachineEnv(const std::string& key);
 
 std::string getAppdata();
 std::string getDesktop();
+boost::filesystem::path getTempFilePath(const std::string& filename);
 
 char getch();
 

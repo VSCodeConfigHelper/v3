@@ -22,11 +22,43 @@
 #include <httplib.h>
 
 #include <chrono>
+#include <boost/filesystem.hpp>
 
 #include "generator.h"
 #include "log.h"
+#include "native.h"
 
 using namespace std::literals;
+
+void ExtensionManager::installOffline(const std::string& id, const char* host, const char* path) {
+    if (installedExtensions.find(id) != installedExtensions.end()) {
+        LOG_INF("扩展 ", id, " 已安装。");
+        return;
+    }
+    LOG_INF("从 ", host, path, " 下载扩展 ", id, "...");
+    LOG_WRN("由于启用了离线扩展安装，工具需要一段时间下载扩展包。请耐心等待...");
+    httplib::Client client(host);
+    auto res{client.Get(path)};
+    if (res && res->status == 200) {
+        LOG_INF("下载完成。");
+    } else {
+        LOG_WRN("离线扩展包下载失败。将使用在线安装。");
+        install(id);
+        return;
+    }
+    auto vsixPath{Native::getTempFilePath("cpptools.vsix")};
+    boost::filesystem::save_string_file(vsixPath, res->body);
+    try {
+        LOG_INF("尝试安装...");
+        LOG_DBG(runScript({"--install-extension", vsixPath.string()}));
+        installedExtensions.insert(id);
+        LOG_INF("安装完成。");
+    } catch (...) {
+        LOG_ERR("从 ", vsixPath, " 安装扩展时发生错误。");
+        throw;
+    }
+}
+
 
 void Generator::sendAnalytics() {
     httplib::Client client("https://api.countapi.xyz");

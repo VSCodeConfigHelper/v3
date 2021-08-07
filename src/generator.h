@@ -42,6 +42,7 @@ struct ConfigOptions {
     bool ApplyNonAsciiCheck;
 
     bool ShouldInstallL11n;
+    bool OfflineInstallCCpp;
     bool ShouldUninstallExtensions;
 
     GenTestType GenerateTestFile;
@@ -66,7 +67,7 @@ class ExtensionManager {
         "jbenden.c-cpp-flylint"
     };
     // clang-format on
-    std::string runScript(const std::string& args);
+    std::string runScript(const std::initializer_list<std::string>& args);
 
 public:
     ExtensionManager(const boost::filesystem::path& vscodePath);
@@ -76,6 +77,7 @@ public:
     void uninstall(const std::string& id);
 
     void uninstallAll();
+    void installOffline(const std::string& id, const char* host, const char* path);
 };
 
 class Generator {

@@ -56,9 +56,9 @@ inline void to_json(nlohmann::json& j, const Environment& e) {
     j = nlohmann::json::object();
     auto&& VscodePath{e.VscodePath()};
     if (VscodePath) {
-        j["vscodePath"] = *VscodePath;
+        j["VscodePath"] = *VscodePath;
     } else {
-        j["vscodePath"] = nullptr;
+        j["VscodePath"] = nullptr;
     }
     j["Compilers"] = e.Compilers();
 }

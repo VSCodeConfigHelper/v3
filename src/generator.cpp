@@ -1,17 +1,17 @@
 // Copyright (C) 2021 Guyutongxue
-// 
+//
 // This file is part of VS Code Config Helper.
-// 
+//
 // VS Code Config Helper is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // VS Code Config Helper is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with VS Code Config Helper.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -34,7 +34,7 @@ namespace fs = boost::filesystem;
 using namespace boost::assign;
 using namespace std::literals;
 
-std::string ExtensionManager::runScript(const std::string& args) {
+std::string ExtensionManager::runScript(const std::initializer_list<std::string>& args) {
     bp::ipstream is;
     bp::child proc(scriptPath, args, bp::std_out > is);
     proc.wait();
@@ -51,8 +51,9 @@ ExtensionManager::ExtensionManager(const boost::filesystem::path& vscodePath)
 
 std::unordered_set<std::string> ExtensionManager::list() {
     try {
-        auto output{runScript("--list-extensions")};
+        auto output{runScript({"--list-extensions"})};
         boost::trim(output), boost::to_lower(output);
+        LOG_DBG(output);
         std::unordered_set<std::string> result;
         boost::split(result, output, boost::is_any_of("\r\n"));
         return result;
@@ -69,7 +70,7 @@ void ExtensionManager::install(const std::string& id_orig) {
     }
     try {
         LOG_INF("尝试安装 ", id, "...");
-        runScript("--installed-extension " + id);
+        LOG_DBG(runScript({"--install-extension", id}));
         installedExtensions.insert(id);
         LOG_INF("安装完成。");
     } catch (...) {
@@ -83,7 +84,7 @@ void ExtensionManager::uninstall(const std::string& id_orig) {
     if (auto pos{installedExtensions.find(id)}; pos != installedExtensions.end()) {
         try {
             LOG_INF("尝试卸载 ", id, "...");
-            runScript("--uninstall-extension " + id);
+            LOG_DBG(runScript({"--uninstall-extension", id}));
             installedExtensions.erase(pos);
             LOG_INF("卸载完成。");
         } catch (...) {
@@ -102,6 +103,10 @@ void ExtensionManager::uninstallAll() {
 }
 
 namespace {
+
+const char offlineHost[]{"https://guyutongxue.oss-cn-beijing.aliyuncs.com"};
+const char offlinePath[]{"/vscode-cpptools/cpptools-win32_v1.5.1.vsix"};
+const char C_CPP_EXT_ID[]{"ms-vscode.cpptools"};
 
 boost::regex splitPathRegex(";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 
@@ -196,7 +201,7 @@ void Generator::generateTasksJson(const fs::path& path) {
     args += "-g", "${file}", "-o", "${fileDirname}\\${fileBasenameNoExtension}.exe";
     // clang-format off
     auto sfbTask(json::object({
-        {"type", "cppbuild"},
+        {"type", "process"}, // "cppbuild" won't apply options
         {"label", "gcc single file build"},
         {"command", (fs::path(options.MingwPath) / compilerExe()).string()},
         {"args", args},
@@ -359,7 +364,7 @@ std::string Generator::generateTestFile() {
     }
     LOG_INF("正在生成测试文件 ", filepath, "...");
     const std::string compileHotkeyComment{
-        "按下 "s + (options.UseExternalTerminal ? "F6" : "Ctrl + F5") + " 编译运行"};
+        "按下 "s + (options.UseExternalTerminal ? "F6" : "Ctrl + F5") + " 编译运行。"};
     const std::string compileResultComment{"按下 "s +
                                            (options.UseExternalTerminal
                                                 ? "F5 后，您将在下方弹出的终端（Terminal）"
@@ -462,7 +467,11 @@ void Generator::generate() {
         if (options.ShouldUninstallExtensions) {
             extensions.uninstallAll();
         }
-        extensions.install("ms-vscode.cpptools");
+        if (options.OfflineInstallCCpp) {
+            extensions.installOffline(C_CPP_EXT_ID, offlineHost, offlinePath);
+        } else {
+            extensions.install(C_CPP_EXT_ID);
+        }
         if (options.ShouldInstallL11n) {
             extensions.install("ms-ceintl.vscode-language-pack-zh-hans");
         }
