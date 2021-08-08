@@ -1,5 +1,10 @@
 # 更新日志 Change Log
 
+## 3.0.1
+*2021.8.8*
+
+- 修复 [#2](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/2)
+
 ## 3.0.0
 *2021.8.7*
 

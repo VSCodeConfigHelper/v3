@@ -1,17 +1,17 @@
 // Copyright (C) 2021 Guyutongxue
-// 
+//
 // This file is part of VS Code Config Helper.
-// 
+//
 // VS Code Config Helper is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // VS Code Config Helper is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with VS Code Config Helper.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -91,23 +91,27 @@ std::optional<std::string> getRegistry(HKEY hkey, const std::string& path, const
     if (result != ERROR_SUCCESS) {
         return std::nullopt;
     }
-    const unsigned int MAX_BUFSIZE{1024};
-    DWORD bufsize{MAX_BUFSIZE};
-    wchar_t buffer[MAX_BUFSIZE];
-    result =
-        RegGetValue(keyPath, nullptr, widen(key).c_str(), RRF_RT_REG_SZ, nullptr, buffer, &bufsize);
+    // Get value size
+    DWORD bufSize{0};
+    result = RegGetValue(keyPath, nullptr, widen(key).c_str(), RRF_RT_REG_SZ, nullptr, nullptr,
+                         &bufSize);
+    auto buf{std::make_unique_for_overwrite<wchar_t[]>(bufSize + 1)};
+    result = RegGetValue(keyPath, nullptr, widen(key).c_str(), RRF_RT_REG_SZ, nullptr, buf.get(),
+                         &bufSize);
     RegCloseKey(keyPath);
     if (result != ERROR_SUCCESS) {
         return std::nullopt;
     } else {
         if (expand) {
-            wchar_t buffer2[MAX_BUFSIZE];
-            if (ExpandEnvironmentStrings(buffer, buffer2, MAX_BUFSIZE) == 0)
-                return narrow(buffer);
+            auto buf2Size{bufSize * 2};
+            auto buf2{std::make_unique_for_overwrite<wchar_t[]>(buf2Size)};
+            result = ExpandEnvironmentStrings(buf.get(), buf2.get(), buf2Size);
+            if (result == 0 || result > buf2Size)
+                return narrow(buf.get());
             else
-                return narrow(buffer2);
+                return narrow(buf2.get());
         }
-        return narrow(buffer);
+        return narrow(buf.get());
     }
 }
 
@@ -173,7 +177,7 @@ char getch() {
 
 void checkSystemVersion() {
 #ifdef _MSC_VER
-    if(!IsWindows10OrGreater()) {
+    if (!IsWindows10OrGreater()) {
         LOG_WRN("此程序未在低于 Windows 10 的操作系统上测试过。程序可能出现问题。");
     }
 #endif

@@ -418,7 +418,7 @@ int main(void) {
     oss << c("** 重要提示：您以后编写其它代码时，请务必确保文件名不包含中文或特殊字符，切记！**")
         << '\n';
     oss << c("如果遇到了问题，请您浏览") << '\n';
-    oss << c("https://github.com/Guyutongxue/VSCodeConfigHelper/blob/master/TroubleShooting.md")
+    oss << c("https://github.com/Guyutongxue/VSCodeConfigHelper/blob/v2.x/TroubleShooting.md")
         << '\n';
     oss << c("获取帮助。如果问题未能得到解决，请联系开发者 guyutongxue@163.com。") << '\n';
 

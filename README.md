@@ -1,6 +1,6 @@
 # VS Code Config Helper (v3)
 
-
+[![](https://img.shields.io/github/workflow/status/Guyutongxue/VSCodeConfigHelper3/CMake)](https://github.com/Guyutongxue/VSCodeConfigHelper3/actions/workflows/cmake.yml)
 
 ## Build instruction
 

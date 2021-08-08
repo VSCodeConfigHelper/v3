@@ -53,7 +53,7 @@
                             <v-col sm="3" class="d-flex flex-row justify-center align-center">
                                 <span>
                                     版本
-                                    <code>3.0.0</code>
+                                    <code>{{latestVersion}}</code>
                                 </span>
                             </v-col>
                         </v-row>
@@ -86,13 +86,29 @@
         const vm = new Vue({
             el: "#app",
             vuetify: new Vuetify(),
-
+            data: {
+                latestVersion: "获取中...",
+                githubUrl: "https://github.com/Guyutongxue/VSCodeConfigHelper3"
+            },
+            created: function () {
+                fetch("https://api.github.com/repos/Guyutongxue/VSCodeConfigHelper3/releases/latest")
+                    .then(r => r.json())
+                    .then(v => {
+                        this.latestVersion = v["tag_name"];
+                        if (v["assets"] && v["assets"].length > 0) {
+                            const asset = v["assets"][0];
+                            githubUrl = asset["browser_download_url"];
+                        } else {
+                            githubUrl = v["html_url"];
+                        }
+                    });
+            },
             methods: {
                 downloadLanzou: function () {
                     window.open("https://gytx.lanzoui.com/b01cl900j")
                 },
                 downloadGithub: function () {
-                    window.open("https://github.com/Guyutongxue/VSCodeConfigHelper3")
+                    window.open(this.githubUrl)
                 }
             }
         });
