@@ -367,8 +367,8 @@ std::string Generator::generateTestFile() {
         "按下 "s + (options.UseExternalTerminal ? "F6" : "Ctrl + F5") + " 编译运行。"};
     const std::string compileResultComment{"按下 "s +
                                            (options.UseExternalTerminal
-                                                ? "F5 后，您将在下方弹出的终端（Terminal）"
-                                                : "F6 后，您将在弹出的") +
+                                                ? "F6 后，您将在弹出的"
+                                                : "F5 后，您将在下方弹出的终端（Terminal）") +
                                            "窗口中看到这一行字。"};
     bool isCpp{options.Language == ConfigOptions::LanguageType::Cpp};
     std::string (*c)(const std::string&){nullptr};
@@ -378,7 +378,7 @@ std::string Generator::generateTestFile() {
         c = [](const std::string& s) { return "/* " + s + " */"; };
     std::ostringstream oss;
     oss << c("VS Code C/C++ 测试代码 \"Hello World\"") << '\n';
-    oss << c("由 VSCodeConfigHelper 生成") << '\n';
+    oss << c("由 VSCodeConfigHelper v" PROJECT_VERSION " 生成") << '\n';
     oss << '\n';
     oss << c("您可以在当前的文件夹（工作文件夹）下编写代码。") << '\n';
     oss << '\n';
@@ -460,7 +460,6 @@ void Generator::generateShortcut() {
 
 void Generator::generate() {
     try {
-        fs::path mingwPath(options.MingwPath);
         fs::path dotVscode(fs::path(options.WorkspacePath) / ".vscode");
 
         ExtensionManager extensions(options.VscodePath);
@@ -475,13 +474,21 @@ void Generator::generate() {
         if (options.ShouldInstallL11n) {
             extensions.install("ms-ceintl.vscode-language-pack-zh-hans");
         }
-
-        if (options.UseExternalTerminal) {
-            saveFile(mingwPath / "pause-console.ps1", Embed::PAUSE_CONSOLE_PS1);
-            addKeybinding("f6", "workbench.action.tasks.runTask", "run and pause");
-        }
-        if (options.ApplyNonAsciiCheck) {
-            saveFile(mingwPath / "check-ascii.ps1", Embed::CHECK_ASCII_PS1);
+        if constexpr (Native::isWindows) {
+            fs::path mingwPath(options.MingwPath);
+            if (options.UseExternalTerminal) {
+                saveFile(mingwPath / "pause-console.ps1", Embed::PAUSE_CONSOLE_PS1);
+                addKeybinding("f6", "workbench.action.tasks.runTask", "run and pause");
+            }
+            if (options.ApplyNonAsciiCheck) {
+                saveFile(mingwPath / "check-ascii.ps1", Embed::CHECK_ASCII_PS1);
+            }
+            if (!options.NoSetEnv) {
+                addToPath(mingwPath);
+            }
+        } else {
+            // *nix specified
+            // TODO
         }
 
         if (fs::exists(dotVscode)) {
@@ -492,10 +499,6 @@ void Generator::generate() {
         generateTasksJson(dotVscode / "tasks.json");
         generateLaunchJson(dotVscode / "launch.json");
         generatePropertiesJson(dotVscode / "c_cpp_properties.json");
-
-        if (!options.NoSetEnv) {
-            addToPath(mingwPath);
-        }
         if (options.GenerateTestFile == ConfigOptions::GenTestType::Auto) {
             if (fs::exists(fs::path(options.WorkspacePath) / "helloworld.cpp")) {
                 options.GenerateTestFile = ConfigOptions::GenTestType::Never;

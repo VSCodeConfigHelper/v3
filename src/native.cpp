@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with VS Code Config Helper.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifdef _WIN32
+
 #include "native.h"
 
 #include <conio.h>
@@ -184,3 +186,5 @@ void checkSystemVersion() {
 }
 
 }  // namespace Native
+
+#endif  // _WIN32

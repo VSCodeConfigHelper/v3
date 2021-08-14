@@ -25,6 +25,8 @@
 #include <unordered_set>
 #include <optional>
 
+#include "config.h"
+
 struct CompilerInfo {
     std::string Path;
     std::string VersionText;
@@ -61,4 +63,5 @@ inline void to_json(nlohmann::json& j, const Environment& e) {
         j["VscodePath"] = nullptr;
     }
     j["Compilers"] = e.Compilers();
+    j["Version"] = PROJECT_VERSION;
 }

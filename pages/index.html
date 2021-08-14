@@ -67,7 +67,7 @@
                         </div>
                     </v-col>
                 </v-row>
-                <v-footer fixed="70px">
+                <v-footer fixed height="70px">
                     <v-row justify="center">
                         <v-col cols="9">
                             <a href="https://guyutongxue.gitee.io/VSCodeConfigHelper" target="_blank">版本 2.x 主页</a>
@@ -97,9 +97,9 @@
                         this.latestVersion = v["tag_name"];
                         if (v["assets"] && v["assets"].length > 0) {
                             const asset = v["assets"][0];
-                            githubUrl = asset["browser_download_url"];
+                            this.githubUrl = asset["browser_download_url"];
                         } else {
-                            githubUrl = v["html_url"];
+                            this.githubUrl = v["html_url"];
                         }
                     });
             },

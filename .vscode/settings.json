@@ -8,9 +8,10 @@
         "args": [
             // "--help"
             "--use-gui",
-            "--gui-address=http://localhost:3000/config.html",
+            "--gui-address=http://localhost:3000/pages/config.html",
             "--verbose"
         ],
         "externalConsole": false
-    }
+    },
+    "cmake.configureOnOpen": true
 }

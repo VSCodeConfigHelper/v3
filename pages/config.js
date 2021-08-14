@@ -62,6 +62,9 @@ const vm = new Vue({
                 // Get folder name (not exe)
                 this.vscodePath = dirname(v.VscodePath);
             }
+            if ("Version" in v) {
+                this.backendVersion = v.Version;
+            }
             this.compilers = v.Compilers.map(m => ({
                 path: dirname(m.Path),
                 version: m.VersionNumber,
@@ -82,6 +85,7 @@ const vm = new Vue({
     },
     data: {
         currentStep: 1,
+        backendVersion: "v3.0.0",
         vscodePath: "",
         vscodeStatus: "resolved",
         mingwTableHeader: [
