@@ -1,17 +1,17 @@
 // Copyright (C) 2021 Guyutongxue
-// 
+//
 // This file is part of VS Code Config Helper.
-// 
+//
 // VS Code Config Helper is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // VS Code Config Helper is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with VS Code Config Helper.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -55,6 +55,7 @@ Environment::Environment() {
 }
 
 std::optional<std::string> Environment::getVscodePath() {
+#ifdef _WIN32
     LOG_INF("从注册表中尝试获取 VS Code 路径...");
     auto result{Native::getRegistry(HKEY_CLASSES_ROOT, "vscode\\shell\\open\\command", "")};
     if (!result) return std::nullopt;
@@ -69,35 +70,29 @@ std::optional<std::string> Environment::getVscodePath() {
         LOG_DBG("Found VS Code path: ", vscodePath);
         return vscodePath;
     }
+#endif
     return std::nullopt;
 }
 
 std::unordered_set<std::string> Environment::getPaths() {
     LOG_INF("获取环境变量 Path 中的值...");
-
+    std::ostringstream allPath;
+#ifdef _WIN32
     auto usrPath{Native::getCurrentUserEnv("Path")};
     auto sysPath{Native::getLocalMachineEnv("Path")};
     LOG_DBG("User Path: ", usrPath ? *usrPath : "");
     LOG_DBG("System Path: ", sysPath ? *sysPath : "");
 
-    std::ostringstream allPath;
     if (usrPath) allPath << *usrPath;
     allPath << ';';
     if (sysPath) allPath << *sysPath;
+#endif
 
     // https://stackoverflow.com/a/47923278
     boost::regex pathSplitter(";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
     std::unordered_set<std::string> result;
     boost::split_regex(result, allPath.str(), pathSplitter);
     return result;
-}
-
-const std::optional<std::string>& Environment::VscodePath() const {
-    return vscodePath;
-}
-
-const std::vector<CompilerInfo>& Environment::Compilers() const {
-    return compilers;
 }
 
 std::optional<std::string> Environment::testCompiler(const boost::filesystem::path& path) {

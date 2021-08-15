@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with VS Code Config Helper.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <windows.h>
-#include <shellapi.h>
 
 #include <boost/nowide/args.hpp>
 #include <boost/nowide/filesystem.hpp>

@@ -1,26 +1,30 @@
 // Copyright (C) 2021 Guyutongxue
-// 
+//
 // This file is part of VS Code Config Helper.
-// 
+//
 // VS Code Config Helper is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // VS Code Config Helper is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with VS Code Config Helper.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/trivial.hpp>
+
+#include "native.h"
 
 namespace Log {
 
@@ -30,6 +34,7 @@ void init(bool verbose);
 template <typename... Ts>
 void log(boost::log::trivial::severity_level level, const Ts&... content) {
     using namespace boost::log;
+#ifdef _WIN32
     WORD color{0x0F};
     switch (level) {
         case trivial::trace: color = 0x08; break;
@@ -43,6 +48,7 @@ void log(boost::log::trivial::severity_level level, const Ts&... content) {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(hstdout, &csbi);
     SetConsoleTextAttribute(hstdout, color);
+#endif
     record rec = logger.open_record(keywords::severity = level);
     if (rec) {
         record_ostream strm(rec);
@@ -50,7 +56,9 @@ void log(boost::log::trivial::severity_level level, const Ts&... content) {
         strm.flush();
         logger.push_record(std::move(rec));
     }
+#ifdef _WIN32
     SetConsoleTextAttribute(hstdout, csbi.wAttributes);
+#endif
 }
 
 }  // namespace Log

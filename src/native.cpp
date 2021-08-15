@@ -15,13 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with VS Code Config Helper.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifdef _WIN32
-
 #include "native.h"
 
+#if _WIN32
 #include <conio.h>
 #include <shlobj.h>
 #include <versionhelpers.h>
+#else
+#include <pwd.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
 
 #include <boost/nowide/convert.hpp>
 #include <stdexcept>
@@ -31,6 +35,8 @@
 namespace Native {
 
 using namespace boost::nowide;
+
+#ifdef _WIN32
 
 std::optional<std::string> browseFolder(const std::string& initDir) {
     wchar_t path[MAX_PATH];
@@ -158,23 +164,36 @@ static std::string getSpecialFolder(const GUID folderId) {
     }
 }
 
-std::string getAppdata() {
-    return getSpecialFolder(FOLDERID_RoamingAppData);
-}
-
 std::string getDesktop() {
     return getSpecialFolder(FOLDERID_Desktop);
 }
 
+#endif  // _WIN32
+
+std::string getAppdata() {
+#if _WIN32
+    return getSpecialFolder(FOLDERID_RoamingAppData);
+#else
+    const char* homeDir{getenv("HOME")};
+    if (homeDir == nullptr) {
+        homeDir = getpwuid(getuid())->pw_dir;
+    }
+    return homeDir;
+#endif
+}
+
 boost::filesystem::path getTempFilePath(const std::string& filename) {
-    wchar_t path[MAX_PATH];
-    GetTempPath(MAX_PATH, path);
-    boost::filesystem::path tempDir{narrow(path)};
+    boost::filesystem::path tempDir{boost::filesystem::temp_directory_path()};
     return tempDir / filename;
 }
 
 char getch() {
-    return static_cast<char>(std::tolower(_getch()));
+#if _WIN32
+    int ch{_getch()};
+#else
+    int ch{getchar()};
+#endif
+    return static_cast<char>(std::tolower(ch));
 }
 
 void checkSystemVersion() {
@@ -186,5 +205,3 @@ void checkSystemVersion() {
 }
 
 }  // namespace Native
-
-#endif  // _WIN32

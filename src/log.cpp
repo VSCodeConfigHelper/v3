@@ -17,9 +17,6 @@
 
 #include "log.h"
 
-#include <fcntl.h>
-#include <io.h>
-
 #include <boost/locale/generator.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
@@ -79,8 +76,10 @@ void init(bool verbose) {
         logging::add_console_log(std::cout)};
 
     consoleSink->set_formatter(&consoleFormatter);
+    #if _WIN32
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
+    #endif
 
     if (verbose) {
         consoleSink->set_filter(trivial::severity >= trivial::info);

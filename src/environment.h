@@ -1,29 +1,28 @@
 // Copyright (C) 2021 Guyutongxue
-// 
+//
 // This file is part of VS Code Config Helper.
-// 
+//
 // VS Code Config Helper is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // VS Code Config Helper is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with VS Code Config Helper.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <nlohmann/json.hpp>
 #include <boost/filesystem.hpp>
-
-#include <string>
-#include <vector>
-#include <unordered_set>
+#include <nlohmann/json.hpp>
 #include <optional>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 #include "config.h"
 
@@ -34,7 +33,6 @@ struct CompilerInfo {
     std::string VersionNumber;
     std::string PackageString;
     CompilerInfo(const std::string& path, const std::string& versionText);
-
 };
 
 class Environment {
@@ -46,8 +44,13 @@ class Environment {
 
 public:
     Environment();
-    const std::optional<std::string>& VscodePath() const;
-    const std::vector<CompilerInfo>& Compilers() const;
+    const std::optional<std::string>& VscodePath() const {
+        return vscodePath;
+    }
+
+    const std::vector<CompilerInfo>& Compilers() const {
+        return compilers;
+    }
 
     static std::optional<std::string> testCompiler(const boost::filesystem::path& path);
 };

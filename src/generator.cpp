@@ -36,7 +36,7 @@ using namespace std::literals;
 
 std::string ExtensionManager::runScript(const std::initializer_list<std::string>& args) {
     bp::ipstream is;
-    bp::child proc(scriptPath, args, bp::std_out > is);
+    bp::child proc(scriptPath, std::vector(args), bp::std_out > is);
     proc.wait();
     std::ostringstream oss;
     std::copy(std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>(),
@@ -171,6 +171,7 @@ void Generator::addKeybinding(const std::string& key, const std::string& command
 }
 
 void Generator::addToPath(const fs::path& path) {
+    #if _WIN32
     auto newPath{path.string()};
 
     auto sysPaths{splitPath<std::unordered_set>(Native::getLocalMachineEnv)};
@@ -192,6 +193,7 @@ void Generator::addToPath(const fs::path& path) {
     auto result{boost::join(paths, ";")};
     LOG_DBG("Final Path: ", result);
     Native::setCurrentUserEnv("Path", result);
+    #endif
 }
 
 void Generator::generateTasksJson(const fs::path& path) {
@@ -443,6 +445,7 @@ void Generator::openVscode(const std::optional<std::string>& filename) {
     }
 }
 void Generator::generateShortcut() {
+    #if _WIN32
     fs::path shortcutPath{fs::path(Native::getDesktop()) / "Visual Studio Code.lnk"};
     if (fs::exists(shortcutPath)) {
         LOG_WRN("快捷方式 ", shortcutPath, " 已存在，将被覆盖。");
@@ -456,6 +459,7 @@ void Generator::generateShortcut() {
     } else {
         LOG_WRN("快捷方式 ", shortcutPath, " 生成失败。");
     }
+    #endif
 }
 
 void Generator::generate() {

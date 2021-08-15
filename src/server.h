@@ -41,7 +41,9 @@ class Server {
 public:
     Server(const Environment& env);
 
-    int Port() const;
+    int Port() const {
+        return port;
+    }
     void startListen();
 
     static void runGui(const Environment& env);

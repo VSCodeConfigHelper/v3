@@ -44,29 +44,29 @@ std::optional<std::string> getCurrentUserEnv(const std::string& key);
 void setCurrentUserEnv(const std::string& key, const std::string& value);
 std::optional<std::string> getLocalMachineEnv(const std::string& key);
 
-std::string getAppdata();
 std::string getDesktop();
+
+#endif
+
+std::string getAppdata();
 boost::filesystem::path getTempFilePath(const std::string& filename);
-
 char getch();
-
 void checkSystemVersion();
 
+#if _WIN32
 constexpr const bool isWindows{true};
-
 #else
-
 constexpr const bool isWindows{false};
 
-constexpr const char* cCompiler{"gcc"};
-constexpr const char* cppCompiler{"g++"};
 
 #ifdef __APPLE__
-
 constexpr const char* cCompiler{"clang"};
 constexpr const char* cppCompiler{"clang++"}; 
-
+#else
+constexpr const char* cCompiler{"gcc"};
+constexpr const char* cppCompiler{"g++"};
 #endif // __APPLE__
+
 #endif  // _WIN32
 
 }  // namespace Native

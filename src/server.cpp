@@ -32,6 +32,8 @@
 #include "log.h"
 #include "native.h"
 
+#ifdef _WIN32
+
 namespace fs = boost::filesystem;
 using namespace std::literals;
 
@@ -146,10 +148,6 @@ int Server::bind() {
     }
 }
 
-int Server::Port() const {
-    return port;
-}
-
 void Server::startListen() {
     std::thread t([&]() { server.listen_after_bind(); });
     while (!shouldShutdownServer) {
@@ -160,16 +158,20 @@ void Server::startListen() {
     t.join();
 }
 
+#endif
+
 void Server::runGui(const Environment& env) {
-    Server s(env);
-    LOG_INF("本地服务器已启动，即将开始监听 ", s.port, " 端口...");
-    auto openAddress{Cli::options.GuiAddress + "?port=" + std::to_string(s.port)};
-    if (!Cli::options.NoOpenBrowser) {
-        LOG_WRN("已打开网页 ", openAddress, "，请在浏览器中继续操作。请不要关闭此窗口。");
-        std::system(("START " + openAddress).c_str());
-    } else {
-        LOG_WRN("--no-open-browser 选项禁用了浏览器启动。请与 localhost:", s.port,
-                " 端口通信完成配置。");
+    if constexpr (Native::isWindows) {
+        Server s(env);
+        LOG_INF("本地服务器已启动，即将开始监听 ", s.port, " 端口...");
+        auto openAddress{Cli::options.GuiAddress + "?port=" + std::to_string(s.port)};
+        if (!Cli::options.NoOpenBrowser) {
+            LOG_WRN("已打开网页 ", openAddress, "，请在浏览器中继续操作。请不要关闭此窗口。");
+            std::system(("START " + openAddress).c_str());
+        } else {
+            LOG_WRN("--no-open-browser 选项禁用了浏览器启动。请与 localhost:", s.port,
+                    " 端口通信完成配置。");
+        }
+        s.startListen();
     }
-    s.startListen();
 }
