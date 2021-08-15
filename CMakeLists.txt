@@ -38,12 +38,16 @@ endif()
 target_link_libraries(VSCodeConfigHelper ${CONAN_LIBS})
 
 # Statically link system runtime library
-if(MSYS OR MINGW)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(VSCodeConfigHelper -static-libgcc -static-libstdc++)
-elseif(MSVC)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  # Clang or AppleClang
+  # TODO
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set_property(
     TARGET VSCodeConfigHelper PROPERTY MSVC_RUNTIME_LIBRARY
                                        "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 endif()
 
 set_property(TARGET VSCodeConfigHelper
