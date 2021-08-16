@@ -21,8 +21,11 @@
 #include "environment.h"
 
 namespace Cli {
+
+enum ModeType { GuiMode, MingwMode, MsvcMode, GccMode, AppleMode };
+
 struct ProgramOptions : ConfigOptions {
-    bool UseGui;
+    ModeType Mode;
     bool Verbose;
     bool AssumeYes;
 

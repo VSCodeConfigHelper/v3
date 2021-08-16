@@ -55,16 +55,20 @@ void checkSystemVersion();
 
 #if _WIN32
 constexpr const bool isWindows{true};
+constexpr const bool isMac{false};
 #else
 constexpr const bool isWindows{false};
-
 
 #ifdef __APPLE__
 constexpr const char* cCompiler{"clang"};
 constexpr const char* cppCompiler{"clang++"}; 
+
+constexpr const bool isMac{true};
 #else
 constexpr const char* cCompiler{"gcc"};
 constexpr const char* cppCompiler{"g++"};
+
+constexpr const bool isMac{false};
 #endif // __APPLE__
 
 #endif  // _WIN32
