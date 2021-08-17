@@ -121,13 +121,38 @@ ContainerT<std::string> splitPath(std::optional<std::string> (*getter)(const std
 
 }  // namespace
 
-Generator::Generator(const ConfigOptions& options) : options{options} {}
+Generator::Generator(CurrentOptions options) : options{options} {}
 
 const char* Generator::compilerExe() {
-    return options.Language == ConfigOptions::LanguageType::Cpp ? "g++.exe" : "gcc.exe";
+    if constexpr (Native::isWindows)
+        return options.Language == BaseOptions::LanguageType::Cpp ? "g++.exe" : "gcc.exe";
+    else
+        return options.Language == BaseOptions::LanguageType::Cpp ? "g++" : "gcc";
 }
 const char* Generator::fileExt() {
-    return options.Language == ConfigOptions::LanguageType::Cpp ? ".cpp" : ".c";
+    return options.Language == BaseOptions::LanguageType::Cpp ? ".cpp" : ".c";
+}
+std::string Generator::vscodePath() {
+#ifdef WINDOWS
+        return options.VscodePath;
+#else
+        return "code";
+#endif
+}
+
+std::string Generator::binPath(const std::string& filename) {
+#ifdef WINDOWS
+        return (fs::path(options.MingwPath) / filename).string();
+#else
+        return filename;
+#endif
+}
+std::string Generator::scriptPath(const std::string& filename) {
+#ifdef WINDOWS
+        return (fs::path(options.MingwPath) / filename).string();
+#else
+        return filename;
+#endif
 }
 
 void Generator::saveFile(const fs::path& path, const char* content) {
@@ -170,8 +195,8 @@ void Generator::addKeybinding(const std::string& key, const std::string& command
     fs::save_string_file(filepath, resultStr);
 }
 
+#ifdef WINDOWS
 void Generator::addToPath(const fs::path& path) {
-    #if _WIN32
     auto newPath{path.string()};
 
     auto sysPaths{splitPath<std::unordered_set>(Native::getLocalMachineEnv)};
@@ -193,8 +218,8 @@ void Generator::addToPath(const fs::path& path) {
     auto result{boost::join(paths, ";")};
     LOG_DBG("Final Path: ", result);
     Native::setCurrentUserEnv("Path", result);
-    #endif
 }
+#endif
 
 void Generator::generateTasksJson(const fs::path& path) {
     using json = nlohmann::json;
@@ -205,7 +230,7 @@ void Generator::generateTasksJson(const fs::path& path) {
     auto sfbTask(json::object({
         {"type", "process"}, // "cppbuild" won't apply options
         {"label", "gcc single file build"},
-        {"command", (fs::path(options.MingwPath) / compilerExe()).string()},
+        {"command", binPath(compilerExe())},
         {"args", args},
         {"group", json::object({
             {"kind", "build"},
@@ -232,7 +257,7 @@ void Generator::generateTasksJson(const fs::path& path) {
             "ByPass",
             "-NoProfile",
             "-File",
-            (fs::path(options.MingwPath) / "pause-console.ps1").string(),
+            scriptPath("pause-console.ps1"),
             "${fileDirname}\\${fileBasenameNoExtension}.exe"
         })},
         {"presentation", json::object({
@@ -255,7 +280,7 @@ void Generator::generateTasksJson(const fs::path& path) {
             "ByPass",
             "-NoProfile",
             "-File",
-            (fs::path(options.MingwPath) / "check-ascii.ps1").string(),
+            scriptPath("check-ascii.ps1"),
             "${fileDirname}\\${fileBasenameNoExtension}.exe"
         })},
         {"presentation", json::object({
@@ -276,7 +301,9 @@ void Generator::generateTasksJson(const fs::path& path) {
     auto result(json::object({
         {"version", "2.0.0"},
         {"tasks", allTasks},
-        {"options", json::object({
+        {"options", json::object(
+#ifdef WINDOWS
+        {
             {"shell", json::object({
                 {"executable", "C:\\Windows\\System32\\cmd.exe"},
                 {"args", json::array({
@@ -286,7 +313,9 @@ void Generator::generateTasksJson(const fs::path& path) {
             {"env", json::object({
                 {"Path", options.MingwPath + ";${env:Path}"}
             })}
-        })}
+        }
+#endif
+        )}
     }));
     // clang-format on
     auto resultStr{result.dump(2)};
@@ -312,7 +341,7 @@ void Generator::generateLaunchJson(const fs::path& path) {
                 {"environment", json::array({})},
                 {"externalConsole", options.UseExternalTerminal},
                 {"MIMode", "gdb"},
-                {"miDebuggerPath", (fs::path(options.MingwPath) / "gdb.exe").string()},
+                {"miDebuggerPath", binPath("gdb.exe")},
                 {"setupCommands", json::array({
                     json::object({
                         {"text", "-enable-pretty-printing"},
@@ -341,8 +370,8 @@ void Generator::generatePropertiesJson(const fs::path& path) {
                 {"includePath", json::array({
                     "${workspaceFolder}/**"
                 })},
-                {"compilerPath", (fs::path(options.MingwPath) / compilerExe()).string()},
-                {options.Language == ConfigOptions::LanguageType::Cpp ? 
+                {"compilerPath", binPath(compilerExe())},
+                {options.Language == BaseOptions::LanguageType::Cpp ? 
                     "cppStandard" : 
                     "cStandard",
                 options.LanguageStandard == "c++23" ?
@@ -372,7 +401,7 @@ std::string Generator::generateTestFile() {
                                                 ? "F6 后，您将在弹出的"
                                                 : "F5 后，您将在下方弹出的终端（Terminal）") +
                                            "窗口中看到这一行字。"};
-    bool isCpp{options.Language == ConfigOptions::LanguageType::Cpp};
+    bool isCpp{options.Language == BaseOptions::LanguageType::Cpp};
     std::string (*c)(const std::string&){nullptr};
     if (isCpp)  // I'm wonder why MSVC IntelliSense doesn't support Lambda in ?:.
         c = [](const std::string& s) { return "// " + s; };
@@ -437,15 +466,16 @@ void Generator::openVscode(const std::optional<std::string>& filename) {
         args += "--goto", *filename;
     }
     LOG_INF("启动 VS Code...");
-    LOG_DBG(options.VscodePath, " ", boost::join(args, " "));
+    LOG_DBG(vscodePath(), " ", boost::join(args, " "));
     try {
-        bp::spawn(options.VscodePath, bp::args = args, bp::std_out > bp::null);
+        bp::spawn(vscodePath(), bp::args = args, bp::std_out > bp::null);
     } catch (std::exception& e) {
         LOG_WRN("启动 VS Code 失败：", e.what());
     }
 }
+
+#ifdef WINDOWS
 void Generator::generateShortcut() {
-    #if _WIN32
     fs::path shortcutPath{fs::path(Native::getDesktop()) / "Visual Studio Code.lnk"};
     if (fs::exists(shortcutPath)) {
         LOG_WRN("快捷方式 ", shortcutPath, " 已存在，将被覆盖。");
@@ -459,14 +489,14 @@ void Generator::generateShortcut() {
     } else {
         LOG_WRN("快捷方式 ", shortcutPath, " 生成失败。");
     }
-    #endif
 }
+#endif
 
 void Generator::generate() {
     try {
         fs::path dotVscode(fs::path(options.WorkspacePath) / ".vscode");
 
-        ExtensionManager extensions(options.VscodePath);
+        ExtensionManager extensions(vscodePath());
         if (options.ShouldUninstallExtensions) {
             extensions.uninstallAll();
         }
@@ -478,54 +508,54 @@ void Generator::generate() {
         if (options.ShouldInstallL11n) {
             extensions.install("ms-ceintl.vscode-language-pack-zh-hans");
         }
-        if constexpr (Native::isWindows) {
-            fs::path mingwPath(options.MingwPath);
-            if (options.UseExternalTerminal) {
-                saveFile(mingwPath / "pause-console.ps1", Embed::PAUSE_CONSOLE_PS1);
-                addKeybinding("f6", "workbench.action.tasks.runTask", "run and pause");
-            }
-            if (options.ApplyNonAsciiCheck) {
-                saveFile(mingwPath / "check-ascii.ps1", Embed::CHECK_ASCII_PS1);
-            }
-            if (!options.NoSetEnv) {
-                addToPath(mingwPath);
-            }
-        } else {
-            // *nix specified
-            // TODO
+#ifdef WINDOWS
+        fs::path mingwPath(options.MingwPath);
+        if (options.UseExternalTerminal) {
+            saveFile(mingwPath / "pause-console.ps1", Embed::PAUSE_CONSOLE_PS1);
+            addKeybinding("f6", "workbench.action.tasks.runTask", "run and pause");
         }
+        if (options.ApplyNonAsciiCheck) {
+            saveFile(mingwPath / "check-ascii.ps1", Embed::CHECK_ASCII_PS1);
+        }
+        if (!options.NoSetEnv) {
+            addToPath(mingwPath);
+        }
+#endif
 
-        if (fs::exists(dotVscode)) {
-            fs::remove_all(dotVscode);
-            LOG_INF("移除了已存在的 .vscode 文件夹。");
-        }
-        fs::create_directories(dotVscode);
-        generateTasksJson(dotVscode / "tasks.json");
-        generateLaunchJson(dotVscode / "launch.json");
-        generatePropertiesJson(dotVscode / "c_cpp_properties.json");
-        if (options.GenerateTestFile == ConfigOptions::GenTestType::Auto) {
-            if (fs::exists(fs::path(options.WorkspacePath) / "helloworld.cpp")) {
-                options.GenerateTestFile = ConfigOptions::GenTestType::Never;
-            } else {
-                options.GenerateTestFile = ConfigOptions::GenTestType::Always;
-            }
-        }
-        std::optional<std::string> testFilename;
-        if (options.GenerateTestFile == ConfigOptions::GenTestType::Always) {
-            testFilename = generateTestFile();
-        }
-        if (options.OpenVscodeAfterConfig) {
-            openVscode(testFilename);
-        }
-        if (options.GenerateDesktopShortcut) {
-            generateShortcut();
-        }
-        if (!options.NoSendAnalytics) {
-            sendAnalytics();
-        }
-        LOG_INF("配置完成。");
-    } catch (std::exception& e) {
-        LOG_ERR(e.what());
-        throw;
+    if (fs::exists(dotVscode)) {
+        fs::remove_all(dotVscode);
+        LOG_INF("移除了已存在的 .vscode 文件夹。");
     }
+    fs::create_directories(dotVscode);
+    generateTasksJson(dotVscode / "tasks.json");
+    generateLaunchJson(dotVscode / "launch.json");
+    generatePropertiesJson(dotVscode / "c_cpp_properties.json");
+    if (options.GenerateTestFile == BaseOptions::GenTestType::Auto) {
+        if (fs::exists(fs::path(options.WorkspacePath) / "helloworld.cpp")) {
+            options.GenerateTestFile = BaseOptions::GenTestType::Never;
+        } else {
+            options.GenerateTestFile = BaseOptions::GenTestType::Always;
+        }
+    }
+    std::optional<std::string> testFilename;
+    if (options.GenerateTestFile == BaseOptions::GenTestType::Always) {
+        testFilename = generateTestFile();
+    }
+    if (options.OpenVscodeAfterConfig) {
+        openVscode(testFilename);
+    }
+#ifdef WINDOWS
+    if (options.GenerateDesktopShortcut) {
+        generateShortcut();
+    }
+#endif
+    if (!options.NoSendAnalytics) {
+        sendAnalytics();
+    }
+    LOG_INF("配置完成。");
+}
+catch (std::exception& e) {
+    LOG_ERR(e.what());
+    throw;
+}
 }

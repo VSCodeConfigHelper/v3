@@ -208,9 +208,9 @@ void init(int argc, char** argv) {
     // parse other options
     boost::to_lower(languageText);
     if (languageText == "c++") {
-        options.Language = ConfigOptions::LanguageType::Cpp;
+        options.Language = BaseOptions::LanguageType::Cpp;
     } else if (languageText == "c") {
-        options.Language = ConfigOptions::LanguageType::C;
+        options.Language = BaseOptions::LanguageType::C;
     } else {
         LOG_ERR(languageText, "是不支持的目标语言。程序将退出");
         std::exit(1);
@@ -219,11 +219,11 @@ void init(int argc, char** argv) {
         options.GuiAddress = DEFAULT_GUI_ADDRESS;
     }
     if (vm.count("generate-test")) {
-        options.GenerateTestFile = ConfigOptions::GenTestType::Always;
+        options.GenerateTestFile = BaseOptions::GenTestType::Always;
     } else if (vm.count("no-generate-test")) {
-        options.GenerateTestFile = ConfigOptions::GenTestType::Never;
+        options.GenerateTestFile = BaseOptions::GenTestType::Never;
     } else {
-        options.GenerateTestFile = ConfigOptions::GenTestType::Auto;
+        options.GenerateTestFile = BaseOptions::GenTestType::Auto;
     }
     boost::to_lower(modeText);
     if (modeText == "gui") {
@@ -342,16 +342,16 @@ void runCli(const Environment& env) {
         LOG_INF("未从命令行传入语言标准，将根据编译器选择语言标准。");
         auto [cppStd, cStd]{getLatestSupportStandardFromCompiler(pInfo->VersionNumber)};
         options.LanguageStandard =
-            options.Language == ConfigOptions::LanguageType::Cpp ? cppStd : cStd;
+            options.Language == BaseOptions::LanguageType::Cpp ? cppStd : cStd;
         LOG_INF("将使用语言标准：", options.LanguageStandard, "。");
     } else {
-        if (options.Language == ConfigOptions::LanguageType::Cpp &&
+        if (options.Language == BaseOptions::LanguageType::Cpp &&
             !contains(cppStandards, options.LanguageStandard)) {
             LOG_ERR(options.LanguageStandard, " 不是合法的 C++ 语言标准。程序将退出。");
             LOG_INF("合法的 C++ 语言标准有：", boost::join(cppStandards, ", "));
             std::exit(1);
         }
-        if (options.Language == ConfigOptions::LanguageType::C &&
+        if (options.Language == BaseOptions::LanguageType::C &&
             !contains(cStandards, options.LanguageStandard)) {
             LOG_ERR(options.LanguageStandard, " 不是合法的 C 语言标准。程序将退出。");
             LOG_INF("合法的 C 语言标准有：", boost::join(cStandards, ", "));
