@@ -107,7 +107,7 @@ void Server::setHandlers() {
         auto j(nlohmann::json::parse(body));
         if (j.at("success").get<bool>()) {
             auto config(j.at("config"));
-            auto options{config.get<ConfigOptions>()};
+            auto options{config.get<WindowsOptions>()};
             Generator g(options);
             g.generate();
         }
