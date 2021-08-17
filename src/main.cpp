@@ -17,6 +17,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <shellapi.h>
 #endif
 #include <boost/nowide/args.hpp>
 #include <boost/nowide/filesystem.hpp>
@@ -33,7 +34,7 @@ int main(int argc, char** argv) {
     Cli::init(argc, argv);
     // LOG_WRN("你好");
     Environment env;
-    if (Cli::options.UseGui) {
+    if (Cli::options.Mode == Cli::GuiMode) {
         Server::runGui(env);
     } else {
         Cli::runCli(env);

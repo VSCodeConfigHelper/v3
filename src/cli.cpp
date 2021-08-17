@@ -1,17 +1,17 @@
 // Copyright (C) 2021 Guyutongxue
-// 
+//
 // This file is part of VS Code Config Helper.
-// 
+//
 // VS Code Config Helper is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // VS Code Config Helper is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with VS Code Config Helper.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -38,7 +38,7 @@ ProgramOptions options;
 
 namespace {
 
-static void preprocessOptions(const po::options_description& desc) {
+void preprocessOptions(const po::options_description& desc) {
     Log::init(options.Verbose);
     if (options.Help) {
         desc.print(std::cout, 30);
@@ -51,12 +51,34 @@ static void preprocessOptions(const po::options_description& desc) {
 }
 
 template <typename T>
-static void addOption(po::options_description& desc, const char* name, T& target,
+void addOption(po::options_description& desc, const char* name, T& target,
                       const char* info) {
     if constexpr (std::is_same_v<T, bool>) {
         desc.add_options()(name, po::bool_switch(&target), info);
     } else {
         desc.add_options()(name, po::value<T>(&target), info);
+    }
+}
+
+void checkOsCompatibility(const std::string& modeText) {
+    if constexpr (Native::isWindows) {
+        if (options.Mode == AppleMode || options.Mode == GuiMode) {
+            LOG_ERR("Windows 版本工具中 ", modeText, " 模式不可用。程序将退出。");
+            std::exit(1);
+        }
+    } else {
+        // *nix
+        if (options.Mode == MsvcMode || options.Mode == GuiMode || options.Mode == MingwMode) {
+            LOG_ERR(modeText, "仅在 Windows 版本工具中可用。程序将退出。");
+            std::exit(1);
+        }
+        if constexpr (!Native::isMac) {
+            // Linux
+            if (options.Mode == AppleMode) {
+                LOG_ERR(modeText, "仅在 macOS 版本工具中可用。程序将退出。");
+                std::exit(1);
+            }
+        }
     }
 }
 
@@ -114,8 +136,6 @@ void init(int argc, char** argv) {
     // The length of the ASCII string must be a multiple of 3, otherwise the help message may fail
     // to print
     ADD_OPTION_G("verbose,V", Verbose, "显示详细的输出信息");
-    ADD_OPTION_G("use-gui,g", UseGui,
-                 "使用 GUI  进行配置。当不提供任何命令行参数时，此选项将被默认使用");
     ADD_OPTION_G("assume-yes,y", AssumeYes, "关闭命令行交互操作，总是假设选择“是”");
     ADD_OPTION_G("help,h", Help, "显示此帮助信息并退出");
     ADD_OPTION_G("version,v", Version, "显示程序版本信息并退出");
@@ -146,11 +166,15 @@ void init(int argc, char** argv) {
 
     // other options that cannot be parsed directly
     std::string languageText;
+    std::string modeText;
     // clang-format off
     configOpt.add_options()
         ("language", po::value<std::string>(&languageText)->default_value("c++"), "指定配置目标语言。可为 c++  或 c")
         ("generate-test", "强制生成测试文件")
         ("no-generate-test", "不生成测试文件")
+    ;
+    generalOpt.add_options()
+        ("mode", po::value<std::string>(&modeText), "指定配置模式。当不提供任何命令行参数时，TODO")
     ;
     // clang-format on
 
@@ -166,21 +190,27 @@ void init(int argc, char** argv) {
     }
 
     if (argc == 1) {
-        options.UseGui = true;
+        if constexpr (Native::isWindows) {
+            options.Mode = GuiMode;
+        } else if constexpr (Native::isMac) {
+            options.Mode = AppleMode;
+        } else {
+            options.Mode = GccMode;
+        }
     }
     preprocessOptions(allOpts);
 
     if (parseError) {
         LOG_ERR("命令行参数存在错误：", *parseError);
     }
-    Native::checkSystemVersion();    
+    Native::checkSystemVersion();
 
     // parse other options
     boost::to_lower(languageText);
     if (languageText == "c++") {
-        options.Language = ConfigOptions::LanguageType::Cpp;
+        options.Language = BaseOptions::LanguageType::Cpp;
     } else if (languageText == "c") {
-        options.Language = ConfigOptions::LanguageType::C;
+        options.Language = BaseOptions::LanguageType::C;
     } else {
         LOG_ERR(languageText, "是不支持的目标语言。程序将退出");
         std::exit(1);
@@ -189,12 +219,28 @@ void init(int argc, char** argv) {
         options.GuiAddress = DEFAULT_GUI_ADDRESS;
     }
     if (vm.count("generate-test")) {
-        options.GenerateTestFile = ConfigOptions::GenTestType::Always;
+        options.GenerateTestFile = BaseOptions::GenTestType::Always;
     } else if (vm.count("no-generate-test")) {
-        options.GenerateTestFile = ConfigOptions::GenTestType::Never;
+        options.GenerateTestFile = BaseOptions::GenTestType::Never;
     } else {
-        options.GenerateTestFile = ConfigOptions::GenTestType::Auto;
+        options.GenerateTestFile = BaseOptions::GenTestType::Auto;
     }
+    boost::to_lower(modeText);
+    if (modeText == "gui") {
+            options.Mode = GuiMode;
+    } else if (modeText == "apple") {
+            options.Mode = AppleMode;
+    } else if (modeText == "gcc") {
+        options.Mode = GccMode;
+    } else if (modeText == "msvc") {
+            options.Mode = MsvcMode;
+    } else if (modeText == "mingw") {
+            options.Mode = MingwMode;
+    } else {
+        LOG_ERR("未知模式 ", modeText, "。程序将退出。");
+        std::exit(1);
+    }
+    checkOsCompatibility(modeText);
 
 #undef ADD_OPTION_G
 #undef ADD_OPTION_C
@@ -296,16 +342,16 @@ void runCli(const Environment& env) {
         LOG_INF("未从命令行传入语言标准，将根据编译器选择语言标准。");
         auto [cppStd, cStd]{getLatestSupportStandardFromCompiler(pInfo->VersionNumber)};
         options.LanguageStandard =
-            options.Language == ConfigOptions::LanguageType::Cpp ? cppStd : cStd;
+            options.Language == BaseOptions::LanguageType::Cpp ? cppStd : cStd;
         LOG_INF("将使用语言标准：", options.LanguageStandard, "。");
     } else {
-        if (options.Language == ConfigOptions::LanguageType::Cpp &&
+        if (options.Language == BaseOptions::LanguageType::Cpp &&
             !contains(cppStandards, options.LanguageStandard)) {
             LOG_ERR(options.LanguageStandard, " 不是合法的 C++ 语言标准。程序将退出。");
             LOG_INF("合法的 C++ 语言标准有：", boost::join(cppStandards, ", "));
             std::exit(1);
         }
-        if (options.Language == ConfigOptions::LanguageType::C &&
+        if (options.Language == BaseOptions::LanguageType::C &&
             !contains(cStandards, options.LanguageStandard)) {
             LOG_ERR(options.LanguageStandard, " 不是合法的 C 语言标准。程序将退出。");
             LOG_INF("合法的 C 语言标准有：", boost::join(cStandards, ", "));

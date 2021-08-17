@@ -26,18 +26,14 @@
 
 #include <boost/filesystem.hpp>
 
-struct ConfigOptions {
+struct BaseOptions {
     enum class LanguageType { Cpp, C };
     enum class GenTestType { Auto, Always, Never };
 
-    std::string VscodePath;
-    std::string MingwPath;
     std::string WorkspacePath;
     LanguageType Language;
     std::string LanguageStandard;
     std::vector<std::string> CompileArgs;
-
-    bool NoSetEnv;
     bool UseExternalTerminal;
     bool ApplyNonAsciiCheck;
 
@@ -46,10 +42,28 @@ struct ConfigOptions {
     bool ShouldUninstallExtensions;
 
     GenTestType GenerateTestFile;
-    bool GenerateDesktopShortcut;
+
     bool OpenVscodeAfterConfig;
     bool NoSendAnalytics;
+
+    virtual ~BaseOptions() = default;
 };
+
+struct WindowsOptions : virtual BaseOptions {
+    std::string VscodePath;
+    std::string MingwPath;
+
+    bool NoSetEnv;
+    bool GenerateDesktopShortcut;
+};
+
+#ifdef _WIN32
+using CurrentOptions = WindowsOptions;
+#elif defined(__APPLE__)
+using CurrentOptions = AppleOptions;
+#else
+using CurrentOptions = BaseOptions;
+#endif
 
 class ExtensionManager {
     boost::filesystem::path scriptPath;
@@ -81,10 +95,13 @@ public:
 };
 
 class Generator {
-    ConfigOptions options;
+    CurrentOptions options;
 
     const char* compilerExe();
     const char* fileExt();
+    std::string vscodePath();
+    std::string binPath(const std::string& filename);
+    std::string scriptPath(const std::string& filename);
 
     void saveFile(const boost::filesystem::path& path, const char* content);
     void addKeybinding(const std::string& key, const std::string& command, const std::string& args);
@@ -100,11 +117,11 @@ class Generator {
     void sendAnalytics();
 
 public:
-    Generator(const ConfigOptions& options);
+    Generator(CurrentOptions options);
     void generate();
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ConfigOptions, VscodePath, MingwPath, WorkspacePath, Language,
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(WindowsOptions, VscodePath, MingwPath, WorkspacePath, Language,
                                    LanguageStandard, CompileArgs, NoSetEnv, UseExternalTerminal,
                                    ApplyNonAsciiCheck, ShouldInstallL11n, ShouldUninstallExtensions,
                                    GenerateTestFile, GenerateDesktopShortcut, OpenVscodeAfterConfig,

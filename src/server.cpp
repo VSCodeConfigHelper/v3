@@ -173,5 +173,8 @@ void Server::runGui(const Environment& env) {
                     " 端口通信完成配置。");
         }
         s.startListen();
+        return;
     }
+    LOG_ERR("仅 MinGW 模式支持 GUI。程序将退出。");
+    std::exit(1);
 }
