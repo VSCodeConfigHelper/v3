@@ -17,7 +17,7 @@
 
 #include "native.h"
 
-#if _WIN32
+#if WINDOWS
 #include <conio.h>
 #include <shlobj.h>
 #include <versionhelpers.h>
@@ -25,6 +25,8 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <boost/filesystem.hpp>
 #endif
 
 #include <boost/nowide/convert.hpp>
@@ -36,7 +38,7 @@ namespace Native {
 
 using namespace boost::nowide;
 
-#ifdef _WIN32
+#ifdef WINDOWS
 
 std::optional<std::string> browseFolder(const std::string& initDir) {
     wchar_t path[MAX_PATH];
@@ -168,10 +170,10 @@ std::string getDesktop() {
     return getSpecialFolder(FOLDERID_Desktop);
 }
 
-#endif  // _WIN32
+#endif  // WINDOWS
 
 std::string getAppdata() {
-#if _WIN32
+#if WINDOWS
     return getSpecialFolder(FOLDERID_RoamingAppData);
 #else
     const char* homeDir{getenv("HOME")};
@@ -188,7 +190,7 @@ boost::filesystem::path getTempFilePath(const std::string& filename) {
 }
 
 char getch() {
-#if _WIN32
+#if WINDOWS
     int ch{_getch()};
 #else
     int ch{getchar()};
@@ -197,9 +199,16 @@ char getch() {
 }
 
 void checkSystemVersion() {
+#ifdef WINDOWS
 #ifdef _MSC_VER
     if (!IsWindows10OrGreater()) {
         LOG_WRN("此程序未在低于 Windows 10 的操作系统上测试过。程序可能出现问题。");
+    }
+#endif
+#elif defined(LINUX)
+    if (!boost::filesystem::exists("/etc/debian_version")) {
+        LOG_ERR("此程序仅支持 Debian/Ubuntu 发行版。您当前的操作系统不符合要求，程序将退出。");
+        std::exit(1);
     }
 #endif
 }

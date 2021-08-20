@@ -32,7 +32,7 @@
 #include "log.h"
 #include "native.h"
 
-#ifdef _WIN32
+#ifdef WINDOWS
 
 namespace fs = boost::filesystem;
 using namespace std::literals;

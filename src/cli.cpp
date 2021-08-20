@@ -60,28 +60,6 @@ void addOption(po::options_description& desc, const char* name, T& target,
     }
 }
 
-void checkOsCompatibility(const std::string& modeText) {
-    if constexpr (Native::isWindows) {
-        if (options.Mode == AppleMode || options.Mode == GuiMode) {
-            LOG_ERR("Windows 版本工具中 ", modeText, " 模式不可用。程序将退出。");
-            std::exit(1);
-        }
-    } else {
-        // *nix
-        if (options.Mode == MsvcMode || options.Mode == GuiMode || options.Mode == MingwMode) {
-            LOG_ERR(modeText, "仅在 Windows 版本工具中可用。程序将退出。");
-            std::exit(1);
-        }
-        if constexpr (!Native::isMac) {
-            // Linux
-            if (options.Mode == AppleMode) {
-                LOG_ERR(modeText, "仅在 macOS 版本工具中可用。程序将退出。");
-                std::exit(1);
-            }
-        }
-    }
-}
-
 std::pair<const char*, const char*> getLatestSupportStandardFromCompiler(
     const std::string& version) {
     try {
@@ -122,6 +100,7 @@ bool contains(const T& c, const U& v) {
 
 constexpr const char DEFAULT_GUI_ADDRESS[]{"https://vscch3.vercel.app/config.html"};
 
+
 }  // namespace
 
 void init(int argc, char** argv) {
@@ -139,16 +118,21 @@ void init(int argc, char** argv) {
     ADD_OPTION_G("assume-yes,y", AssumeYes, "关闭命令行交互操作，总是假设选择“是”");
     ADD_OPTION_G("help,h", Help, "显示此帮助信息并退出");
     ADD_OPTION_G("version,v", Version, "显示程序版本信息并退出");
+#ifdef WINDOWS
+    ADD_OPTION_C("use-gui,g", UseGui,
+                 "使用 GUI  进行配置。当不提供任何命令行参数时，此选项将被默认使用");
     ADD_OPTION_C("vscode-path", VscodePath,
                  "指定 VS Code 安装路径。若不提供，则工具自动从注册表获取");
     ADD_OPTION_C("mingw-path", MingwPath,
                  "指定  MinGW  的安装路径。若不提供，则工具自动从环境变量获取");
+#else
+    ADD_OPTION_C("compiler", Compiler, "指定编译器");
+#endif
     ADD_OPTION_C("workspace-path", WorkspacePath, "指定工作区文件夹路径。若使用 CLI  则必须提供");
     // ADD_OPTION_C("language", Language, "");
     decltype(options.LanguageStandard) a;
     ADD_OPTION_C("language-standard", LanguageStandard,
                  "指定语言标准。若不提供，则工具根据 MinGW 编译器版本选取");
-    ADD_OPTION_C("no-set-env", NoSetEnv, "不设置用户环境变量");
     ADD_OPTION_C("external-terminal", UseExternalTerminal, "使用外部终端进行运行和调试");
     ADD_OPTION_C("apply-nonascii-check", ApplyNonAsciiCheck,
                  "在调试前进行文件名中非 ASCII   字符的检查");
@@ -156,13 +140,18 @@ void init(int argc, char** argv) {
     ADD_OPTION_C("offline-cpptools", OfflineInstallCCpp, "离线安装  C/C++  扩展");
     ADD_OPTION_C("uninstall-extensions", ShouldUninstallExtensions, "卸载多余的 VS Code 扩展");
     // ADD_OPTION_C("generate-test", GenerateTestFile, "");
+#ifdef WINDOWS
+    ADD_OPTION_C("no-set-env", NoSetEnv, "不设置用户环境变量");
     ADD_OPTION_C("generate-shortcut", GenerateDesktopShortcut,
                  "生成指向工作区文件夹的桌面快捷方式");
+#endif
     ADD_OPTION_C("open-vscode", OpenVscodeAfterConfig, "在配置完成后自动打开 VS Code");
     ADD_OPTION_C("no-send-analytics", NoSendAnalytics, "不发送统计信息");
-    ADD_OPTION_A("remove-scripts", RemoveScripts, "从  MinGW  删除此程序注入的所有脚本 并退出");
+    ADD_OPTION_A("remove-scripts", RemoveScripts, "删除此程序注入的所有脚本并退出");
+#ifdef WINDOWS
     ADD_OPTION_A("no-open-browser", NoOpenBrowser, "使用 GUI  时不自动打开浏览器");
     ADD_OPTION_A("gui-address", GuiAddress, "指定使用 GUI  时自动打开的网页");
+#endif
 
     // other options that cannot be parsed directly
     std::string languageText;
@@ -172,9 +161,6 @@ void init(int argc, char** argv) {
         ("language", po::value<std::string>(&languageText)->default_value("c++"), "指定配置目标语言。可为 c++  或 c")
         ("generate-test", "强制生成测试文件")
         ("no-generate-test", "不生成测试文件")
-    ;
-    generalOpt.add_options()
-        ("mode", po::value<std::string>(&modeText), "指定配置模式。当不提供任何命令行参数时，TODO")
     ;
     // clang-format on
 
@@ -188,16 +174,11 @@ void init(int argc, char** argv) {
     } catch (const std::exception& e) {
         parseError = e.what();
     }
-
+#ifdef WINDOWS
     if (argc == 1) {
-        if constexpr (Native::isWindows) {
-            options.Mode = GuiMode;
-        } else if constexpr (Native::isMac) {
-            options.Mode = AppleMode;
-        } else {
-            options.Mode = GccMode;
-        }
+        options.UseGui = true;
     }
+#endif
     preprocessOptions(allOpts);
 
     if (parseError) {
@@ -225,93 +206,104 @@ void init(int argc, char** argv) {
     } else {
         options.GenerateTestFile = BaseOptions::GenTestType::Auto;
     }
-    boost::to_lower(modeText);
-    if (modeText == "gui") {
-            options.Mode = GuiMode;
-    } else if (modeText == "apple") {
-            options.Mode = AppleMode;
-    } else if (modeText == "gcc") {
-        options.Mode = GccMode;
-    } else if (modeText == "msvc") {
-            options.Mode = MsvcMode;
-    } else if (modeText == "mingw") {
-            options.Mode = MingwMode;
-    } else {
-        LOG_ERR("未知模式 ", modeText, "。程序将退出。");
-        std::exit(1);
-    }
-    checkOsCompatibility(modeText);
 
 #undef ADD_OPTION_G
 #undef ADD_OPTION_C
 #undef ADD_OPTION_A
 }
 
+boost::filesystem::path scriptDirectory() {
+#ifdef WINDOWS
+    return fs::path(options.MingwPath);
+#else
+    return fs::path(Native::getAppdata()) / ".local/bin";
+#endif
+}
+
 void runCli(const Environment& env) {
     std::unique_ptr<const CompilerInfo> pInfo;
-    if (options.MingwPath.empty()) {
-        LOG_INF("未从命令行传入 MinGW 路径，将使用自动检测到的路径。");
-        int chosen{0};
-        const auto& compilers{env.Compilers()};
-        if (compilers.size() == 0) {
-            LOG_ERR("MinGW 路径未找到：命令行参数未传入且未自动检测到。程序将退出。");
-            std::exit(1);
-        } else if (compilers.size() == 1) {
-            LOG_INF("选择自动检测到的 MinGW：", compilers.at(0).Path, " - ",
-                    compilers.at(0).VersionNumber, " (", compilers.at(0).PackageString, ")");
-            chosen = 0;
-        } else {
-            if (options.AssumeYes) {
-                LOG_INF("由于启用了 -y，选择第一个 MinGW。");
+    const auto& compilers{env.Compilers()};
+    #ifdef WINDOWS
+        if (options.MingwPath.empty()) {
+            LOG_INF("未从命令行传入 MinGW 路径，将使用自动检测到的路径。");
+            int chosen{0};
+            if (compilers.size() == 0) {
+                LOG_ERR("MinGW 路径未找到：命令行参数未传入且未自动检测到。程序将退出。");
+                std::exit(1);
+            } else if (compilers.size() == 1) {
+                LOG_INF("选择自动检测到的 MinGW：", compilers.at(0).Path, " - ",
+                        compilers.at(0).VersionNumber, " (", compilers.at(0).PackageString, ")");
                 chosen = 0;
             } else {
-                std::cout << "自动检测到多个 MinGW。请在其中选择一个：";
-                for (int i{0}; i < compilers.size(); i++) {
-                    std::cout << " [" << i << "] " << compilers.at(i).Path << " - "
-                              << compilers.at(i).VersionNumber << " ("
-                              << compilers.at(i).PackageString << ")" << std::endl;
-                }
-                std::cout << "输入你想要选择的 MinGW 编号，并按下回车：";
-                std::string input;
-                while (true) {
-                    std::getline(std::cin, input);
-                    try {
-                        chosen = std::stoi(input);
-                        if (chosen < 0 || chosen >= compilers.size()) {
-                            throw std::out_of_range("");
+                if (options.AssumeYes) {
+                    LOG_INF("由于启用了 -y，选择第一个 MinGW。");
+                    chosen = 0;
+                } else {
+                    std::cout << "自动检测到多个 MinGW。请在其中选择一个：";
+                    for (int i{0}; i < compilers.size(); i++) {
+                        std::cout << " [" << i << "] " << compilers.at(i).Path << " - "
+                                << compilers.at(i).VersionNumber << " ("
+                                << compilers.at(i).PackageString << ")" << std::endl;
+                    }
+                    std::cout << "输入你想要选择的 MinGW 编号，并按下回车：";
+                    std::string input;
+                    while (true) {
+                        std::getline(std::cin, input);
+                        try {
+                            chosen = std::stoi(input);
+                            if (chosen < 0 || chosen >= compilers.size()) {
+                                throw std::out_of_range("");
+                            }
+                            break;
+                        } catch (std::exception& e) {
+                            std::cout << "不是合法的值。请重试：";
                         }
-                        break;
-                    } catch (std::exception& e) {
-                        std::cout << "不是合法的值。请重试：";
                     }
                 }
             }
+            pInfo = std::make_unique<const CompilerInfo>(compilers.at(chosen));
+            LOG_INF("在多个 MinGW 中选中 ", pInfo->Path, " - ", pInfo->VersionNumber, " (",
+                    pInfo->PackageString, ")");
+        } else {
+            LOG_INF("从命令行传入了 MinGW 路径 ", options.MingwPath, "，将使用此路径。");
+            fs::path mingwPath{options.MingwPath};
+            if (boost::to_lower_copy(mingwPath.filename().string()) != "bin") {
+                mingwPath = mingwPath / "bin";
+            }
+            auto versionText{Environment::testCompiler(mingwPath)};
+            if (!versionText) {
+                LOG_ERR("验证 MinGW 失败：无法取得其版本信息（路径：", options.MingwPath,
+                        "）。程序将退出。");
+                std::exit(1);
+            }
+            LOG_INF("MinGW 路径 ", options.MingwPath, " 可用，版本信息：", *versionText);
+            pInfo = std::make_unique<const CompilerInfo>(mingwPath.string(), *versionText);
         }
-        pInfo = std::make_unique<const CompilerInfo>(compilers.at(chosen));
-        LOG_INF("在多个 MinGW 中选中 ", pInfo->Path, " - ", pInfo->VersionNumber, " (",
-                pInfo->PackageString, ")");
-    } else {
-        LOG_INF("从命令行传入了 MinGW 路径 ", options.MingwPath, "，将使用此路径。");
-        fs::path mingwPath{options.MingwPath};
-        if (boost::to_lower_copy(mingwPath.filename().string()) != "bin") {
-            mingwPath = mingwPath / "bin";
-        }
-        auto versionText{Environment::testCompiler(mingwPath)};
-        if (!versionText) {
-            LOG_ERR("验证 MinGW 失败：无法取得其版本信息（路径：", options.MingwPath,
-                    "）。程序将退出。");
+        options.MingwPath = pInfo->Path;
+    #else
+    if (options.Compiler.empty()) {
+        if (compilers.size() == 1) {
+            pInfo = std::make_unique<const CompilerInfo>(compilers.at(0));
+        } else {
+            LOG_ERR("NO COMPILER");
             std::exit(1);
         }
-        LOG_INF("MinGW 路径 ", options.MingwPath, " 可用，版本信息：", *versionText);
-        pInfo = std::make_unique<const CompilerInfo>(mingwPath.string(), *versionText);
+    } else {
+        auto versionText{Environment::testCompiler(options.Compiler)};
+        if (!versionText) {
+            LOG_ERR("验证编译器失败：无法取得其版本信息。程序将退出。");
+            std::exit(1);
+        }
+        LOG_INF("编译器 ", options.Compiler, " 可用，版本信息：", *versionText);
+        pInfo = std::make_unique<const CompilerInfo>(options.Compiler, *versionText);
     }
-    options.MingwPath = pInfo->Path;
+    #endif
 
     if (options.RemoveScripts) {
         LOG_INF("启用了开关 --remove-script，程序将删除所有脚本。");
-        const char* filenames[]{"check-ascii.ps1", "pause-console.ps1"};
+        const char* filenames[]{"check-ascii.ps1", "pause-console" SCRIPT_EXT};
         for (const auto& filename : filenames) {
-            auto scriptPath(fs::path(options.MingwPath) / filename);
+            auto scriptPath(scriptDirectory() / filename);
             if (fs::exists(scriptPath)) {
                 fs::remove(scriptPath);
                 LOG_INF("删除了脚本 ", scriptPath, "。");
@@ -320,7 +312,7 @@ void runCli(const Environment& env) {
         LOG_INF("脚本删除操作完成。程序将退出。");
         std::exit(0);
     }
-
+    #ifdef WINDOWS
     if (options.VscodePath.empty()) {
         LOG_INF("未从命令行传入 VS Code 路径，将使用自动检测到的路径。");
         auto vscodePath{env.VscodePath()};
@@ -338,6 +330,9 @@ void runCli(const Environment& env) {
             std::exit(1);
         }
     }
+    #else
+    // TODO
+    #endif
     if (options.LanguageStandard.empty()) {
         LOG_INF("未从命令行传入语言标准，将根据编译器选择语言标准。");
         auto [cppStd, cStd]{getLatestSupportStandardFromCompiler(pInfo->VersionNumber)};

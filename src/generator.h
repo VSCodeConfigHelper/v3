@@ -50,6 +50,8 @@ struct BaseOptions {
 };
 
 struct WindowsOptions : virtual BaseOptions {
+    bool UseGui;
+
     std::string VscodePath;
     std::string MingwPath;
 
@@ -57,12 +59,20 @@ struct WindowsOptions : virtual BaseOptions {
     bool GenerateDesktopShortcut;
 };
 
-#ifdef _WIN32
+struct PosixOptions : virtual BaseOptions {
+    std::string Compiler;
+};
+
+struct AppleOptions : PosixOptions {
+    bool InstallXcodeTools;
+};
+
+#ifdef WINDOWS
 using CurrentOptions = WindowsOptions;
-#elif defined(__APPLE__)
+#elif defined(APPLE)
 using CurrentOptions = AppleOptions;
 #else
-using CurrentOptions = BaseOptions;
+using CurrentOptions = PosixOptions;
 #endif
 
 class ExtensionManager {

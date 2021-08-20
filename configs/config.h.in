@@ -4,7 +4,7 @@
 
 namespace Embed {
 
-constexpr const char PAUSE_CONSOLE_PS1[]{R"CppRawStr(@PAUSE_CONSOLE_PS1_SRC@)CppRawStr"};
-constexpr const char CHECK_ASCII_PS1[]{R"CppRawStr(@CHECK_ASCII_PS1_SRC@)CppRawStr"};
+constexpr const char PAUSE_CONSOLE[]{R"CppRawStr(@PAUSE_CONSOLE_SRC@)CppRawStr"};
+constexpr const char CHECK_ASCII[]{R"CppRawStr(@CHECK_ASCII_SRC@)CppRawStr"};
 
 }

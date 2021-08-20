@@ -24,8 +24,7 @@ namespace Cli {
 
 enum ModeType { GuiMode, MingwMode, MsvcMode, GccMode, AppleMode };
 
-struct ProgramOptions : WindowsOptions {
-    ModeType Mode;
+struct ProgramOptions : CurrentOptions {
     bool Verbose;
     bool AssumeYes;
 
@@ -40,6 +39,8 @@ struct ProgramOptions : WindowsOptions {
 extern ProgramOptions options;
 
 void init(int argc, char** argv);
+
+boost::filesystem::path scriptDirectory();
 
 void runCli(const Environment& env);
 }

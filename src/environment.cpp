@@ -40,10 +40,20 @@ CompilerInfo::CompilerInfo(const std::string& path, const std::string& versionTe
 Environment::Environment() {
     LOG_INF("解析环境中...");
     vscodePath = getVscodePath();
-    for (auto&& path : getPaths()) {
-        auto versionText{testCompiler(path)};
-        if (versionText) {
-            compilers.push_back(CompilerInfo(path, *versionText));
+    if constexpr (Native::isWindows) {
+        for (auto&& path : getPaths()) {
+            auto versionText{testCompiler(path)};
+            if (versionText) {
+                compilers.emplace_back(path, *versionText);
+            }
+        }
+    } else {
+        int ret{bp::system(bp::search_path("bash"), bp::args = {"-c", "command", "-v", Native::cppCompiler})};
+        if (ret == 0) {
+            auto versionText{testCompiler(Native::cppCompiler)};
+            if (versionText) {
+                compilers.emplace_back(Native::cppCompiler, *versionText);
+            }
         }
     }
     LOG_INF("解析环境完成。");
@@ -55,7 +65,7 @@ Environment::Environment() {
 }
 
 std::optional<std::string> Environment::getVscodePath() {
-#ifdef _WIN32
+#ifdef WINDOWS
     LOG_INF("从注册表中尝试获取 VS Code 路径...");
     auto result{Native::getRegistry(HKEY_CLASSES_ROOT, "vscode\\shell\\open\\command", "")};
     if (!result) return std::nullopt;
@@ -70,14 +80,17 @@ std::optional<std::string> Environment::getVscodePath() {
         LOG_DBG("Found VS Code path: ", vscodePath);
         return vscodePath;
     }
+#else
+    int ret{bp::system(bp::search_path("bash"), bp::args={"-c", "command", "-v", "code"})};
+    if (ret == 0) return "code";
 #endif
     return std::nullopt;
 }
 
+#ifdef WINDOWS
 std::unordered_set<std::string> Environment::getPaths() {
     LOG_INF("获取环境变量 Path 中的值...");
     std::ostringstream allPath;
-#ifdef _WIN32
     auto usrPath{Native::getCurrentUserEnv("Path")};
     auto sysPath{Native::getLocalMachineEnv("Path")};
     LOG_DBG("User Path: ", usrPath ? *usrPath : "");
@@ -86,7 +99,6 @@ std::unordered_set<std::string> Environment::getPaths() {
     if (usrPath) allPath << *usrPath;
     allPath << ';';
     if (sysPath) allPath << *sysPath;
-#endif
 
     // https://stackoverflow.com/a/47923278
     boost::regex pathSplitter(";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
@@ -94,13 +106,19 @@ std::unordered_set<std::string> Environment::getPaths() {
     boost::split_regex(result, allPath.str(), pathSplitter);
     return result;
 }
+#endif
+
 
 std::optional<std::string> Environment::testCompiler(const boost::filesystem::path& path) {
     bp::ipstream is;
+#ifdef WINDOWS
     auto compilerPath{path / "g++.exe"};
     if (!fs::exists(compilerPath)) {
         return std::nullopt;
     }
+#else
+    auto compilerPath{bp::search_path(path)};
+#endif
     try {
         bp::child proc(compilerPath, "--version", bp::std_out > is);
         std::string versionText;

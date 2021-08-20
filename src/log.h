@@ -34,7 +34,7 @@ void init(bool verbose);
 template <typename... Ts>
 void log(boost::log::trivial::severity_level level, const Ts&... content) {
     using namespace boost::log;
-#ifdef _WIN32
+#ifdef WINDOWS
     WORD color{0x0F};
     switch (level) {
         case trivial::trace: color = 0x08; break;
@@ -56,7 +56,7 @@ void log(boost::log::trivial::severity_level level, const Ts&... content) {
         strm.flush();
         logger.push_record(std::move(rec));
     }
-#ifdef _WIN32
+#ifdef WINDOWS
     SetConsoleTextAttribute(hstdout, csbi.wAttributes);
 #endif
 }

@@ -55,10 +55,12 @@ void checkSystemVersion();
 
 #if _WIN32
 #define WINDOWS 1
+#define SCRIPT_EXT "ps1"
 constexpr const bool isWindows{true};
 constexpr const bool isMac{false};
 #else
 constexpr const bool isWindows{false};
+#define SCRIPT_EXT "sh"
 
 #ifdef __APPLE__
 #define MACOS 1

@@ -24,8 +24,12 @@ aux_source_directory(src SOURCES)
 add_executable(VSCodeConfigHelper ${SOURCES})
 
 # load script files into string
-file(READ scripts/pause-console.ps1 PAUSE_CONSOLE_PS1_SRC)
-file(READ scripts/check-ascii.ps1 CHECK_ASCII_PS1_SRC)
+if(WIN32)
+file(READ scripts/pause-console.ps1 PAUSE_CONSOLE_SRC)
+file(READ scripts/check-ascii.ps1 CHECK_ASCII_SRC)
+else()
+file(READ scripts/pause-console.sh PAUSE_CONSOLE_SRC)
+endif()
 
 configure_file(configs/config.h.in ${CMAKE_BINARY_DIR}/include/config.h)
 target_include_directories(VSCodeConfigHelper

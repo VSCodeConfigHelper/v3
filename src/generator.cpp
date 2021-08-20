@@ -27,7 +27,7 @@
 
 #include "config.h"
 #include "log.h"
-#include "native.h"
+#include "cli.h"
 
 namespace bp = boost::process;
 namespace fs = boost::filesystem;
@@ -45,7 +45,7 @@ std::string ExtensionManager::runScript(const std::initializer_list<std::string>
 }
 
 ExtensionManager::ExtensionManager(const boost::filesystem::path& vscodePath)
-    : scriptPath{vscodePath.parent_path() / "bin\\code.cmd"} {
+    : scriptPath{ Native::isWindows ? vscodePath.parent_path() / "bin\\code.cmd" : vscodePath} {
     installedExtensions = list();
 }
 
@@ -136,7 +136,7 @@ std::string Generator::vscodePath() {
 #ifdef WINDOWS
         return options.VscodePath;
 #else
-        return "code";
+        return bp::search_path("code").string();
 #endif
 }
 
@@ -508,17 +508,16 @@ void Generator::generate() {
         if (options.ShouldInstallL11n) {
             extensions.install("ms-ceintl.vscode-language-pack-zh-hans");
         }
-#ifdef WINDOWS
-        fs::path mingwPath(options.MingwPath);
         if (options.UseExternalTerminal) {
-            saveFile(mingwPath / "pause-console.ps1", Embed::PAUSE_CONSOLE_PS1);
+            saveFile(Cli::scriptDirectory() / "pause-console" SCRIPT_EXT, Embed::PAUSE_CONSOLE);
             addKeybinding("f6", "workbench.action.tasks.runTask", "run and pause");
         }
+#ifdef WINDOWS
         if (options.ApplyNonAsciiCheck) {
-            saveFile(mingwPath / "check-ascii.ps1", Embed::CHECK_ASCII_PS1);
+            saveFile(Cli::scriptDirectory() / "check-ascii.ps1", Embed::CHECK_ASCII);
         }
         if (!options.NoSetEnv) {
-            addToPath(mingwPath);
+            addToPath(options.MingwPath);
         }
 #endif
 

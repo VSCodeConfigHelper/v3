@@ -76,7 +76,7 @@ void init(bool verbose) {
         logging::add_console_log(std::cout)};
 
     consoleSink->set_formatter(&consoleFormatter);
-    #if _WIN32
+    #if WINDOWS
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
     #endif
