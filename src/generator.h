@@ -67,9 +67,9 @@ struct AppleOptions : PosixOptions {
     bool InstallXcodeTools;
 };
 
-#ifdef WINDOWS
+#ifdef _WIN32
 using CurrentOptions = WindowsOptions;
-#elif defined(APPLE)
+#elif defined(__APPLE__)
 using CurrentOptions = AppleOptions;
 #else
 using CurrentOptions = PosixOptions;

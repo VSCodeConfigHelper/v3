@@ -40,22 +40,22 @@ CompilerInfo::CompilerInfo(const std::string& path, const std::string& versionTe
 Environment::Environment() {
     LOG_INF("解析环境中...");
     vscodePath = getVscodePath();
-    if constexpr (Native::isWindows) {
-        for (auto&& path : getPaths()) {
-            auto versionText{testCompiler(path)};
-            if (versionText) {
-                compilers.emplace_back(path, *versionText);
-            }
-        }
-    } else {
-        int ret{bp::system(bp::search_path("bash"), bp::args = {"-c", "command", "-v", Native::cppCompiler})};
-        if (ret == 0) {
-            auto versionText{testCompiler(Native::cppCompiler)};
-            if (versionText) {
-                compilers.emplace_back(Native::cppCompiler, *versionText);
-            }
+#ifdef WINDOWS
+    for (auto&& path : getPaths()) {
+        auto versionText{testCompiler(path)};
+        if (versionText) {
+            compilers.emplace_back(path, *versionText);
         }
     }
+#else
+    auto fullPath{bp::search_path(Native::cppCompiler).string()};
+    if (!fullPath.empty()) {
+        auto versionText{testCompiler(fullPath)};
+        if (versionText) {
+            compilers.emplace_back(fullPath, *versionText);
+        }
+    }
+#endif
     LOG_INF("解析环境完成。");
     LOG_DBG("Resolved vscode path: ", vscodePath ? *vscodePath : "null");
     LOG_DBG("Resolved compilers: ");
@@ -81,8 +81,8 @@ std::optional<std::string> Environment::getVscodePath() {
         return vscodePath;
     }
 #else
-    int ret{bp::system(bp::search_path("bash"), bp::args={"-c", "command", "-v", "code"})};
-    if (ret == 0) return "code";
+    auto path{bp::search_path("code").string()};
+    if (!path.empty()) return path;
 #endif
     return std::nullopt;
 }
@@ -108,7 +108,6 @@ std::unordered_set<std::string> Environment::getPaths() {
 }
 #endif
 
-
 std::optional<std::string> Environment::testCompiler(const boost::filesystem::path& path) {
     bp::ipstream is;
 #ifdef WINDOWS
@@ -117,7 +116,7 @@ std::optional<std::string> Environment::testCompiler(const boost::filesystem::pa
         return std::nullopt;
     }
 #else
-    auto compilerPath{bp::search_path(path)};
+    const auto& compilerPath{path};
 #endif
     try {
         bp::child proc(compilerPath, "--version", bp::std_out > is);

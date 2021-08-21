@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     // LOG_WRN("你好");
     Environment env;
 #ifdef WINDOWS
-    if (Cli::options.Mode == Cli::GuiMode)
+    if (Cli::options.UseGui)
         Server::runGui(env);
     else
 #endif

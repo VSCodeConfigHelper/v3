@@ -27,6 +27,10 @@
 #include "log.h"
 #include "native.h"
 
+#ifndef WINDOWS
+#include <boost/process.hpp>
+#endif
+
 namespace Cli {
 
 using namespace std::literals;
@@ -51,8 +55,7 @@ void preprocessOptions(const po::options_description& desc) {
 }
 
 template <typename T>
-void addOption(po::options_description& desc, const char* name, T& target,
-                      const char* info) {
+void addOption(po::options_description& desc, const char* name, T& target, const char* info) {
     if constexpr (std::is_same_v<T, bool>) {
         desc.add_options()(name, po::bool_switch(&target), info);
     } else {
@@ -99,7 +102,6 @@ bool contains(const T& c, const U& v) {
 }
 
 constexpr const char DEFAULT_GUI_ADDRESS[]{"https://vscch3.vercel.app/config.html"};
-
 
 }  // namespace
 
@@ -223,64 +225,64 @@ boost::filesystem::path scriptDirectory() {
 void runCli(const Environment& env) {
     std::unique_ptr<const CompilerInfo> pInfo;
     const auto& compilers{env.Compilers()};
-    #ifdef WINDOWS
-        if (options.MingwPath.empty()) {
-            LOG_INF("未从命令行传入 MinGW 路径，将使用自动检测到的路径。");
-            int chosen{0};
-            if (compilers.size() == 0) {
-                LOG_ERR("MinGW 路径未找到：命令行参数未传入且未自动检测到。程序将退出。");
-                std::exit(1);
-            } else if (compilers.size() == 1) {
-                LOG_INF("选择自动检测到的 MinGW：", compilers.at(0).Path, " - ",
-                        compilers.at(0).VersionNumber, " (", compilers.at(0).PackageString, ")");
+#ifdef WINDOWS
+    if (options.MingwPath.empty()) {
+        LOG_INF("未从命令行传入 MinGW 路径，将使用自动检测到的路径。");
+        int chosen{0};
+        if (compilers.size() == 0) {
+            LOG_ERR("MinGW 路径未找到：命令行参数未传入且未自动检测到。程序将退出。");
+            std::exit(1);
+        } else if (compilers.size() == 1) {
+            LOG_INF("选择自动检测到的 MinGW：", compilers.at(0).Path, " - ",
+                    compilers.at(0).VersionNumber, " (", compilers.at(0).PackageString, ")");
+            chosen = 0;
+        } else {
+            if (options.AssumeYes) {
+                LOG_INF("由于启用了 -y，选择第一个 MinGW。");
                 chosen = 0;
             } else {
-                if (options.AssumeYes) {
-                    LOG_INF("由于启用了 -y，选择第一个 MinGW。");
-                    chosen = 0;
-                } else {
-                    std::cout << "自动检测到多个 MinGW。请在其中选择一个：";
-                    for (int i{0}; i < compilers.size(); i++) {
-                        std::cout << " [" << i << "] " << compilers.at(i).Path << " - "
-                                << compilers.at(i).VersionNumber << " ("
-                                << compilers.at(i).PackageString << ")" << std::endl;
-                    }
-                    std::cout << "输入你想要选择的 MinGW 编号，并按下回车：";
-                    std::string input;
-                    while (true) {
-                        std::getline(std::cin, input);
-                        try {
-                            chosen = std::stoi(input);
-                            if (chosen < 0 || chosen >= compilers.size()) {
-                                throw std::out_of_range("");
-                            }
-                            break;
-                        } catch (std::exception& e) {
-                            std::cout << "不是合法的值。请重试：";
+                std::cout << "自动检测到多个 MinGW。请在其中选择一个：";
+                for (int i{0}; i < compilers.size(); i++) {
+                    std::cout << " [" << i << "] " << compilers.at(i).Path << " - "
+                              << compilers.at(i).VersionNumber << " ("
+                              << compilers.at(i).PackageString << ")" << std::endl;
+                }
+                std::cout << "输入你想要选择的 MinGW 编号，并按下回车：";
+                std::string input;
+                while (true) {
+                    std::getline(std::cin, input);
+                    try {
+                        chosen = std::stoi(input);
+                        if (chosen < 0 || chosen >= compilers.size()) {
+                            throw std::out_of_range("");
                         }
+                        break;
+                    } catch (std::exception& e) {
+                        std::cout << "不是合法的值。请重试：";
                     }
                 }
             }
-            pInfo = std::make_unique<const CompilerInfo>(compilers.at(chosen));
-            LOG_INF("在多个 MinGW 中选中 ", pInfo->Path, " - ", pInfo->VersionNumber, " (",
-                    pInfo->PackageString, ")");
-        } else {
-            LOG_INF("从命令行传入了 MinGW 路径 ", options.MingwPath, "，将使用此路径。");
-            fs::path mingwPath{options.MingwPath};
-            if (boost::to_lower_copy(mingwPath.filename().string()) != "bin") {
-                mingwPath = mingwPath / "bin";
-            }
-            auto versionText{Environment::testCompiler(mingwPath)};
-            if (!versionText) {
-                LOG_ERR("验证 MinGW 失败：无法取得其版本信息（路径：", options.MingwPath,
-                        "）。程序将退出。");
-                std::exit(1);
-            }
-            LOG_INF("MinGW 路径 ", options.MingwPath, " 可用，版本信息：", *versionText);
-            pInfo = std::make_unique<const CompilerInfo>(mingwPath.string(), *versionText);
         }
-        options.MingwPath = pInfo->Path;
-    #else
+        pInfo = std::make_unique<const CompilerInfo>(compilers.at(chosen));
+        LOG_INF("在多个 MinGW 中选中 ", pInfo->Path, " - ", pInfo->VersionNumber, " (",
+                pInfo->PackageString, ")");
+    } else {
+        LOG_INF("从命令行传入了 MinGW 路径 ", options.MingwPath, "，将使用此路径。");
+        fs::path mingwPath{options.MingwPath};
+        if (boost::to_lower_copy(mingwPath.filename().string()) != "bin") {
+            mingwPath = mingwPath / "bin";
+        }
+        auto versionText{Environment::testCompiler(mingwPath)};
+        if (!versionText) {
+            LOG_ERR("验证 MinGW 失败：无法取得其版本信息（路径：", options.MingwPath,
+                    "）。程序将退出。");
+            std::exit(1);
+        }
+        LOG_INF("MinGW 路径 ", options.MingwPath, " 可用，版本信息：", *versionText);
+        pInfo = std::make_unique<const CompilerInfo>(mingwPath.string(), *versionText);
+    }
+    options.MingwPath = pInfo->Path;
+#else
     if (options.Compiler.empty()) {
         if (compilers.size() == 1) {
             pInfo = std::make_unique<const CompilerInfo>(compilers.at(0));
@@ -289,16 +291,18 @@ void runCli(const Environment& env) {
             std::exit(1);
         }
     } else {
-        auto versionText{Environment::testCompiler(options.Compiler)};
+        auto fullPath{options.Compiler.find('/') == std::string::npos
+                          ? boost::process::search_path(options.Compiler).string()
+                          : options.Compiler};
+        auto versionText{Environment::testCompiler(fullPath)};
         if (!versionText) {
-            LOG_ERR("验证编译器失败：无法取得其版本信息。程序将退出。");
+            LOG_ERR("验证编译器 ", fullPath, " 失败：无法取得其版本信息。程序将退出。");
             std::exit(1);
         }
-        LOG_INF("编译器 ", options.Compiler, " 可用，版本信息：", *versionText);
-        pInfo = std::make_unique<const CompilerInfo>(options.Compiler, *versionText);
+        LOG_INF("编译器 ", fullPath, " 可用，版本信息：", *versionText);
+        pInfo = std::make_unique<const CompilerInfo>(fullPath, *versionText);
     }
-    #endif
-
+#endif
     if (options.RemoveScripts) {
         LOG_INF("启用了开关 --remove-script，程序将删除所有脚本。");
         const char* filenames[]{"check-ascii.ps1", "pause-console" SCRIPT_EXT};
@@ -312,10 +316,11 @@ void runCli(const Environment& env) {
         LOG_INF("脚本删除操作完成。程序将退出。");
         std::exit(0);
     }
-    #ifdef WINDOWS
+#ifdef WINDOWS
     if (options.VscodePath.empty()) {
         LOG_INF("未从命令行传入 VS Code 路径，将使用自动检测到的路径。");
-        auto vscodePath{env.VscodePath()};
+#endif
+        const auto& vscodePath{env.VscodePath()};
         if (vscodePath) {
             LOG_INF("自动检测到的 VS Code 路径：", *vscodePath);
             options.VscodePath = *vscodePath;
@@ -323,6 +328,7 @@ void runCli(const Environment& env) {
             LOG_ERR("VS Code 路径未找到：命令行参数未传入且未自动检测到。程序将退出。");
             std::exit(1);
         }
+#ifdef WINDOWS
     } else {
         LOG_INF("从命令行传入了 VS Code 路径 ", options.VscodePath, "，将使用此路径。");
         if (!fs::exists(options.VscodePath)) {
@@ -330,9 +336,7 @@ void runCli(const Environment& env) {
             std::exit(1);
         }
     }
-    #else
-    // TODO
-    #endif
+#endif
     if (options.LanguageStandard.empty()) {
         LOG_INF("未从命令行传入语言标准，将根据编译器选择语言标准。");
         auto [cppStd, cStd]{getLatestSupportStandardFromCompiler(pInfo->VersionNumber)};
