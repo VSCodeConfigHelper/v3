@@ -48,11 +48,26 @@ Environment::Environment() {
         }
     }
 #else
+    LOG_INF("查找 C++ 编译器...");
     auto fullPath{bp::search_path(Native::cppCompiler).string()};
     if (!fullPath.empty()) {
         auto versionText{testCompiler(fullPath)};
         if (versionText) {
-            compilers.emplace_back(fullPath, *versionText);
+            CompilerInfo info(fullPath, *versionText);
+            info.type = LanguageType::Cpp;
+            LOG_DBG("C++ compiler info: ", info.Path, ": ", info.VersionText);
+            compilers.push_back(info);
+        }
+    }
+    LOG_INF("查找 C 编译器...");
+    fullPath = bp::search_path(Native::cCompiler).string();
+    if (!fullPath.empty()) {
+        auto versionText{testCompiler(fullPath)};
+        if (versionText) {
+            CompilerInfo info(fullPath, *versionText);
+            info.type = LanguageType::C;
+            LOG_DBG("C compiler info: ", info.Path, ": ", info.VersionText);
+            compilers.push_back(info);
         }
     }
 #endif
@@ -81,7 +96,9 @@ std::optional<std::string> Environment::getVscodePath() {
         return vscodePath;
     }
 #else
+    LOG_INF("检测 VS Code 是否安装...");
     auto path{bp::search_path("code").string()};
+    LOG_DBG("VS Code Path: ", path);
     if (!path.empty()) return path;
 #endif
     return std::nullopt;

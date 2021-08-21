@@ -22,8 +22,6 @@
 
 namespace Cli {
 
-enum ModeType { GuiMode, MingwMode, MsvcMode, GccMode, AppleMode };
-
 struct ProgramOptions : CurrentOptions {
     bool Verbose;
     bool AssumeYes;

@@ -23,6 +23,7 @@
 
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/trivial.hpp>
+#include <iostream>
 
 #include "native.h"
 
@@ -34,6 +35,9 @@ void init(bool verbose);
 template <typename... Ts>
 void log(boost::log::trivial::severity_level level, const Ts&... content) {
     using namespace boost::log;
+    record rec = logger.open_record(keywords::severity = level);
+    if (!rec) return;
+    record_ostream strm(rec);
 #ifdef WINDOWS
     WORD color{0x0F};
     switch (level) {
@@ -48,16 +52,25 @@ void log(boost::log::trivial::severity_level level, const Ts&... content) {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(hstdout, &csbi);
     SetConsoleTextAttribute(hstdout, color);
-#endif
-    record rec = logger.open_record(keywords::severity = level);
-    if (rec) {
-        record_ostream strm(rec);
-        (strm << ... << content);
-        strm.flush();
-        logger.push_record(std::move(rec));
+#else
+    const char* color{""};
+    switch (level) {
+        case trivial::trace: color = "\033[01;30m"; break;
+        case trivial::debug: color = "\033[37m"; break;
+        case trivial::info: color = "\033[01;37m"; break;
+        case trivial::warning: color = "\033[01;33m"; break;
+        case trivial::error: color = "\033[01;31m"; break;
+        case trivial::fatal: color = "\033[31m"; break;
     }
+    std::cout << color;
+#endif
+    (strm << ... << content);
+    strm.flush();
+    logger.push_record(std::move(rec));
 #ifdef WINDOWS
     SetConsoleTextAttribute(hstdout, csbi.wAttributes);
+#else
+    std::cout << "\033[m";
 #endif
 }
 

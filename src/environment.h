@@ -25,8 +25,12 @@
 #include <vector>
 
 #include "config.h"
+#include "generator.h"
 
 struct CompilerInfo {
+#ifndef _WIN32
+    LanguageType type{LanguageType::Cpp};
+#endif
     std::string Path;
     std::string VersionText;
 

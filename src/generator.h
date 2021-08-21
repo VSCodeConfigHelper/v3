@@ -26,8 +26,9 @@
 
 #include <boost/filesystem.hpp>
 
+enum class LanguageType { Cpp, C };
+
 struct BaseOptions {
-    enum class LanguageType { Cpp, C };
     enum class GenTestType { Auto, Always, Never };
 
     std::string WorkspacePath;
@@ -35,7 +36,6 @@ struct BaseOptions {
     std::string LanguageStandard;
     std::vector<std::string> CompileArgs;
     bool UseExternalTerminal;
-    bool ApplyNonAsciiCheck;
 
     bool ShouldInstallL11n;
     bool OfflineInstallCCpp;
@@ -49,17 +49,18 @@ struct BaseOptions {
     virtual ~BaseOptions() = default;
 };
 
-struct WindowsOptions : virtual BaseOptions {
+struct WindowsOptions : BaseOptions {
     bool UseGui;
 
     std::string VscodePath;
     std::string MingwPath;
 
+    bool ApplyNonAsciiCheck;
     bool NoSetEnv;
     bool GenerateDesktopShortcut;
 };
 
-struct PosixOptions : virtual BaseOptions {
+struct PosixOptions : BaseOptions {
     std::string Compiler;
 };
 
@@ -107,10 +108,11 @@ public:
 class Generator {
     CurrentOptions options;
 
-    const char* compilerExe();
     const char* fileExt();
+;
     std::string vscodePath();
-    std::string binPath(const std::string& filename);
+    std::string compilerPath();
+    std::string debuggerPath();
     std::string scriptPath(const std::string& filename);
 
     void saveFile(const boost::filesystem::path& path, const char* content);

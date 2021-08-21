@@ -48,32 +48,37 @@ std::string getDesktop();
 
 #endif
 
-std::string getAppdata();
+boost::filesystem::path getAppdata();
 boost::filesystem::path getTempFilePath(const std::string& filename);
 char getch();
 void checkSystemVersion();
 
 #if _WIN32
 #define WINDOWS 1
+
 #define SCRIPT_EXT "ps1"
-constexpr const bool isWindows{true};
-constexpr const bool isMac{false};
+#define PATH_SLASH "\\"
+#define EXE_EXT "exe"
+constexpr const char newLine{'\r'};
 #else
-constexpr const bool isWindows{false};
+
 #define SCRIPT_EXT "sh"
+#define PATH_SLASH "/"
+#define EXE_EXT "out"
+constexpr const char newLine{'\n'};
 
 #ifdef __APPLE__
 #define MACOS 1
+
 constexpr const char* cCompiler{"clang"};
 constexpr const char* cppCompiler{"clang++"}; 
 
-constexpr const bool isMac{true};
 #else
 #define LINUX 1
+
 constexpr const char* cCompiler{"gcc"};
 constexpr const char* cppCompiler{"g++"};
 
-constexpr const bool isMac{false};
 #endif // __APPLE__
 
 #endif  // _WIN32

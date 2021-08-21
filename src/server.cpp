@@ -158,23 +158,21 @@ void Server::startListen() {
     t.join();
 }
 
-#endif
-
 void Server::runGui(const Environment& env) {
-    if constexpr (Native::isWindows) {
-        Server s(env);
-        LOG_INF("本地服务器已启动，即将开始监听 ", s.port, " 端口...");
-        auto openAddress{Cli::options.GuiAddress + "?port=" + std::to_string(s.port)};
-        if (!Cli::options.NoOpenBrowser) {
-            LOG_WRN("已打开网页 ", openAddress, "，请在浏览器中继续操作。请不要关闭此窗口。");
-            std::system(("START " + openAddress).c_str());
-        } else {
-            LOG_WRN("--no-open-browser 选项禁用了浏览器启动。请与 localhost:", s.port,
-                    " 端口通信完成配置。");
-        }
-        s.startListen();
-        return;
+    Server s(env);
+    LOG_INF("本地服务器已启动，即将开始监听 ", s.port, " 端口...");
+    auto openAddress{Cli::options.GuiAddress + "?port=" + std::to_string(s.port)};
+    if (!Cli::options.NoOpenBrowser) {
+        LOG_WRN("已打开网页 ", openAddress, "，请在浏览器中继续操作。请不要关闭此窗口。");
+        std::system(("START " + openAddress).c_str());
+    } else {
+        LOG_WRN("--no-open-browser 选项禁用了浏览器启动。请与 localhost:", s.port,
+                " 端口通信完成配置。");
     }
-    LOG_ERR("仅 MinGW 模式支持 GUI。程序将退出。");
+    s.startListen();
+    return;
+    LOG_ERR("仅 Windows 支持 GUI。程序将退出。");
     std::exit(1);
 }
+
+#endif

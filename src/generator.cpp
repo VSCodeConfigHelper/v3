@@ -45,7 +45,13 @@ std::string ExtensionManager::runScript(const std::initializer_list<std::string>
 }
 
 ExtensionManager::ExtensionManager(const boost::filesystem::path& vscodePath)
-    : scriptPath{ Native::isWindows ? vscodePath.parent_path() / "bin\\code.cmd" : vscodePath} {
+    : scriptPath{
+#ifdef WINDOWS
+        vscodePath.parent_path() / "bin\\code.cmd"
+#else    
+        vscodePath
+#endif
+    } {
     installedExtensions = list();
 }
 
@@ -123,15 +129,10 @@ ContainerT<std::string> splitPath(std::optional<std::string> (*getter)(const std
 
 Generator::Generator(CurrentOptions options) : options{options} {}
 
-const char* Generator::compilerExe() {
-    if constexpr (Native::isWindows)
-        return options.Language == BaseOptions::LanguageType::Cpp ? "g++.exe" : "gcc.exe";
-    else
-        return options.Language == BaseOptions::LanguageType::Cpp ? "g++" : "gcc";
-}
 const char* Generator::fileExt() {
-    return options.Language == BaseOptions::LanguageType::Cpp ? ".cpp" : ".c";
+    return options.Language == LanguageType::Cpp ? ".cpp" : ".c";
 }
+
 std::string Generator::vscodePath() {
 #ifdef WINDOWS
         return options.VscodePath;
@@ -140,19 +141,24 @@ std::string Generator::vscodePath() {
 #endif
 }
 
-std::string Generator::binPath(const std::string& filename) {
+std::string Generator::compilerPath() {
 #ifdef WINDOWS
-        return (fs::path(options.MingwPath) / filename).string();
+    const char* filename{options.Language == LanguageType::Cpp ? "g++.exe" : "gcc.exe"};
+    return (fs::path(options.MingwPath) / filename).string();
 #else
-        return filename;
+    return options.Compiler;
+#endif
+}
+
+std::string Generator::debuggerPath() {
+#ifdef WINDOWS
+        return (fs::path(options.MingwPath) / "gdb.exe").string();
+#else
+        return "gdb";
 #endif
 }
 std::string Generator::scriptPath(const std::string& filename) {
-#ifdef WINDOWS
-        return (fs::path(options.MingwPath) / filename).string();
-#else
-        return filename;
-#endif
+    return (Cli::scriptDirectory() / filename).string();
 }
 
 void Generator::saveFile(const fs::path& path, const char* content) {
@@ -160,15 +166,20 @@ void Generator::saveFile(const fs::path& path, const char* content) {
     if (fs::exists(path)) {
         LOG_INF("脚本 ", path, " 已存在，无需写入。");
     } else {
+        fs::create_directories(path.parent_path());
         fs::save_string_file(path, content);
         LOG_INF("写入完成。");
+#ifndef WINDOWS
+        LOG_INF("设置脚本 ", path, " 的执行权限...");
+        fs::permissions(path, fs::perms::owner_all);
+#endif
     }
 }
 
 void Generator::addKeybinding(const std::string& key, const std::string& command,
                               const std::string& args) {
     using json = nlohmann::json;
-    auto filepath(fs::path(Native::getAppdata()) / "Code\\User\\keybindings.json");
+    auto filepath(Native::getAppdata() / "Code" / "User" / "keybindings.json");
     LOG_INF("将快捷键 ", key, " (", command, " ", args, ") 添加到 ", filepath, " 中...");
     auto result(json::array());
     if (fs::exists(filepath)) {
@@ -192,6 +203,7 @@ void Generator::addKeybinding(const std::string& key, const std::string& command
 
     auto resultStr{result.dump(2)};
     LOG_DBG(resultStr);
+    fs::create_directories(filepath.parent_path());
     fs::save_string_file(filepath, resultStr);
 }
 
@@ -225,12 +237,12 @@ void Generator::generateTasksJson(const fs::path& path) {
     using json = nlohmann::json;
     LOG_INF("生成 ", path, " ...");
     auto args{options.CompileArgs};
-    args += "-g", "${file}", "-o", "${fileDirname}\\${fileBasenameNoExtension}.exe";
+    args += "-g", "${file}", "-o", "${fileDirname}" PATH_SLASH "${fileBasenameNoExtension}." EXE_EXT;
     // clang-format off
     auto sfbTask(json::object({
         {"type", "process"}, // "cppbuild" won't apply options
         {"label", "gcc single file build"},
-        {"command", binPath(compilerExe())},
+        {"command", compilerPath()},
         {"args", args},
         {"group", json::object({
             {"kind", "build"},
@@ -249,16 +261,26 @@ void Generator::generateTasksJson(const fs::path& path) {
     auto pauseTask(json::object({
         {"type", "shell"},
         {"label", "run and pause"},
-        {"command", "START"},
+        {"command", 
+#ifdef WINDOWS
+            "START"
+#else
+            "x-terminal-emulator",
+#endif
+        },
         {"dependsOn", "gcc single file build"},
         {"args", json::array({
+#ifdef WINDOWS
             "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe",
             "-ExecutionPolicy",
             "ByPass",
             "-NoProfile",
             "-File",
-            scriptPath("pause-console.ps1"),
-            "${fileDirname}\\${fileBasenameNoExtension}.exe"
+#else
+            "-e",
+#endif
+            scriptPath("pause-console." SCRIPT_EXT),
+            "${fileDirname}" PATH_SLASH "${fileBasenameNoExtension}." EXE_EXT
         })},
         {"presentation", json::object({
             {"reveal", "never"},
@@ -296,26 +318,28 @@ void Generator::generateTasksJson(const fs::path& path) {
     auto allTasks(json::array({sfbTask}));
     if (options.UseExternalTerminal)
         allTasks += pauseTask;
+#ifdef WINDOWS
     if (options.ApplyNonAsciiCheck)
         allTasks += asciiTask;
+#endif
     auto result(json::object({
         {"version", "2.0.0"},
         {"tasks", allTasks},
-        {"options", json::object(
 #ifdef WINDOWS
-        {
-            {"shell", json::object({
-                {"executable", "C:\\Windows\\System32\\cmd.exe"},
-                {"args", json::array({
-                    "/C"
+        {"options", json::object(
+            {
+                {"shell", json::object({
+                    {"executable", "C:\\Windows\\System32\\cmd.exe"},
+                    {"args", json::array({
+                        "/C"
+                    })}
+                })},
+                {"env", json::object({
+                    {"Path", options.MingwPath + ";${env:Path}"}
                 })}
-            })},
-            {"env", json::object({
-                {"Path", options.MingwPath + ";${env:Path}"}
-            })}
-        }
-#endif
+            }
         )}
+#endif
     }));
     // clang-format on
     auto resultStr{result.dump(2)};
@@ -334,21 +358,25 @@ void Generator::generateLaunchJson(const fs::path& path) {
                 {"name", "gcc single file debug"},
                 {"type", "cppdbg"},
                 {"request", "launch"},
-                {"program", "${fileDirname}\\${fileBasenameNoExtension}.exe"},
+                {"program", "${fileDirname}" PATH_SLASH "${fileBasenameNoExtension}." EXE_EXT},
                 {"args", json::array({})},
                 {"stopAtEntry", false},
                 {"cwd", "${fileDirname}"},
                 {"environment", json::array({})},
                 {"externalConsole", options.UseExternalTerminal},
                 {"MIMode", "gdb"},
-                {"miDebuggerPath", binPath("gdb.exe")},
+                {"miDebuggerPath", debuggerPath()},
                 {"setupCommands", json::array({
                     json::object({
                         {"text", "-enable-pretty-printing"},
                         {"ignoreFailures", true}
                     })
                 })},
-                {"preLaunchTask", options.ApplyNonAsciiCheck ? "check ascii" : "gcc single file build"},
+                {"preLaunchTask", 
+#ifdef WINDOWS
+                    options.ApplyNonAsciiCheck ? "check ascii" : 
+#endif
+                    "gcc single file build"},
                 {"internalConsoleOptions", "neverOpen"}
             })
         })}
@@ -370,8 +398,8 @@ void Generator::generatePropertiesJson(const fs::path& path) {
                 {"includePath", json::array({
                     "${workspaceFolder}/**"
                 })},
-                {"compilerPath", binPath(compilerExe())},
-                {options.Language == BaseOptions::LanguageType::Cpp ? 
+                {"compilerPath", compilerPath()},
+                {options.Language == LanguageType::Cpp ? 
                     "cppStandard" : 
                     "cStandard",
                 options.LanguageStandard == "c++23" ?
@@ -401,7 +429,7 @@ std::string Generator::generateTestFile() {
                                                 ? "F6 后，您将在弹出的"
                                                 : "F5 后，您将在下方弹出的终端（Terminal）") +
                                            "窗口中看到这一行字。"};
-    bool isCpp{options.Language == BaseOptions::LanguageType::Cpp};
+    bool isCpp{options.Language == LanguageType::Cpp};
     std::string (*c)(const std::string&){nullptr};
     if (isCpp)  // I'm wonder why MSVC IntelliSense doesn't support Lambda in ?:.
         c = [](const std::string& s) { return "// " + s; };
@@ -459,7 +487,7 @@ int main(void) {
 }
 
 void Generator::openVscode(const std::optional<std::string>& filename) {
-    const auto& folderPath{fs::absolute(options.WorkspacePath).string()};
+    auto folderPath{fs::absolute(options.WorkspacePath).string()};
 
     std::vector args{folderPath};
     if (filename) {
@@ -509,7 +537,7 @@ void Generator::generate() {
             extensions.install("ms-ceintl.vscode-language-pack-zh-hans");
         }
         if (options.UseExternalTerminal) {
-            saveFile(Cli::scriptDirectory() / "pause-console" SCRIPT_EXT, Embed::PAUSE_CONSOLE);
+            saveFile(Cli::scriptDirectory() / "pause-console." SCRIPT_EXT, Embed::PAUSE_CONSOLE);
             addKeybinding("f6", "workbench.action.tasks.runTask", "run and pause");
         }
 #ifdef WINDOWS
@@ -530,7 +558,7 @@ void Generator::generate() {
     generateLaunchJson(dotVscode / "launch.json");
     generatePropertiesJson(dotVscode / "c_cpp_properties.json");
     if (options.GenerateTestFile == BaseOptions::GenTestType::Auto) {
-        if (fs::exists(fs::path(options.WorkspacePath) / "helloworld.cpp")) {
+        if (fs::exists(fs::path(options.WorkspacePath) / ("helloworld"s + fileExt()))) {
             options.GenerateTestFile = BaseOptions::GenTestType::Never;
         } else {
             options.GenerateTestFile = BaseOptions::GenTestType::Always;

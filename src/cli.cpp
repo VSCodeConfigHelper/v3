@@ -136,13 +136,13 @@ void init(int argc, char** argv) {
     ADD_OPTION_C("language-standard", LanguageStandard,
                  "指定语言标准。若不提供，则工具根据 MinGW 编译器版本选取");
     ADD_OPTION_C("external-terminal", UseExternalTerminal, "使用外部终端进行运行和调试");
-    ADD_OPTION_C("apply-nonascii-check", ApplyNonAsciiCheck,
-                 "在调试前进行文件名中非 ASCII   字符的检查");
     ADD_OPTION_C("install-chinese", ShouldInstallL11n, "为 VS Code 安装中文语言包");
     ADD_OPTION_C("offline-cpptools", OfflineInstallCCpp, "离线安装  C/C++  扩展");
     ADD_OPTION_C("uninstall-extensions", ShouldUninstallExtensions, "卸载多余的 VS Code 扩展");
     // ADD_OPTION_C("generate-test", GenerateTestFile, "");
 #ifdef WINDOWS
+    ADD_OPTION_C("apply-nonascii-check", ApplyNonAsciiCheck,
+                 "在调试前进行文件名中非  ASCII  字符的检查");
     ADD_OPTION_C("no-set-env", NoSetEnv, "不设置用户环境变量");
     ADD_OPTION_C("generate-shortcut", GenerateDesktopShortcut,
                  "生成指向工作区文件夹的桌面快捷方式");
@@ -191,9 +191,9 @@ void init(int argc, char** argv) {
     // parse other options
     boost::to_lower(languageText);
     if (languageText == "c++") {
-        options.Language = BaseOptions::LanguageType::Cpp;
+        options.Language = LanguageType::Cpp;
     } else if (languageText == "c") {
-        options.Language = BaseOptions::LanguageType::C;
+        options.Language = LanguageType::C;
     } else {
         LOG_ERR(languageText, "是不支持的目标语言。程序将退出");
         std::exit(1);
@@ -218,7 +218,7 @@ boost::filesystem::path scriptDirectory() {
 #ifdef WINDOWS
     return fs::path(options.MingwPath);
 #else
-    return fs::path(Native::getAppdata()) / ".local/bin";
+    return Native::getAppdata().parent_path() / ".local/bin";
 #endif
 }
 
@@ -284,10 +284,12 @@ void runCli(const Environment& env) {
     options.MingwPath = pInfo->Path;
 #else
     if (options.Compiler.empty()) {
-        if (compilers.size() == 1) {
-            pInfo = std::make_unique<const CompilerInfo>(compilers.at(0));
+        auto r{std::find_if(compilers.begin(), compilers.end(),
+                            [](const CompilerInfo& c) { return c.type == options.Language; })};
+        if (r != compilers.end()) {
+            pInfo = std::make_unique<const CompilerInfo>(*r);
         } else {
-            LOG_ERR("NO COMPILER");
+            LOG_ERR("未找到 ", options.Language == LanguageType::Cpp ? "C++" : "C", " 编译器。程序将退出。");
             std::exit(1);
         }
     } else {
@@ -302,6 +304,7 @@ void runCli(const Environment& env) {
         LOG_INF("编译器 ", fullPath, " 可用，版本信息：", *versionText);
         pInfo = std::make_unique<const CompilerInfo>(fullPath, *versionText);
     }
+    options.Compiler = pInfo->Path;
 #endif
     if (options.RemoveScripts) {
         LOG_INF("启用了开关 --remove-script，程序将删除所有脚本。");
@@ -319,7 +322,6 @@ void runCli(const Environment& env) {
 #ifdef WINDOWS
     if (options.VscodePath.empty()) {
         LOG_INF("未从命令行传入 VS Code 路径，将使用自动检测到的路径。");
-#endif
         const auto& vscodePath{env.VscodePath()};
         if (vscodePath) {
             LOG_INF("自动检测到的 VS Code 路径：", *vscodePath);
@@ -328,7 +330,6 @@ void runCli(const Environment& env) {
             LOG_ERR("VS Code 路径未找到：命令行参数未传入且未自动检测到。程序将退出。");
             std::exit(1);
         }
-#ifdef WINDOWS
     } else {
         LOG_INF("从命令行传入了 VS Code 路径 ", options.VscodePath, "，将使用此路径。");
         if (!fs::exists(options.VscodePath)) {
@@ -336,21 +337,25 @@ void runCli(const Environment& env) {
             std::exit(1);
         }
     }
+#else
+    if (!env.VscodePath()) {
+        LOG_ERR("未检测到 VS Code，可能是 code 不在 PATH 中。程序将退出。");
+        std::exit(1);
+    }
 #endif
     if (options.LanguageStandard.empty()) {
         LOG_INF("未从命令行传入语言标准，将根据编译器选择语言标准。");
         auto [cppStd, cStd]{getLatestSupportStandardFromCompiler(pInfo->VersionNumber)};
-        options.LanguageStandard =
-            options.Language == BaseOptions::LanguageType::Cpp ? cppStd : cStd;
+        options.LanguageStandard = options.Language == LanguageType::Cpp ? cppStd : cStd;
         LOG_INF("将使用语言标准：", options.LanguageStandard, "。");
     } else {
-        if (options.Language == BaseOptions::LanguageType::Cpp &&
+        if (options.Language == LanguageType::Cpp &&
             !contains(cppStandards, options.LanguageStandard)) {
             LOG_ERR(options.LanguageStandard, " 不是合法的 C++ 语言标准。程序将退出。");
             LOG_INF("合法的 C++ 语言标准有：", boost::join(cppStandards, ", "));
             std::exit(1);
         }
-        if (options.Language == BaseOptions::LanguageType::C &&
+        if (options.Language == LanguageType::C &&
             !contains(cStandards, options.LanguageStandard)) {
             LOG_ERR(options.LanguageStandard, " 不是合法的 C 语言标准。程序将退出。");
             LOG_INF("合法的 C 语言标准有：", boost::join(cStandards, ", "));
@@ -373,7 +378,7 @@ void runCli(const Environment& env) {
         if (!options.AssumeYes) {
             std::cout << "是否继续？[Y/n] ";
             char key{Native::getch()};
-            if (key != '\r' && key != 'y') {
+            if (key != Native::newLine && key != 'y') {
                 LOG_ERR("配置被用户中止。程序将退出。");
                 std::exit(1);
             }

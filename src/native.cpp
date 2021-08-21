@@ -172,15 +172,15 @@ std::string getDesktop() {
 
 #endif  // WINDOWS
 
-std::string getAppdata() {
+boost::filesystem::path getAppdata() {
 #if WINDOWS
-    return getSpecialFolder(FOLDERID_RoamingAppData);
+    return boost::filesystem::path(getSpecialFolder(FOLDERID_RoamingAppData));
 #else
     const char* homeDir{getenv("HOME")};
     if (homeDir == nullptr) {
         homeDir = getpwuid(getuid())->pw_dir;
     }
-    return homeDir;
+    return boost::filesystem::path(homeDir) / ".config";
 #endif
 }
 
