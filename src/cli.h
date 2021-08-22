@@ -38,7 +38,5 @@ extern ProgramOptions options;
 
 void init(int argc, char** argv);
 
-boost::filesystem::path scriptDirectory();
-
 void runCli(const Environment& env);
 }

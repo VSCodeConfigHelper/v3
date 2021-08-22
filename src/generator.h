@@ -37,7 +37,7 @@ struct BaseOptions {
     std::vector<std::string> CompileArgs;
     bool UseExternalTerminal;
 
-    bool ShouldInstallL11n;
+    bool ShouldInstallL10n;
     bool OfflineInstallCCpp;
     bool ShouldUninstallExtensions;
 
@@ -131,10 +131,12 @@ class Generator {
 public:
     Generator(CurrentOptions options);
     void generate();
+
+    static boost::filesystem::path scriptDirectory(const CurrentOptions& options);
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(WindowsOptions, VscodePath, MingwPath, WorkspacePath, Language,
                                    LanguageStandard, CompileArgs, NoSetEnv, UseExternalTerminal,
-                                   ApplyNonAsciiCheck, ShouldInstallL11n, ShouldUninstallExtensions,
+                                   ApplyNonAsciiCheck, ShouldInstallL10n, ShouldUninstallExtensions,
                                    GenerateTestFile, GenerateDesktopShortcut, OpenVscodeAfterConfig,
                                    NoSendAnalytics);

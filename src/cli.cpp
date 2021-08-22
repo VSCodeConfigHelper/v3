@@ -136,7 +136,7 @@ void init(int argc, char** argv) {
     ADD_OPTION_C("language-standard", LanguageStandard,
                  "指定语言标准。若不提供，则工具根据 MinGW 编译器版本选取");
     ADD_OPTION_C("external-terminal", UseExternalTerminal, "使用外部终端进行运行和调试");
-    ADD_OPTION_C("install-chinese", ShouldInstallL11n, "为 VS Code 安装中文语言包");
+    ADD_OPTION_C("install-chinese", ShouldInstallL10n, "为 VS Code 安装中文语言包");
     ADD_OPTION_C("offline-cpptools", OfflineInstallCCpp, "离线安装  C/C++  扩展");
     ADD_OPTION_C("uninstall-extensions", ShouldUninstallExtensions, "卸载多余的 VS Code 扩展");
     // ADD_OPTION_C("generate-test", GenerateTestFile, "");
@@ -212,14 +212,6 @@ void init(int argc, char** argv) {
 #undef ADD_OPTION_G
 #undef ADD_OPTION_C
 #undef ADD_OPTION_A
-}
-
-boost::filesystem::path scriptDirectory() {
-#ifdef WINDOWS
-    return fs::path(options.MingwPath);
-#else
-    return Native::getAppdata().parent_path() / ".local/bin";
-#endif
 }
 
 void runCli(const Environment& env) {
@@ -310,7 +302,7 @@ void runCli(const Environment& env) {
         LOG_INF("启用了开关 --remove-script，程序将删除所有脚本。");
         const char* filenames[]{"check-ascii.ps1", "pause-console" SCRIPT_EXT};
         for (const auto& filename : filenames) {
-            auto scriptPath(scriptDirectory() / filename);
+            auto scriptPath(Generator::scriptDirectory(options) / filename);
             if (fs::exists(scriptPath)) {
                 fs::remove(scriptPath);
                 LOG_INF("删除了脚本 ", scriptPath, "。");

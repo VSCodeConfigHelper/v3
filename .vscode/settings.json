@@ -13,5 +13,9 @@
         ],
         "externalConsole": false
     },
-    "cmake.configureOnOpen": true
+    "cmake.configureOnOpen": true,
+    "files.associations": {
+        "*.bf": "brainfuck",
+        "type_traits": "cpp"
+    }
 }

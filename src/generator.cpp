@@ -158,7 +158,7 @@ std::string Generator::debuggerPath() {
 #endif
 }
 std::string Generator::scriptPath(const std::string& filename) {
-    return (Cli::scriptDirectory() / filename).string();
+    return (scriptDirectory(options) / filename).string();
 }
 
 void Generator::saveFile(const fs::path& path, const char* content) {
@@ -520,6 +520,14 @@ void Generator::generateShortcut() {
 }
 #endif
 
+boost::filesystem::path Generator::scriptDirectory(const CurrentOptions& opt) {
+#ifdef WINDOWS
+    return fs::path(opt.MingwPath);
+#else
+    return Native::getAppdata().parent_path() / ".local/bin";
+#endif
+}
+
 void Generator::generate() {
     try {
         fs::path dotVscode(fs::path(options.WorkspacePath) / ".vscode");
@@ -533,16 +541,16 @@ void Generator::generate() {
         } else {
             extensions.install(C_CPP_EXT_ID);
         }
-        if (options.ShouldInstallL11n) {
+        if (options.ShouldInstallL10n) {
             extensions.install("ms-ceintl.vscode-language-pack-zh-hans");
         }
         if (options.UseExternalTerminal) {
-            saveFile(Cli::scriptDirectory() / "pause-console." SCRIPT_EXT, Embed::PAUSE_CONSOLE);
+            saveFile(scriptDirectory(options) / "pause-console." SCRIPT_EXT, Embed::PAUSE_CONSOLE);
             addKeybinding("f6", "workbench.action.tasks.runTask", "run and pause");
         }
 #ifdef WINDOWS
         if (options.ApplyNonAsciiCheck) {
-            saveFile(Cli::scriptDirectory() / "check-ascii.ps1", Embed::CHECK_ASCII);
+            saveFile(scriptDirectory(options) / "check-ascii.ps1", Embed::CHECK_ASCII);
         }
         if (!options.NoSetEnv) {
             addToPath(options.MingwPath);
