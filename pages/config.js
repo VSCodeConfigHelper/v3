@@ -520,6 +520,8 @@ const vm = new Vue({
             // match 'class ConfigOptions' in backend
             switch (this.backendVersion) {
                 case "3.0.0":
+                case "3.0.1":
+                case "3.0.2":
                     return {
                         VscodePath: this.vscodePath + "\\Code.exe",
                         MingwPath: this.mingw?.path + "\\bin" ?? null,
@@ -538,6 +540,7 @@ const vm = new Vue({
                         OpenVscodeAfterConfig: this.openVscode,
                         NoSendAnalytics: !this.sendAnalytics
                     };
+                case "3.1.0":
                 default:
                     return {
                         VscodePath: this.vscodePath + "\\Code.exe",
