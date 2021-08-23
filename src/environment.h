@@ -43,6 +43,9 @@ class Environment {
     std::optional<std::string> vscodePath;
     std::vector<CompilerInfo> compilers;
 
+    static constexpr const char* version{PROJECT_VERSION};
+    bool gbk;
+
     static std::optional<std::string> getVscodePath();
     static std::unordered_set<std::string> getPaths();
 
@@ -57,18 +60,20 @@ public:
     }
 
     static std::optional<std::string> testCompiler(const boost::filesystem::path& path);
+
+    friend void to_json(nlohmann::json& j, const Environment& e);
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CompilerInfo, Path, VersionText, VersionNumber, PackageString)
 
 inline void to_json(nlohmann::json& j, const Environment& e) {
     j = nlohmann::json::object();
-    auto&& VscodePath{e.VscodePath()};
-    if (VscodePath) {
-        j["VscodePath"] = *VscodePath;
+    if (e.vscodePath) {
+        j["VscodePath"] = *e.vscodePath;
     } else {
         j["VscodePath"] = nullptr;
     }
-    j["Compilers"] = e.Compilers();
-    j["Version"] = PROJECT_VERSION;
+    j["Compilers"] = e.compilers;
+    j["Gbk"] = e.gbk;
+    j["Version"] = e.version;
 }

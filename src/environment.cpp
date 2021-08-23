@@ -71,6 +71,7 @@ Environment::Environment() {
         }
     }
 #endif
+    gbk = Native::isGbkCp();
     LOG_INF("解析环境完成。");
     LOG_DBG("Resolved vscode path: ", vscodePath ? *vscodePath : "null");
     LOG_DBG("Resolved compilers: ");

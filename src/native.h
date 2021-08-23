@@ -48,6 +48,8 @@ std::string getDesktop();
 
 #endif
 
+bool isGbkCp();
+
 boost::filesystem::path getAppdata();
 boost::filesystem::path getTempFilePath(const std::string& filename);
 char getch();

@@ -118,9 +118,10 @@ void Server::setHandlers() {
         server.Post(path.c_str(), [&](const Request& req, Response& res) {
             res.set_header("Access-Control-Allow-Origin", "*");
             try {
-                LOG_DBG("Req body: ", req.body);
+                LOG_DBG("Path:", path);
+                LOG_DBG("Req : ", req.body);
                 auto resBody{handler(req.body)};
-                LOG_DBG("Res body: ", resBody);
+                LOG_DBG("Res : ", resBody);
                 res.set_content(resBody, "text/plain");
             } catch (std::exception& e) {
                 LOG_ERR(e.what());

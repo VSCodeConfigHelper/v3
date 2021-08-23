@@ -47,6 +47,7 @@ const LANG_CPP = 0;
 const LANG_C = 1;
 const STYLE_INTERNAL = 0;
 const STYLE_EXTERNAL = 1;
+const MINIMUM_REQUIRED_VERSION = "3.1.0";
 const vm = new Vue({
     el: '#app',
     created: function () {
@@ -54,6 +55,13 @@ const vm = new Vue({
             method: 'POST'
         }).then(r => r.json()).then(v => {
             console.log(v);
+            if ("Version" in v) {
+                this.backendVersion = v.Version;
+            }
+            if (compareVersions(MINIMUM_REQUIRED_VERSION, this.backendVersion) === 1) {
+                alert(`您的工具版本为 ${this.backendVersion}，无法继续配置。版本低于 ${MINIMUM_REQUIRED_VERSION} 的工具已不再支持，请及时更新。`);
+                window.location = "https://vscch3.vercel.app/";
+            }
             if (v.VscodePath === null) {
                 this.vscodeStatus = "unresolved";
                 this.vscodePath = "";
@@ -62,8 +70,8 @@ const vm = new Vue({
                 // Get folder name (not exe)
                 this.vscodePath = dirname(v.VscodePath);
             }
-            if ("Version" in v) {
-                this.backendVersion = v.Version;
+            if ("Gbk" in v && v.Gbk === true) {
+                this.enableGbk = true;
             }
             this.compilers = v.Compilers.map(m => ({
                 path: dirname(m.Path),
@@ -199,6 +207,8 @@ const vm = new Vue({
         wall: false,
         wextra: false,
         werror: false,
+        enableGbk: false,
+        fexecCharsetGbk: false,
         staticStd: false,
         customOptions: [],
         dbgStyle: 0, // 0: internal, 1: external
@@ -305,6 +315,9 @@ const vm = new Vue({
             }
             if (this.werror === true) {
                 args.push("-Werror");
+            }
+            if (this.enableGbk === true && this.fexecCharsetGbk === true) {
+                args.push("-fexec-charset=GBK");
             }
             if (this.staticStd === true) {
                 args.push("-static-libgcc");
@@ -445,6 +458,7 @@ const vm = new Vue({
                 this.wall = false;
                 this.wextra = false;
                 this.werror = false;
+                this.fexecCharsetGbk = false;
                 this.staticStd = false;
                 this.dbgStyle = STYLE_INTERNAL;
                 this.nonAsciiCheck = false;
@@ -464,6 +478,8 @@ const vm = new Vue({
                 this.optimization = '';
                 this.wall = true;
                 this.wextra = true;
+                this.werror = false;
+                if (this.enableGbk === true) this.fexecCharsetGbk = true;
                 this.staticStd = false;
                 this.dbgStyle = STYLE_EXTERNAL;
                 this.nonAsciiCheck = true;
@@ -492,6 +508,7 @@ const vm = new Vue({
                     wall: this.wall,
                     wextra: this.wextra,
                     werror: this.werror,
+                    fexecCharsetGbk: this.fexecCharsetGbk,
                     staticStd: this.staticStd,
                     dbgStyle: this.dbgStyle,
                     nonAsciiCheck: this.nonAsciiCheck,
@@ -513,6 +530,9 @@ const vm = new Vue({
                 if (data === null) return;
                 for (const key in data) {
                     this[key] = data[key];
+                }
+                if (this.enableGbk === false) {
+                    this.fexecCharsetGbk = false;
                 }
             });
         },

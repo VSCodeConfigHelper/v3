@@ -267,6 +267,7 @@
                                                                 <v-checkbox hide-details class="mt-2" v-model="wall" label="全部警告（-Wall）"></v-checkbox>
                                                                 <v-checkbox hide-details class="mt-2" v-model="wextra" label="额外警告（-Wextra）"></v-checkbox>
                                                                 <v-checkbox hide-details class="mt-2" v-model="werror" label="视警告为错误（-Werror）"></v-checkbox>
+                                                                <v-checkbox hide-details class="mt-2" v-model="fexecCharsetGbk" label="防止中文乱码（-fexec-charset=GBK）" :disabled="!enableGbk"></v-checkbox>
                                                                 <v-checkbox hide-details class="mt-2" v-model="staticStd" label="静态链接标准库（-static-libgcc，-static-libstdc++）">
                                                                 </v-checkbox>
                                                                 <v-combobox dense outlined hide-details class="mt-2" v-model="customOptions" label="其它自定义选项" multiple small-chips></v-combobox>
@@ -392,6 +393,8 @@
     <script src="https://cdn.jsdelivr.net/npm/rxjs@6.6.7/bundles/rxjs.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue-rx@6.2.0/dist/vue-rx.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/compare-versions@3.6.0/index.min.js"></script>
     <script src="config.js"></script>
 </body>
 

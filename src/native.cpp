@@ -172,6 +172,14 @@ std::string getDesktop() {
 
 #endif  // WINDOWS
 
+bool isGbkCp() {
+#if WINDOWS
+    return GetACP() == 936;
+#else
+    return true;
+#endif
+}
+
 boost::filesystem::path getAppdata() {
 #if WINDOWS
     return boost::filesystem::path(getSpecialFolder(FOLDERID_RoamingAppData));
