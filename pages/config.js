@@ -47,7 +47,7 @@ const LANG_CPP = 0;
 const LANG_C = 1;
 const STYLE_INTERNAL = 0;
 const STYLE_EXTERNAL = 1;
-const MINIMUM_REQUIRED_VERSION = "3.1.0";
+const MINIMUM_REQUIRED_VERSION = "3.0.0";
 const vm = new Vue({
     el: '#app',
     created: function () {
