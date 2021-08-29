@@ -111,7 +111,13 @@ void ExtensionManager::uninstallAll() {
 namespace {
 
 const char offlineHost[]{"https://guyutongxue.oss-cn-beijing.aliyuncs.com"};
-const char offlinePath[]{"/vscode-cpptools/cpptools-win32_v1.5.1.vsix"};
+#ifdef WINDOWS
+const char offlinePath[]{"/vscode-cpptools/cpptools-win32.vsix"};
+#elif defined(LINUX)
+const char offlinePath[]{"/vscode-cpptools/cpptools-linux.vsix"};
+#else
+const char offlinePath[]{"/vscode-cpptools/cpptools-osx.vsix"};
+#endif
 const char C_CPP_EXT_ID[]{"ms-vscode.cpptools"};
 
 boost::regex splitPathRegex(";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");

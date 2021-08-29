@@ -218,6 +218,10 @@ void checkSystemVersion() {
         LOG_ERR("此程序仅支持 Debian/Ubuntu 发行版。您当前的操作系统不符合要求，程序将退出。");
         std::exit(1);
     }
+#else
+# ifdef __arm__
+    LOG_WRN("此程序未在 Apple 芯片的 Mac 上测试过。程序可能出现问题。");
+# endif
 #endif
 }
 

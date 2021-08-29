@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="shortcut icon" href="assets/icon.ico" type="image/x-icon" />
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+    <meta charset="utf-8">
+    <title>VS Code Config Helper 3</title>
+</head>
+
+<body>
+    <main id="app">
+        <v-app>
+            <v-container>
+                <v-row justify="center">
+                    <v-col md="9">
+                        <div class="text-h4 text-center pt-2">
+                            配置已完成
+                        </div>
+                        <div class="subtitle-1 text-center pt-1">您可以关闭此页面了</div>
+                    </v-col>
+                </v-row>
+                <v-btn elevation="2" fixed x-small fab bottom right :title="showDonation ? '隐藏捐助' : '显示捐助'" @click="toggleDonation">
+                    <v-icon>{{ showDonation ? 'mdi-arrow-collapse-down' : 'mdi-currency-usd' }}</v-icon>
+                </v-btn>
+                <v-footer fixed v-show="showDonation">
+                    <v-row justify="center">
+                        <v-col md="9">
+                            <v-row>
+                                <v-col align="center" class="pb-0 pt-5">
+                                    如果这个软件对你有帮助，可以给作者买一杯咖啡
+                                </v-col>
+                            </v-row>
+                            <v-row justify="center">
+                                <v-col align="right">
+                                    <v-img src="https://z3.ax1x.com/2021/08/29/hGe1SK.jpg" alt="alipay" max-width="200"></v-img>
+                                </v-col>
+                                <v-col align="left">
+                                    <v-img src="https://z3.ax1x.com/2021/08/29/hGeQW6.jpg" alt="wechat" max-width="200"></v-img>
+                                </v-col>
+                            </v-row>
+                        </v-col>
+                    </v-row>
+                </v-footer>
+            </v-container>
+        </v-app>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.0/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script>
+        const vm = new Vue({
+            el: "#app",
+            vuetify: new Vuetify(),
+            data: {
+                showDonation: true
+            },
+            created: function() {
+                const cookie = Cookies.get("showDonation");
+                if (typeof cookie !== "undefined") {
+                    if (cookie === "no") this.showDonation = false;
+                }
+            },
+            methods: {
+                toggleDonation: function() {
+                    this.showDonation ^= true;
+                    if (!this.showDonation) {
+                        Cookies.set("showDonation", "no");
+                    } else {
+                        Cookies.remove("showDonation");
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -53,7 +53,13 @@ const vm = new Vue({
     created: function () {
         fetch(`${HOST}/getEnv`, {
             method: 'POST'
-        }).then(r => r.json()).then(v => {
+        })
+            .then(r => r.json())
+            .catch(_ => {
+                alert("尝试与本地工具通信失败。无法继续配置。");
+                window.location = "about:blank";
+            })
+            .then(v => {
             console.log(v);
             if ("Version" in v) {
                 this.backendVersion = v.Version;
@@ -431,7 +437,7 @@ const vm = new Vue({
             }).then(r => r.text()).then((v) => {
                 alert("配置完成，您可以关闭此页面了。");
                 console.log("result: ", v);
-                window.location = "about:blank";
+                window.location = "/donate.html";
             });
         },
         getFolder: function (initDir, target) {
