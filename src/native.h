@@ -72,14 +72,14 @@ constexpr const char newLine{'\n'};
 #ifdef __APPLE__
 #define MACOS 1
 
-constexpr const char* cCompiler{"clang"};
-constexpr const char* cppCompiler{"clang++"}; 
+#define C_COMPILER "clang"
+#define CXX_COMPILER "clang++" 
 
 #else
 #define LINUX 1
 
-constexpr const char* cCompiler{"gcc"};
-constexpr const char* cppCompiler{"g++"};
+#define C_COMPILER "gcc"
+#define CXX_COMPILER "g++"
 
 #endif // __APPLE__
 

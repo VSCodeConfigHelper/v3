@@ -121,20 +121,22 @@ void init(int argc, char** argv) {
     ADD_OPTION_G("help,h", Help, "显示此帮助信息并退出");
     ADD_OPTION_G("version,v", Version, "显示程序版本信息并退出");
 #ifdef WINDOWS
-    ADD_OPTION_C("use-gui,g", UseGui,
+    ADD_OPTION_G("use-gui,g", UseGui,
                  "使用 GUI  进行配置。当不提供任何命令行参数时，此选项将被默认使用");
     ADD_OPTION_C("vscode-path", VscodePath,
                  "指定 VS Code 安装路径。若不提供，则工具自动从注册表获取");
     ADD_OPTION_C("mingw-path", MingwPath,
                  "指定  MinGW  的安装路径。若不提供，则工具自动从环境变量获取");
 #else
-    ADD_OPTION_C("compiler", Compiler, "指定编译器");
+    ADD_OPTION_C("vscode-path", VscodePath,
+                 "指定 VS Code 安装路径。若不提供，则工具自动从环境变量获取");
+    ADD_OPTION_C("compiler", Compiler, "指定编译器。若不提供，则默认为 " CXX_COMPILER "/" C_COMPILER);
 #endif
     ADD_OPTION_C("workspace-path", WorkspacePath, "指定工作区文件夹路径。若使用 CLI  则必须提供");
     // ADD_OPTION_C("language", Language, "");
     decltype(options.LanguageStandard) a;
     ADD_OPTION_C("language-standard", LanguageStandard,
-                 "指定语言标准。若不提供，则工具根据 MinGW 编译器版本选取");
+                 "指定语言标准。若不提供，则工具根据编译器版本选取");
     ADD_OPTION_C("external-terminal", UseExternalTerminal, "使用外部终端进行运行和调试");
     ADD_OPTION_C("install-chinese", ShouldInstallL10n, "为 VS Code 安装中文语言包");
     ADD_OPTION_C("offline-cpptools", OfflineInstallCCpp, "离线安装  C/C++  扩展");
@@ -281,7 +283,8 @@ void runCli(const Environment& env) {
         if (r != compilers.end()) {
             pInfo = std::make_unique<const CompilerInfo>(*r);
         } else {
-            LOG_ERR("未找到 ", options.Language == LanguageType::Cpp ? "C++" : "C", " 编译器。程序将退出。");
+            LOG_ERR("未找到 ", options.Language == LanguageType::Cpp ? "C++" : "C",
+                    " 编译器。程序将退出。");
             std::exit(1);
         }
     } else {
@@ -311,7 +314,6 @@ void runCli(const Environment& env) {
         LOG_INF("脚本删除操作完成。程序将退出。");
         std::exit(0);
     }
-#ifdef WINDOWS
     if (options.VscodePath.empty()) {
         LOG_INF("未从命令行传入 VS Code 路径，将使用自动检测到的路径。");
         const auto& vscodePath{env.VscodePath()};
@@ -329,12 +331,6 @@ void runCli(const Environment& env) {
             std::exit(1);
         }
     }
-#else
-    if (!env.VscodePath()) {
-        LOG_ERR("未检测到 VS Code，可能是 code 不在 PATH 中。程序将退出。");
-        std::exit(1);
-    }
-#endif
     if (options.LanguageStandard.empty()) {
         LOG_INF("未从命令行传入语言标准，将根据编译器选择语言标准。");
         auto [cppStd, cStd]{getLatestSupportStandardFromCompiler(pInfo->VersionNumber)};

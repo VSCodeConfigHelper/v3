@@ -32,6 +32,7 @@ struct BaseOptions {
     enum class GenTestType { Auto, Always, Never };
 
     std::string WorkspacePath;
+    std::string VscodePath;
     LanguageType Language;
     std::string LanguageStandard;
     std::vector<std::string> CompileArgs;
@@ -52,7 +53,6 @@ struct BaseOptions {
 struct WindowsOptions : BaseOptions {
     bool UseGui;
 
-    std::string VscodePath;
     std::string MingwPath;
 
     bool ApplyNonAsciiCheck;
@@ -109,8 +109,7 @@ class Generator {
     CurrentOptions options;
 
     const char* fileExt();
-;
-    std::string vscodePath();
+    
     std::string compilerPath();
     std::string debuggerPath();
     std::string scriptPath(const std::string& filename);

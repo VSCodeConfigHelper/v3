@@ -53,12 +53,25 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
 endif()
 
+# simplify Linux/Mac output name for convenience
+if(NOT WIN32)
+  set_property(TARGET VSCodeConfigHelper
+               PROPERTY OUTPUT_NAME "vscch")
+endif()
+
 # CPack
 # `cpack --config build/CPackConfig.cmake`
 set(CPACK_GENERATOR 7Z)
 set(CPACK_PACKAGE_DIRECTORY ${CMAKE_BINARY_DIR}/package)
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
-set(CPACK_PACKAGE_FILE_NAME "vscch_v${PROJECT_VERSION}")
+if(WIN32)
+  set(CPACK_SYSTYPE "win")
+elseif(APPLE)
+  set(CPACK_SYSTYPE "mac")
+else()
+  set(CPACK_SYSTYPE "linux")
+endif()
+set(CPACK_PACKAGE_FILE_NAME "VSCodeConfigHelper_v${PROJECT_VERSION}_${CPACK_SYSTYPE}")
 install(TARGETS VSCodeConfigHelper RUNTIME DESTINATION .)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION .)
 include(CPack)

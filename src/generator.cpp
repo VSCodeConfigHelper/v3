@@ -139,14 +139,6 @@ const char* Generator::fileExt() {
     return options.Language == LanguageType::Cpp ? ".cpp" : ".c";
 }
 
-std::string Generator::vscodePath() {
-#ifdef WINDOWS
-        return options.VscodePath;
-#else
-        return bp::search_path("code").string();
-#endif
-}
-
 std::string Generator::compilerPath() {
 #ifdef WINDOWS
     const char* filename{options.Language == LanguageType::Cpp ? "g++.exe" : "gcc.exe"};
@@ -472,7 +464,7 @@ int main() {
  */
 int main(void) {
     /* 在标准输出中打印 "Hello, world!" */
-    printf("Hello, world!");
+    printf("Hello, world!\n");
     return EXIT_SUCCESS;
 }
 )";
@@ -480,8 +472,10 @@ int main(void) {
     oss << '\n';
     oss << c("此文件编译运行将输出 \"Hello, world!\"。") << '\n';
     oss << c(compileResultComment) << '\n';
-    oss << c("** 重要提示：您以后编写其它代码时，请务必确保文件名不包含中文或特殊字符，切记！**")
+#ifdef WINDOWS
+    oss << c("重要提示：您以后编写其它代码时，请务必确保文件名不包含中文或特殊字符，切记！")
         << '\n';
+#endif
     oss << c("如果遇到了问题，请您浏览") << '\n';
     oss << c("https://github.com/Guyutongxue/VSCodeConfigHelper/blob/v2.x/TroubleShooting.md")
         << '\n';
@@ -500,9 +494,9 @@ void Generator::openVscode(const std::optional<std::string>& filename) {
         args += "--goto", *filename;
     }
     LOG_INF("启动 VS Code...");
-    LOG_DBG(vscodePath(), " ", boost::join(args, " "));
+    LOG_DBG(options.VscodePath, boost::join(args, " "));
     try {
-        bp::spawn(vscodePath(), bp::args = args, bp::std_out > bp::null);
+        bp::spawn(options.VscodePath, bp::args = args, bp::std_out > bp::null);
     } catch (std::exception& e) {
         LOG_WRN("启动 VS Code 失败：", e.what());
     }
@@ -538,7 +532,7 @@ void Generator::generate() {
     try {
         fs::path dotVscode(fs::path(options.WorkspacePath) / ".vscode");
 
-        ExtensionManager extensions(vscodePath());
+        ExtensionManager extensions(options.VscodePath);
         if (options.ShouldUninstallExtensions) {
             extensions.uninstallAll();
         }

@@ -49,7 +49,7 @@ Environment::Environment() {
     }
 #else
     LOG_INF("查找 C++ 编译器...");
-    auto fullPath{bp::search_path(Native::cppCompiler).string()};
+    auto fullPath{bp::search_path(CXX_COMPILER).string()};
     if (!fullPath.empty()) {
         auto versionText{testCompiler(fullPath)};
         if (versionText) {
@@ -60,7 +60,7 @@ Environment::Environment() {
         }
     }
     LOG_INF("查找 C 编译器...");
-    fullPath = bp::search_path(Native::cCompiler).string();
+    fullPath = bp::search_path(C_COMPILER).string();
     if (!fullPath.empty()) {
         auto versionText{testCompiler(fullPath)};
         if (versionText) {
