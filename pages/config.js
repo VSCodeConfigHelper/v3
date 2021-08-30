@@ -435,7 +435,6 @@ const vm = new Vue({
                     config: result
                 })
             }).then(r => r.text()).then((v) => {
-                alert("配置完成，您可以关闭此页面了。");
                 console.log("result: ", v);
                 window.location = "/donate.html";
             });

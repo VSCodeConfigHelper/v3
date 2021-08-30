@@ -19,7 +19,7 @@
                         <div class="text-h4 text-center pt-2">
                             配置已完成
                         </div>
-                        <div class="subtitle-1 text-center pt-1">您可以关闭此页面了</div>
+                        <div class="subtitle-1 text-center pt-1">你可以关闭此页面了</div>
                     </v-col>
                 </v-row>
                 <v-btn elevation="2" fixed x-small fab bottom right :title="showDonation ? '隐藏捐助' : '显示捐助'" @click="toggleDonation">
@@ -67,7 +67,7 @@
                 toggleDonation: function() {
                     this.showDonation ^= true;
                     if (!this.showDonation) {
-                        Cookies.set("showDonation", "no");
+                        Cookies.set("showDonation", "no", { expires: 365 });
                     } else {
                         Cookies.remove("showDonation");
                     }

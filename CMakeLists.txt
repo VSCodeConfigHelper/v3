@@ -25,10 +25,10 @@ add_executable(VSCodeConfigHelper ${SOURCES})
 
 # load script files into string
 if(WIN32)
-file(READ scripts/pause-console.ps1 PAUSE_CONSOLE_SRC)
-file(READ scripts/check-ascii.ps1 CHECK_ASCII_SRC)
+  file(READ scripts/pause-console.ps1 PAUSE_CONSOLE_SRC)
+  file(READ scripts/check-ascii.ps1 CHECK_ASCII_SRC)
 else()
-file(READ scripts/pause-console.sh PAUSE_CONSOLE_SRC)
+  file(READ scripts/pause-console.sh PAUSE_CONSOLE_SRC)
 endif()
 
 configure_file(configs/config.h.in ${CMAKE_BINARY_DIR}/include/config.h)
@@ -45,8 +45,7 @@ target_link_libraries(VSCodeConfigHelper ${CONAN_LIBS})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(VSCodeConfigHelper -static-libgcc -static-libstdc++)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  # Clang or AppleClang
-  # TODO
+  # Clang or AppleClang TODO
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set_property(
     TARGET VSCodeConfigHelper PROPERTY MSVC_RUNTIME_LIBRARY
@@ -54,5 +53,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
 endif()
 
-set_property(TARGET VSCodeConfigHelper
-             PROPERTY OUTPUT_NAME "VSCodeConfigHelper_v${PROJECT_VERSION}")
+# CPack
+# `cpack --config build/CPackConfig.cmake`
+set(CPACK_GENERATOR 7Z)
+set(CPACK_PACKAGE_DIRECTORY ${CMAKE_BINARY_DIR}/package)
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+set(CPACK_PACKAGE_FILE_NAME "vscch_v${PROJECT_VERSION}")
+install(TARGETS VSCodeConfigHelper RUNTIME DESTINATION .)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION .)
+include(CPack)

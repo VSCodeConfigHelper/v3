@@ -2,6 +2,12 @@
 
 [![](https://img.shields.io/github/workflow/status/Guyutongxue/VSCodeConfigHelper3/CMake)](https://github.com/Guyutongxue/VSCodeConfigHelper3/actions/workflows/cmake.yml)
 
+## Support Platforms
+
+- Windows 10 and above
+- Ubuntu or other Debian-based Linux distro (next release)
+- Intel Mac (next release)
+
 ## Build instruction
 
 ### GCC Debug (not recommended)
