@@ -18,6 +18,7 @@ mkdir build
 cd build
 conan install .. -b missing -s compiler=gcc -s compiler.libcxx=libstdc++11 -s compiler.version=11
 cmake ..
+mingw32-make
 ```
 
 ### MSVC Debug
@@ -27,6 +28,7 @@ mkdir build
 cd build
 conan install .. -b missing -s build_type=Debug -s compiler.runtime=MTd
 cmake ..
+cmake --build .
 ```
 
 ### MSVC Release
@@ -35,5 +37,6 @@ cmake ..
 mkdir build
 cd build
 conan install .. -b missing -s build_type=Release -s compiler.runtime=MT
-cmake .. --config Release
+cmake ..
+cmake --build . --config MinSizeRel
 ```
