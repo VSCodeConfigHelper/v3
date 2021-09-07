@@ -6,5 +6,6 @@ namespace Embed {
 
 constexpr const char PAUSE_CONSOLE[]{R"CppRawStr(@PAUSE_CONSOLE_SRC@)CppRawStr"};
 constexpr const char CHECK_ASCII[]{R"CppRawStr(@CHECK_ASCII_SRC@)CppRawStr"};
+constexpr const char PAUSE_CONSOLE_LAUNCHER[]{R"CppRawStr(@PAUSE_CONSOLE_LAUNCHER_SRC@)CppRawStr"};
 
 }

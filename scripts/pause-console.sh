@@ -14,7 +14,7 @@ function set-title() {
 }
 set-title $1
 start_time="$(date -u +%s.%4N)"
-$1 "${@:2}"
+"$1" "${@:2}"
 exit_code=$?
 end_time="$(date -u +%s.%4N)"
 elapsed_time="$(echo "$end_time-$start_time" | bc | sed 's/^\./0./')"

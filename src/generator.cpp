@@ -25,9 +25,9 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 
+#include "cli.h"
 #include "config.h"
 #include "log.h"
-#include "cli.h"
 
 namespace bp = boost::process;
 namespace fs = boost::filesystem;
@@ -47,11 +47,11 @@ std::string ExtensionManager::runScript(const std::initializer_list<std::string>
 ExtensionManager::ExtensionManager(const boost::filesystem::path& vscodePath)
     : scriptPath{
 #ifdef WINDOWS
-        vscodePath.parent_path() / "bin\\code.cmd"
-#else    
-        vscodePath
+          vscodePath.parent_path() / "bin\\code.cmd"
+#else
+          vscodePath
 #endif
-    } {
+      } {
     installedExtensions = list();
 }
 
@@ -150,9 +150,9 @@ std::string Generator::compilerPath() {
 
 std::string Generator::debuggerPath() {
 #ifdef WINDOWS
-        return (fs::path(options.MingwPath) / "gdb.exe").string();
+    return (fs::path(options.MingwPath) / "gdb.exe").string();
 #else
-        return "gdb";
+    return "gdb";
 #endif
 }
 std::string Generator::scriptPath(const std::string& filename) {
@@ -235,7 +235,8 @@ void Generator::generateTasksJson(const fs::path& path) {
     using json = nlohmann::json;
     LOG_INF("生成 ", path, " ...");
     auto args{options.CompileArgs};
-    args += "-g", "${file}", "-o", "${fileDirname}" PATH_SLASH "${fileBasenameNoExtension}." EXE_EXT;
+    args += "-g", "${file}", "-o",
+        "${fileDirname}" PATH_SLASH "${fileBasenameNoExtension}." EXE_EXT;
     // clang-format off
     auto sfbTask(json::object({
         {"type", "process"}, // "cppbuild" won't apply options
@@ -262,22 +263,26 @@ void Generator::generateTasksJson(const fs::path& path) {
         {"command", 
 #ifdef WINDOWS
             "START"
-#else
+#elif defined(LINUX)
             "x-terminal-emulator",
+#else // MACOS
+            scriptPath("pause-console-launcher.sh"),
 #endif
         },
         {"dependsOn", "gcc single file build"},
         {"args", json::array({
-#ifdef WINDOWS
+#ifndef MACOS
+# ifdef WINDOWS
             "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe",
             "-ExecutionPolicy",
             "ByPass",
             "-NoProfile",
             "-File",
-#else
+# else // LINUX
             "-e",
-#endif
             scriptPath("pause-console." SCRIPT_EXT),
+# endif
+#endif
             "${fileDirname}" PATH_SLASH "${fileBasenameNoExtension}." EXE_EXT
         })},
         {"presentation", json::object({
@@ -288,6 +293,11 @@ void Generator::generateTasksJson(const fs::path& path) {
             {"panel", "shared"},
             {"clear", true}
         })},
+#ifdef MACOS
+        {"options", json::object({
+            {"cwd", scriptPath("")}
+        })},
+#endif 
         {"problemMatcher", json::array()}
     }));
     auto asciiTask(json::object({
@@ -361,9 +371,23 @@ void Generator::generateLaunchJson(const fs::path& path) {
                 {"stopAtEntry", false},
                 {"cwd", "${fileDirname}"},
                 {"environment", json::array({})},
-                {"externalConsole", options.UseExternalTerminal},
-                {"MIMode", "gdb"},
+                {"externalConsole", 
+#ifdef MACOS
+                    true
+#else
+                options.UseExternalTerminal
+#endif
+                },
+                {"MIMode", 
+#ifdef MACOS
+                "lldb"
+#else
+                "gdb"
+#endif                
+                },
+#ifndef MACOS
                 {"miDebuggerPath", debuggerPath()},
+#endif
                 {"setupCommands", json::array({
                     json::object({
                         {"text", "-enable-pretty-printing"},
@@ -523,8 +547,12 @@ void Generator::generateShortcut() {
 boost::filesystem::path Generator::scriptDirectory(const CurrentOptions& opt) {
 #ifdef WINDOWS
     return fs::path(opt.MingwPath);
-#else
+#elif defined(LINUX)
+    // ~/.config
     return Native::getAppdata().parent_path() / ".local/bin";
+#else
+    // ~/Library/Application Support
+    return Native::getAppdata().parent_path().parent_path() / ".local/bin";
 #endif
 }
 
@@ -546,6 +574,10 @@ void Generator::generate() {
         }
         if (options.UseExternalTerminal) {
             saveFile(scriptDirectory(options) / "pause-console." SCRIPT_EXT, Embed::PAUSE_CONSOLE);
+#ifdef MACOS
+            saveFile(scriptDirectory(options) / "pause-console-launcher.sh",
+                     Embed::PAUSE_CONSOLE_LAUNCHER);
+#endif
             addKeybinding("f6", "workbench.action.tasks.runTask", "run and pause");
         }
 #ifdef WINDOWS
@@ -557,40 +589,39 @@ void Generator::generate() {
         }
 #endif
 
-    if (fs::exists(dotVscode)) {
-        fs::remove_all(dotVscode);
-        LOG_INF("移除了已存在的 .vscode 文件夹。");
-    }
-    fs::create_directories(dotVscode);
-    generateTasksJson(dotVscode / "tasks.json");
-    generateLaunchJson(dotVscode / "launch.json");
-    generatePropertiesJson(dotVscode / "c_cpp_properties.json");
-    if (options.GenerateTestFile == BaseOptions::GenTestType::Auto) {
-        if (fs::exists(fs::path(options.WorkspacePath) / ("helloworld"s + fileExt()))) {
-            options.GenerateTestFile = BaseOptions::GenTestType::Never;
-        } else {
-            options.GenerateTestFile = BaseOptions::GenTestType::Always;
+        if (fs::exists(dotVscode)) {
+            fs::remove_all(dotVscode);
+            LOG_INF("移除了已存在的 .vscode 文件夹。");
         }
-    }
-    std::optional<std::string> testFilename;
-    if (options.GenerateTestFile == BaseOptions::GenTestType::Always) {
-        testFilename = generateTestFile();
-    }
-    if (options.OpenVscodeAfterConfig) {
-        openVscode(testFilename);
-    }
+        fs::create_directories(dotVscode);
+        generateTasksJson(dotVscode / "tasks.json");
+        generateLaunchJson(dotVscode / "launch.json");
+        generatePropertiesJson(dotVscode / "c_cpp_properties.json");
+        if (options.GenerateTestFile == BaseOptions::GenTestType::Auto) {
+            if (fs::exists(fs::path(options.WorkspacePath) / ("helloworld"s + fileExt()))) {
+                options.GenerateTestFile = BaseOptions::GenTestType::Never;
+            } else {
+                options.GenerateTestFile = BaseOptions::GenTestType::Always;
+            }
+        }
+        std::optional<std::string> testFilename;
+        if (options.GenerateTestFile == BaseOptions::GenTestType::Always) {
+            testFilename = generateTestFile();
+        }
+        if (options.OpenVscodeAfterConfig) {
+            openVscode(testFilename);
+        }
 #ifdef WINDOWS
-    if (options.GenerateDesktopShortcut) {
-        generateShortcut();
-    }
+        if (options.GenerateDesktopShortcut) {
+            generateShortcut();
+        }
 #endif
-    if (!options.NoSendAnalytics) {
-        sendAnalytics();
+        if (!options.NoSendAnalytics) {
+            sendAnalytics();
+        }
+        LOG_INF("配置完成。");
+    } catch (std::exception& e) {
+        LOG_ERR(e.what());
+        throw;
     }
-    LOG_INF("配置完成。");
-}
-catch (std::exception& e) {
-    LOG_ERR(e.what());
-    throw;
-}
 }

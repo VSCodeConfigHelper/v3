@@ -27,6 +27,9 @@ add_executable(VSCodeConfigHelper ${SOURCES})
 if(WIN32)
   file(READ scripts/pause-console.ps1 PAUSE_CONSOLE_SRC)
   file(READ scripts/check-ascii.ps1 CHECK_ASCII_SRC)
+elseif(APPLE)
+  file(READ scripts/pause-console.rb PAUSE_CONSOLE_SRC)
+  file(READ scripts/pause-console-launcher.sh PAUSE_CONSOLE_LAUNCHER_SRC)
 else()
   file(READ scripts/pause-console.sh PAUSE_CONSOLE_SRC)
 endif()
@@ -45,7 +48,7 @@ target_link_libraries(VSCodeConfigHelper ${CONAN_LIBS})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(VSCodeConfigHelper -static-libgcc -static-libstdc++)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  # Clang or AppleClang TODO
+  target_compile_options(VSCodeConfigHelper PRIVATE -static)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set_property(
     TARGET VSCodeConfigHelper PROPERTY MSVC_RUNTIME_LIBRARY

@@ -303,7 +303,7 @@ void runCli(const Environment& env) {
 #endif
     if (options.RemoveScripts) {
         LOG_INF("启用了开关 --remove-script，程序将删除所有脚本。");
-        const char* filenames[]{"check-ascii.ps1", "pause-console" SCRIPT_EXT};
+        const char* filenames[]{"check-ascii.ps1", "pause-console-launcher.sh", "pause-console." SCRIPT_EXT};
         for (const auto& filename : filenames) {
             auto scriptPath(Generator::scriptDirectory(options) / filename);
             if (fs::exists(scriptPath)) {

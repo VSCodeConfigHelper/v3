@@ -17,16 +17,24 @@
 
 #include "native.h"
 
-#if WINDOWS
+#ifdef WINDOWS
+
 #include <conio.h>
 #include <shlobj.h>
 #include <versionhelpers.h>
+
 #else
+
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef LINUX
 #include <boost/filesystem.hpp>
+#else
+#include <sys/sysctl.h>
+#endif
+
 #endif
 
 #include <boost/nowide/convert.hpp>
@@ -181,14 +189,18 @@ bool isGbkCp() {
 }
 
 boost::filesystem::path getAppdata() {
-#if WINDOWS
+#ifdef WINDOWS
     return boost::filesystem::path(getSpecialFolder(FOLDERID_RoamingAppData));
 #else
     const char* homeDir{getenv("HOME")};
     if (homeDir == nullptr) {
         homeDir = getpwuid(getuid())->pw_dir;
     }
+# ifdef LINUX
     return boost::filesystem::path(homeDir) / ".config";
+# else
+    return boost::filesystem::path(homeDir) / "Library/Application Support";
+# endif
 #endif
 }
 
@@ -208,20 +220,29 @@ char getch() {
 
 void checkSystemVersion() {
 #ifdef WINDOWS
-#ifdef _MSC_VER
+# ifdef _MSC_VER
     if (!IsWindows10OrGreater()) {
         LOG_WRN("此程序未在低于 Windows 10 的操作系统上测试过。程序可能出现问题。");
     }
-#endif
+# endif
 #elif defined(LINUX)
     if (!boost::filesystem::exists("/etc/debian_version")) {
         LOG_ERR("此程序仅支持 Debian/Ubuntu 发行版。您当前的操作系统不符合要求，程序将退出。");
         std::exit(1);
     }
 #else
-# ifdef __arm__
-    LOG_WRN("此程序未在 Apple 芯片的 Mac 上测试过。程序可能出现问题。");
-# endif
+    char versionStr[256];
+    std::size_t size{sizeof(versionStr)};
+    int result{
+        sysctlbyname("kern.version", versionStr, &size, nullptr, 0)};
+    if (result != 0) {
+        LOG_WRN("获取系统版本失败：", strerror(errno));
+        return;
+    }
+    LOG_DBG("kern.version: ", versionStr);
+    if (std::string(versionStr).find("X86_64") == std::string::npos) {
+        LOG_WRN("您当前的操作系统不是 x86_64 架构：程序未经测试，可能出现问题。");
+    }
 #endif
 }
 

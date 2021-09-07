@@ -56,32 +56,33 @@ char getch();
 void checkSystemVersion();
 
 #if _WIN32
-#define WINDOWS 1
+# define WINDOWS 1
 
-#define SCRIPT_EXT "ps1"
-#define PATH_SLASH "\\"
-#define EXE_EXT "exe"
+# define SCRIPT_EXT "ps1"
+# define PATH_SLASH "\\"
+# define EXE_EXT "exe"
 constexpr const char newLine{'\r'};
 #else
 
-#define SCRIPT_EXT "sh"
-#define PATH_SLASH "/"
-#define EXE_EXT "out"
+# define PATH_SLASH "/"
+# define EXE_EXT "out"
 constexpr const char newLine{'\n'};
 
-#ifdef __APPLE__
-#define MACOS 1
+# ifdef __APPLE__
+#  define MACOS 1
 
-#define C_COMPILER "clang"
-#define CXX_COMPILER "clang++" 
+#  define SCRIPT_EXT "rb"
+#  define C_COMPILER "clang"
+#  define CXX_COMPILER "clang++" 
 
-#else
-#define LINUX 1
+# else
+#  define LINUX 1
 
-#define C_COMPILER "gcc"
-#define CXX_COMPILER "g++"
+#  define SCRIPT_EXT "sh"
+#  define C_COMPILER "gcc"
+#  define CXX_COMPILER "g++"
 
-#endif // __APPLE__
+# endif // __APPLE__
 
 #endif  // _WIN32
 
