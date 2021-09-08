@@ -29,11 +29,12 @@
 
 struct CompilerInfo {
 #ifndef _WIN32
-    LanguageType type{LanguageType::Cpp};
+    LanguageType langType{LanguageType::Cpp};
 #endif
     std::string Path;
     std::string VersionText;
 
+    enum { Gcc, Clang } compilerType;
     std::string VersionNumber;
     std::string PackageString;
     CompilerInfo(const std::string& path, const std::string& versionText);

@@ -65,7 +65,7 @@ struct PosixOptions : BaseOptions {
 };
 
 struct AppleOptions : PosixOptions {
-    bool InstallXcodeTools;
+    bool NoInstallClt;
 };
 
 #ifdef _WIN32

@@ -61,6 +61,7 @@
                         <v-col md="9">
                             <v-alert dense colored-border border="left" type="info" class="mb-0">
                                 工具已经为您初步检测了系统环境，现在我们需要您提供一些信息。
+                                <span v-if="latestVersion">（存在新版本 <code>{{latestVersion}}</code>，建议及时<a href="/index.html">更新</a>）</span>
                             </v-alert>
                         </v-col>
                     </v-row>

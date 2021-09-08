@@ -31,10 +31,21 @@ namespace fs = boost::filesystem;
 
 CompilerInfo::CompilerInfo(const std::string& path, const std::string& versionText)
     : Path(path), VersionText(versionText) {
-    auto firstSpace{versionText.find_first_of(' ')};
-    auto lastSpace{versionText.find_last_of(' ')};
-    VersionNumber = versionText.substr(lastSpace + 1);
-    PackageString = versionText.substr(firstSpace + 2, lastSpace - firstSpace - 3);
+    if (versionText.find("clang") != std::string::npos) {
+        compilerType = CompilerInfo::Clang;
+        boost::regex versionPattern("version (\\d+\\.\\d+\\.\\d+)");
+        boost::smatch version;
+        boost::regex_search(versionText, version, versionPattern);
+        if (version.size() > 1) {
+            VersionNumber = version[1];
+        }
+    } else {
+        compilerType = CompilerInfo::Gcc;
+        auto firstSpace{versionText.find_first_of(' ')};
+        auto lastSpace{versionText.find_last_of(' ')};
+        VersionNumber = versionText.substr(lastSpace + 1);
+        PackageString = versionText.substr(firstSpace + 2, lastSpace - firstSpace - 3);
+    }
 }
 
 Environment::Environment() {
@@ -54,7 +65,7 @@ Environment::Environment() {
         auto versionText{testCompiler(fullPath)};
         if (versionText) {
             CompilerInfo info(fullPath, *versionText);
-            info.type = LanguageType::Cpp;
+            info.langType = LanguageType::Cpp;
             LOG_DBG("C++ compiler info: ", info.Path, ": ", info.VersionText);
             compilers.push_back(info);
         }
@@ -65,7 +76,7 @@ Environment::Environment() {
         auto versionText{testCompiler(fullPath)};
         if (versionText) {
             CompilerInfo info(fullPath, *versionText);
-            info.type = LanguageType::C;
+            info.langType = LanguageType::C;
             LOG_DBG("C compiler info: ", info.Path, ": ", info.VersionText);
             compilers.push_back(info);
         }

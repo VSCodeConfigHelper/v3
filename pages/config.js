@@ -60,36 +60,44 @@ const vm = new Vue({
                 window.location = "about:blank";
             })
             .then(v => {
-            console.log(v);
-            if ("Version" in v) {
-                this.backendVersion = v.Version;
-            }
-            if (compareVersions(MINIMUM_REQUIRED_VERSION, this.backendVersion) === 1) {
-                alert(`您的工具版本为 ${this.backendVersion}，无法继续配置。版本低于 ${MINIMUM_REQUIRED_VERSION} 的工具已不再支持，请及时更新。`);
-                window.location = "https://vscch3.vercel.app/";
-            }
-            if (v.VscodePath === null) {
-                this.vscodeStatus = "unresolved";
-                this.vscodePath = "";
-            } else {
-                this.vscodeStatus = "resolved";
-                // Get folder name (not exe)
-                this.vscodePath = dirname(v.VscodePath);
-            }
-            if ("Gbk" in v && v.Gbk === true) {
-                this.enableGbk = true;
-            }
-            this.compilers = v.Compilers.map(m => ({
-                path: dirname(m.Path),
-                version: m.VersionNumber,
-                packageInfo: m.PackageString
-            }));
-            // select the first one only if there is only one
-            if (this.compilers.length === 1) {
-                this.mingwTableSelected.push(this.compilers[0]);
-            }
-            this.newCompiler = this.compilers.length === 0 ? 1 : 0;
-        }).then(() => this.loadProfile());
+                console.log(v);
+                if ("Version" in v) {
+                    this.backendVersion = v.Version;
+                    fetch("https://api.github.com/repos/Guyutongxue/VSCodeConfigHelper3/releases/latest")
+                        .then(r => r.json())
+                        .then(v => {
+                            const latest = v["tag_name"].substr(1);
+                            if (compareVersions(latest, this.backendVersion) === 1) {
+                                this.latestVersion = latest;
+                            }
+                        });
+                }
+                if (compareVersions(MINIMUM_REQUIRED_VERSION, this.backendVersion) === 1) {
+                    alert(`您的工具版本为 ${this.backendVersion}，无法继续配置。版本低于 ${MINIMUM_REQUIRED_VERSION} 的工具已不再支持，请及时更新。`);
+                    window.location = "https://vscch3.vercel.app/";
+                }
+                if (v.VscodePath === null) {
+                    this.vscodeStatus = "unresolved";
+                    this.vscodePath = "";
+                } else {
+                    this.vscodeStatus = "resolved";
+                    // Get folder name (not exe)
+                    this.vscodePath = dirname(v.VscodePath);
+                }
+                if ("Gbk" in v && v.Gbk === true) {
+                    this.enableGbk = true;
+                }
+                this.compilers = v.Compilers.map(m => ({
+                    path: dirname(m.Path),
+                    version: m.VersionNumber,
+                    packageInfo: m.PackageString
+                }));
+                // select the first one only if there is only one
+                if (this.compilers.length === 1) {
+                    this.mingwTableSelected.push(this.compilers[0]);
+                }
+                this.newCompiler = this.compilers.length === 0 ? 1 : 0;
+            }).then(() => this.loadProfile());
         fetch("mingw.json").then(r => r.json()).then((/** @type {string[]} */ v) => {
             v.forEach((link, idx) => {
                 this.mingwDlLinks[idx].url = link;
@@ -100,6 +108,7 @@ const vm = new Vue({
     data: {
         currentStep: 1,
         backendVersion: "3.0.0",
+        latestVersion: null,
         vscodePath: "",
         vscodeStatus: "resolved",
         mingwTableHeader: [
@@ -399,7 +408,7 @@ const vm = new Vue({
             window.location = "https://update.code.visualstudio.com/latest/win32-x64-user/stable";
         },
         showUninstList: function () {
-            alert(this.uninstList.join("\n"));  
+            alert(this.uninstList.join("\n"));
         },
         next: function () {
             this.currentStep++;

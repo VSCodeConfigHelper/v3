@@ -68,5 +68,6 @@ void Generator::sendAnalytics() {
         LOG_INF("统计数据发送成功。");
     } else {
         LOG_WRN("统计数据发送失败。");
+        LOG_DBG(res.error(), " ", res ? res->status : -1);
     }
 }

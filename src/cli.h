@@ -29,6 +29,7 @@ struct ProgramOptions : CurrentOptions {
     bool RemoveScripts;
     bool NoOpenBrowser;
     std::string GuiAddress;
+    bool CheckUpdate;
 
     bool Help;
     bool Version;
@@ -39,4 +40,6 @@ extern ProgramOptions options;
 void init(int argc, char** argv);
 
 void runCli(const Environment& env);
+
+void checkUpdate();
 }

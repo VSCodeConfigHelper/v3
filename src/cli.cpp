@@ -52,6 +52,10 @@ void preprocessOptions(const po::options_description& desc) {
         std::cout << "VSCodeConfigHelper v" PROJECT_VERSION " (c) Guyutongxue" << std::endl;
         std::exit(0);
     }
+    if (options.CheckUpdate) {
+        checkUpdate();
+        std::exit(0);
+    }
 }
 
 template <typename T>
@@ -63,8 +67,7 @@ void addOption(po::options_description& desc, const char* name, T& target, const
     }
 }
 
-std::pair<const char*, const char*> getLatestSupportStandardFromCompiler(
-    const std::string& version) {
+std::pair<const char*, const char*> getLatestSupportStandardFromGccVer(const std::string& version) {
     try {
         std::vector<std::string> versionParts;
         boost::split(versionParts, version, boost::is_any_of("."));
@@ -78,13 +81,54 @@ std::pair<const char*, const char*> getLatestSupportStandardFromCompiler(
             }
         } else {
             switch (majorVersion) {
-                case 5: return {"c++14", "c11"};
-                case 6: return {"c++14", "c11"};
+                case 5:
+                case 6:
                 case 7: return {"c++14", "c11"};
-                case 8: return {"c++17", "c18"};
+                case 8:
                 case 9: return {"c++17", "c18"};
                 case 10: return {"c++20", "c18"};
                 case 11: return {"c++23", "c18"};
+
+                default: return {"c++14", "c11"};
+            }
+        }
+    } catch (...) {
+        return {"c++14", "c11"};
+    }
+}
+// https://clang.llvm.org/cxx_status.html
+std::pair<const char*, const char*> getLatestSupportStandardFromClangVer(
+    const std::string& version) {
+    try {
+        std::vector<std::string> versionParts;
+        boost::split(versionParts, version, boost::is_any_of("."));
+        int majorVersion{std::stoi(versionParts.at(0))};
+        if (majorVersion < 4) {
+            int minorVersion{std::stoi(versionParts.at(1))};
+            if (majorVersion == 3) {
+                if (minorVersion >= 4) {
+                    return {"c++14", "c11"};
+                } else if (minorVersion == 3) {
+                    return {"c++11", "c11"};
+                } else {
+                    return {"c++98", "c11"};
+                }
+            } else {
+                return {"c++98", "c99"};
+            }
+        } else {
+            switch (majorVersion) {
+                case 4: return {"c++14", "c11"};
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9: return {"c++17", "c18"};
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 14: return {"c++20", "c18"};
 
                 default: return {"c++14", "c11"};
             }
@@ -125,19 +169,20 @@ void init(int argc, char** argv) {
                  "使用 GUI  进行配置。当不提供任何命令行参数时，此选项将被默认使用");
     ADD_OPTION_C("vscode-path", VscodePath,
                  "指定 VS Code 安装路径。若不提供，则工具自动从注册表获取");
-    ADD_OPTION_C("mingw-path", MingwPath,
+    ADD_OPTION_C("mingw-path,c", MingwPath,
                  "指定  MinGW  的安装路径。若不提供，则工具自动从环境变量获取");
 #else
     ADD_OPTION_C("vscode-path", VscodePath,
                  "指定 VS Code 安装路径。若不提供，则工具自动从环境变量获取");
-    ADD_OPTION_C("compiler", Compiler, "指定编译器。若不提供，则默认为 " CXX_COMPILER "/" C_COMPILER);
+    ADD_OPTION_C("compiler,c", Compiler,
+                 "指定编译器。若不提供，则默认为 " CXX_COMPILER "/" C_COMPILER);
 #endif
-    ADD_OPTION_C("workspace-path", WorkspacePath, "指定工作区文件夹路径。若使用 CLI  则必须提供");
+    ADD_OPTION_C("workspace-path,w", WorkspacePath, "指定工作区文件夹路径。若使用 CLI  则必须提供");
     // ADD_OPTION_C("language", Language, "");
     decltype(options.LanguageStandard) a;
     ADD_OPTION_C("language-standard", LanguageStandard,
                  "指定语言标准。若不提供，则工具根据编译器版本选取");
-    ADD_OPTION_C("external-terminal", UseExternalTerminal, "使用外部终端进行运行和调试");
+    ADD_OPTION_C("external-terminal,e", UseExternalTerminal, "使用外部终端进行运行和调试");
     ADD_OPTION_C("install-chinese", ShouldInstallL10n, "为 VS Code 安装中文语言包");
     ADD_OPTION_C("offline-cpptools", OfflineInstallCCpp, "离线安装  C/C++  扩展");
     ADD_OPTION_C("uninstall-extensions", ShouldUninstallExtensions, "卸载多余的 VS Code 扩展");
@@ -149,8 +194,12 @@ void init(int argc, char** argv) {
     ADD_OPTION_C("generate-shortcut", GenerateDesktopShortcut,
                  "生成指向工作区文件夹的桌面快捷方式");
 #endif
-    ADD_OPTION_C("open-vscode", OpenVscodeAfterConfig, "在配置完成后自动打开 VS Code");
+#ifdef MACOS
+    ADD_OPTION_C("no-install-clt", NoInstallClt, "不进行自动检测安装 XCode Command Line Tools");
+#endif
+    ADD_OPTION_C("open-vscode,o", OpenVscodeAfterConfig, "在配置完成后自动打开 VS Code");
     ADD_OPTION_C("no-send-analytics", NoSendAnalytics, "不发送统计信息");
+    ADD_OPTION_C("check-update", CheckUpdate, "检查此工具可用的更新，然后退出");
     ADD_OPTION_A("remove-scripts", RemoveScripts, "删除此程序注入的所有脚本并退出");
 #ifdef WINDOWS
     ADD_OPTION_A("no-open-browser", NoOpenBrowser, "使用 GUI  时不自动打开浏览器");
@@ -277,9 +326,25 @@ void runCli(const Environment& env) {
     }
     options.MingwPath = pInfo->Path;
 #else
+    if (!options.NoInstallClt) {
+        if (!fs::exists("/Library/Developer/CommandLineTools")) {
+            LOG_WRN(
+                "未安装 Xcode Command Line "
+                "Tools，将进行安装。这可能需要一段时间。请按照系统提示操作。");
+            int retVal{boost::process::system("xcode-select --install")};
+            if (retVal != 0) {
+                LOG_ERR("安装失败。请手动安装编译器，或添加 -no-install-clt 参数禁用安装过程。");
+            } else {
+                LOG_INF("安装成功。");
+            }
+            options.Compiler = options.Language == LanguageType::Cpp ? CXX_COMPILER : C_COMPILER;
+        } else {
+            LOG_INF("检测到已安装的 Xcode Command Line Tools。");
+        }
+    }
     if (options.Compiler.empty()) {
         auto r{std::find_if(compilers.begin(), compilers.end(),
-                            [](const CompilerInfo& c) { return c.type == options.Language; })};
+                            [](const CompilerInfo& c) { return c.langType == options.Language; })};
         if (r != compilers.end()) {
             pInfo = std::make_unique<const CompilerInfo>(*r);
         } else {
@@ -303,7 +368,8 @@ void runCli(const Environment& env) {
 #endif
     if (options.RemoveScripts) {
         LOG_INF("启用了开关 --remove-script，程序将删除所有脚本。");
-        const char* filenames[]{"check-ascii.ps1", "pause-console-launcher.sh", "pause-console." SCRIPT_EXT};
+        const char* filenames[]{"check-ascii.ps1", "pause-console-launcher.sh",
+                                "pause-console." SCRIPT_EXT};
         for (const auto& filename : filenames) {
             auto scriptPath(Generator::scriptDirectory(options) / filename);
             if (fs::exists(scriptPath)) {
@@ -333,7 +399,9 @@ void runCli(const Environment& env) {
     }
     if (options.LanguageStandard.empty()) {
         LOG_INF("未从命令行传入语言标准，将根据编译器选择语言标准。");
-        auto [cppStd, cStd]{getLatestSupportStandardFromCompiler(pInfo->VersionNumber)};
+        auto [cppStd, cStd]{pInfo->compilerType == CompilerInfo::Clang
+                                ? getLatestSupportStandardFromClangVer(pInfo->VersionNumber)
+                                : getLatestSupportStandardFromGccVer(pInfo->VersionNumber)};
         options.LanguageStandard = options.Language == LanguageType::Cpp ? cppStd : cStd;
         LOG_INF("将使用语言标准：", options.LanguageStandard, "。");
     } else {
