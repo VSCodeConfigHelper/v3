@@ -280,8 +280,8 @@ void Generator::generateTasksJson(const fs::path& path) {
             "-File",
 # else // LINUX
             "-e",
-            scriptPath("pause-console." SCRIPT_EXT),
 # endif
+            scriptPath("pause-console." SCRIPT_EXT),
 #endif
             "${fileDirname}" PATH_SLASH "${fileBasenameNoExtension}." EXE_EXT
         })},
