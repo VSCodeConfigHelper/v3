@@ -326,6 +326,7 @@ void runCli(const Environment& env) {
     }
     options.MingwPath = pInfo->Path;
 #else
+#ifdef MACOS
     if (!options.NoInstallClt) {
         if (!fs::exists("/Library/Developer/CommandLineTools")) {
             LOG_WRN(
@@ -342,6 +343,7 @@ void runCli(const Environment& env) {
             LOG_INF("检测到已安装的 Xcode Command Line Tools。");
         }
     }
+#endif
     if (options.Compiler.empty()) {
         auto r{std::find_if(compilers.begin(), compilers.end(),
                             [](const CompilerInfo& c) { return c.langType == options.Language; })};
