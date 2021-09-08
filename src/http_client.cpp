@@ -115,7 +115,7 @@ void ExtensionManager::installOffline(const std::string& id, const char* host, c
     LOG_INF("从 ", host, path, " 下载扩展 ", id, "...");
     LOG_WRN("由于启用了离线扩展安装，工具需要一段时间下载扩展包。请耐心等待...");
     auto vsixPath{Native::getTempFilePath("cpptools.vsix")};
-    auto data{download(host, path, vsixPath.c_str())};
+    auto data{download(host, path, vsixPath.string().c_str())};
     if (data) {
         LOG_INF("下载完成。");
     } else {
