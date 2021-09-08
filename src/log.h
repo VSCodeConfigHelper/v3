@@ -70,7 +70,7 @@ void log(boost::log::trivial::severity_level level, const Ts&... content) {
 #ifdef WINDOWS
     SetConsoleTextAttribute(hstdout, csbi.wAttributes);
 #else
-    std::cout << "\033[m";
+    std::clog << "\033[m";
 #endif
 }
 

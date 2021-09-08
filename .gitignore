@@ -1,3 +1,5 @@
 /build/
 /build_*/
 /.vscode/
+
+.DS_Store

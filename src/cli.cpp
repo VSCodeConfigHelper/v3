@@ -199,7 +199,7 @@ void init(int argc, char** argv) {
 #endif
     ADD_OPTION_C("open-vscode,o", OpenVscodeAfterConfig, "在配置完成后自动打开 VS Code");
     ADD_OPTION_C("no-send-analytics", NoSendAnalytics, "不发送统计信息");
-    ADD_OPTION_C("check-update", CheckUpdate, "检查此工具可用的更新，然后退出");
+    ADD_OPTION_A("check-update", CheckUpdate, "检查此工具可用的更新并退出");
     ADD_OPTION_A("remove-scripts", RemoveScripts, "删除此程序注入的所有脚本并退出");
 #ifdef WINDOWS
     ADD_OPTION_A("no-open-browser", NoOpenBrowser, "使用 GUI  时不自动打开浏览器");
