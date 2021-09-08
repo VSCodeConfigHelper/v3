@@ -4,13 +4,31 @@
 
 ## Support Platforms
 
-- Windows 10 and above
-- Ubuntu or other Debian-based Linux distro (next release)
-- Intel Mac (next release)
+- GUI & CLI: Windows 10 and above
+- CLI:
+    - Ubuntu or other Debian-based Linux distro
+    - Intel Mac
+
+## Usage
+
+## GUI
+
+Follow the instruction on GUI, see also [Demo](https://b23.tv/av292212272).
+
+## CLI
+
+Example:
+
+```sh
+# Configure <Workspace Folder Path>, with external terminal; Open vscode after config.
+./vscch -eoy -w <Workspace Folder Path>
+```
+
+Use `./vscch -h` to show complete options list.
 
 ## Build instruction
 
-### GCC Debug (not recommended)
+### MinGW Debug (not recommended)
 For building OpenSSL, export `CONAN_BASH_PATH` to a msys2 bash.exe.
 
 ```
@@ -39,4 +57,23 @@ cd build
 conan install .. -b missing -s build_type=Release -s compiler.runtime=MT
 cmake ..
 cmake --build . --config MinSizeRel
+```
+## GCC (Linux)
+
+```
+mkdir build
+cd build
+conan install .. -b missing -s compiler.libcxx=libstdc++11
+cmake ..
+make
+```
+
+## Apple Clang
+
+```
+mkdir build
+cd build
+conan install .. -b missing
+cmake ..
+cmake --build .
 ```

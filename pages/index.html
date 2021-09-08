@@ -103,12 +103,12 @@
                     .then(r => r.json())
                     .then(v => {
                         this.latestVersion = v["tag_name"];
-                        if (v["assets"] && v["assets"].length > 0) {
-                            const asset = v["assets"][0];
-                            this.githubUrl = asset["browser_download_url"];
-                        } else {
+                        // if (v["assets"] && v["assets"].length > 0) {
+                        //     const asset = v["assets"][0];
+                        //     this.githubUrl = asset["browser_download_url"];
+                        // } else {
                             this.githubUrl = v["html_url"];
-                        }
+                        // }
                     });
             },
             methods: {
