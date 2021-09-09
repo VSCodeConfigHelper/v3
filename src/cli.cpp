@@ -56,6 +56,20 @@ void preprocessOptions(const po::options_description& desc) {
         checkUpdate();
         std::exit(0);
     }
+#ifdef MACOS
+    if (!options.NoInstallClt) {
+        if (!fs::exists("/Library/Developer/CommandLineTools")) {
+            LOG_WRN(
+                "未安装 Xcode Command Line "
+                "Tools，将进行安装。这可能需要一段时间，请按照系统提示操作。安装完成后，再次启动本"
+                "工具以进行配置。");
+            boost::process::system("xcode-select --install");
+            std::exit(1);
+        } else {
+            LOG_INF("检测到已安装的 Xcode Command Line Tools。");
+        }
+    }
+#endif
 }
 
 template <typename T>
@@ -326,24 +340,6 @@ void runCli(const Environment& env) {
     }
     options.MingwPath = pInfo->Path;
 #else
-#ifdef MACOS
-    if (!options.NoInstallClt) {
-        if (!fs::exists("/Library/Developer/CommandLineTools")) {
-            LOG_WRN(
-                "未安装 Xcode Command Line "
-                "Tools，将进行安装。这可能需要一段时间。请按照系统提示操作。");
-            int retVal{boost::process::system("xcode-select --install")};
-            if (retVal != 0) {
-                LOG_ERR("安装失败。请手动安装编译器，或添加 -no-install-clt 参数禁用安装过程。");
-            } else {
-                LOG_INF("安装成功。");
-            }
-            options.Compiler = options.Language == LanguageType::Cpp ? CXX_COMPILER : C_COMPILER;
-        } else {
-            LOG_INF("检测到已安装的 Xcode Command Line Tools。");
-        }
-    }
-#endif
     if (options.Compiler.empty()) {
         auto r{std::find_if(compilers.begin(), compilers.end(),
                             [](const CompilerInfo& c) { return c.langType == options.Language; })};
