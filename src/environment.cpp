@@ -31,6 +31,9 @@ namespace fs = boost::filesystem;
 
 CompilerInfo::CompilerInfo(const std::string& path, const std::string& versionText)
     : Path(path), VersionText(versionText) {
+#ifdef WINDOWS
+    Not64Bit = !Native::is64BitExecutable(path + "\\g++.exe");
+#endif
     if (versionText.find("clang") != std::string::npos) {
         compilerType = CompilerInfo::Clang;
         boost::regex versionPattern("version (\\d+\\.\\d+\\.\\d+)");

@@ -61,6 +61,7 @@ const vm = new Vue({
             })
             .then(v => {
                 console.log(v);
+                // v3.0.2 above
                 if ("Version" in v) {
                     this.backendVersion = v.Version;
                     fetch("https://api.github.com/repos/Guyutongxue/VSCodeConfigHelper3/releases/latest")
@@ -84,13 +85,16 @@ const vm = new Vue({
                     // Get folder name (not exe)
                     this.vscodePath = dirname(v.VscodePath);
                 }
+                // v3.1.0 above
                 if ("Gbk" in v && v.Gbk === true) {
                     this.enableGbk = true;
                 }
                 this.compilers = v.Compilers.map(m => ({
                     path: dirname(m.Path),
                     version: m.VersionNumber,
-                    packageInfo: m.PackageString
+                    packageInfo: m.PackageString,
+                    // v3.1.1 above
+                    not64Bit: "Not64Bit" in m ? m.Not64Bit : false,
                 }));
                 // select the first one only if there is only one
                 if (this.compilers.length === 1) {
@@ -262,6 +266,9 @@ const vm = new Vue({
                 return this.newCompilerInfo;
             }
         },
+        mingwNot64Bit: function () {
+            return this.mingw?.not64Bit ?? false;
+        },
         mingwOk: function () {
             if (this.newCompiler === 0) {
                 return this.mingwTableSelected.length === 1;
@@ -373,7 +380,9 @@ const vm = new Vue({
                 this.newCompilerInfo = {
                     path: dirname(v.info.Path),
                     version: v.info.VersionNumber,
-                    packageInfo: v.info.PackageString
+                    packageInfo: v.info.PackageString,
+                    // v3.1.1 above
+                    not64Bit: "Not64Bit" in v.info ? v.info.Not64Bit : false,
                 }
             } else {
                 switch (v.reason) {
@@ -381,6 +390,7 @@ const vm = new Vue({
                     case "semicolon": this.newCompilerInvalidReason = "路径中不得含有分号。"; break;
                     default: this.newCompilerInvalidReason = "此路径不合法。"; break;
                 }
+                this.newCompilerInfo = {};
             }
         });
         this.$watchAsObservable('workspacePath').pipe(

@@ -28,15 +28,20 @@
 #include "generator.h"
 
 struct CompilerInfo {
-#ifndef _WIN32
-    LanguageType langType{LanguageType::Cpp};
-#endif
+    enum { Gcc, Clang } compilerType;
+
     std::string Path;
     std::string VersionText;
 
-    enum { Gcc, Clang } compilerType;
     std::string VersionNumber;
     std::string PackageString;
+    
+#ifdef _WIN32
+    bool Not64Bit;
+#else
+    LanguageType langType{LanguageType::Cpp};
+#endif
+
     CompilerInfo(const std::string& path, const std::string& versionText);
 };
 
@@ -65,7 +70,9 @@ public:
     friend void to_json(nlohmann::json& j, const Environment& e);
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CompilerInfo, Path, VersionText, VersionNumber, PackageString)
+#ifdef _WIN32
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CompilerInfo, Path, VersionText, VersionNumber, PackageString, Not64Bit)
 
 inline void to_json(nlohmann::json& j, const Environment& e) {
     j = nlohmann::json::object();
@@ -78,3 +85,5 @@ inline void to_json(nlohmann::json& j, const Environment& e) {
     j["Gbk"] = e.gbk;
     j["Version"] = e.version;
 }
+
+#endif

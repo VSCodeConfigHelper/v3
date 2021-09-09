@@ -46,6 +46,8 @@ std::optional<std::string> getLocalMachineEnv(const std::string& key);
 
 std::string getDesktop();
 
+bool is64BitExecutable(const std::string& path);
+
 #endif
 
 bool isGbkCp();

@@ -178,6 +178,14 @@ std::string getDesktop() {
     return getSpecialFolder(FOLDERID_Desktop);
 }
 
+bool is64BitExecutable(const std::string& path) {
+    DWORD binaryType;
+    if (GetBinaryType(widen(path).c_str(), &binaryType)) {
+        return binaryType == SCS_64BIT_BINARY;
+    }
+    return false;
+}
+
 #endif  // WINDOWS
 
 bool isGbkCp() {
