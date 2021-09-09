@@ -200,6 +200,7 @@ void init(int argc, char** argv) {
     ADD_OPTION_C("install-chinese", ShouldInstallL10n, "为 VS Code 安装中文语言包");
     ADD_OPTION_C("offline-cpptools", OfflineInstallCCpp, "离线安装  C/C++  扩展");
     ADD_OPTION_C("uninstall-extensions", ShouldUninstallExtensions, "卸载多余的 VS Code 扩展");
+    ADD_OPTION_C("compile-arg,a", CompileArgs, "指定编译选项");
     // ADD_OPTION_C("generate-test", GenerateTestFile, "");
 #ifdef WINDOWS
     ADD_OPTION_C("apply-nonascii-check", ApplyNonAsciiCheck,
@@ -222,12 +223,20 @@ void init(int argc, char** argv) {
 
     // other options that cannot be parsed directly
     std::string languageText;
-    std::string modeText;
+    bool newbieMode;
     // clang-format off
     configOpt.add_options()
         ("language", po::value<std::string>(&languageText)->default_value("c++"), "指定配置目标语言。可为 c++  或 c")
         ("generate-test", "强制生成测试文件")
         ("no-generate-test", "不生成测试文件")
+        ("newbie-mode,n", po::bool_switch(&newbieMode)->default_value(false), "启用新手模式。这相当于以下选项："
+            "--assume-yes --verbose --external-terminal --install-chinese"
+            " --offline-cpptools --uninstall-extensions --open-vscode"
+            " -a-Wall -a-Wextra"
+#ifdef WINDOWS
+            " --apply-nonascii-check"
+#endif
+        )
     ;
     // clang-format on
 
@@ -246,10 +255,26 @@ void init(int argc, char** argv) {
         options.UseGui = true;
     }
 #endif
+    if (newbieMode) {
+        options.AssumeYes = true;
+        options.UseExternalTerminal = true;
+        options.ShouldInstallL10n = true;
+        options.OfflineInstallCCpp = true;
+        options.ShouldUninstallExtensions = true;
+        options.OpenVscodeAfterConfig = true;
+        options.CompileArgs = {"-Wall", "-Wextra"};
+#ifdef WINDOWS
+        options.ApplyNonAsciiCheck = true;
+        if (Native::isGbkCp()) {
+            options.CompileArgs.emplace_back("-fexec-charset=GBK");
+        }
+#endif
+    }
     preprocessOptions(allOpts);
 
     if (parseError) {
         LOG_ERR("命令行参数存在错误：", *parseError);
+        std::exit(1);
     }
     Native::checkSystemVersion();
 

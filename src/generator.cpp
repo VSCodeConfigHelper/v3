@@ -440,7 +440,13 @@ std::string Generator::generateTestFile() {
     }
     LOG_INF("正在生成测试文件 ", filepath, "...");
     const std::string compileHotkeyComment{
-        "按下 "s + (options.UseExternalTerminal ? "F6" : "Ctrl + F5") + " 编译运行。"};
+        "按下 "s + (options.UseExternalTerminal ? "F6" : 
+#ifdef MACOS
+        "⌃ F5"
+#else
+        "Ctrl + F5"
+#endif       
+        ) + " 编译运行。"};
     const std::string compileResultComment{"按下 "s +
                                            (options.UseExternalTerminal
                                                 ? "F6 后，您将在弹出的"
@@ -460,7 +466,13 @@ std::string Generator::generateTestFile() {
     oss << '\n';
     oss << c(compileHotkeyComment) << '\n';
     oss << c("按下 F5 编译调试。") << '\n';
-    oss << c("按下 Ctrl + Shift + B 编译，但不运行。") << '\n';
+    oss << c("按下 "
+#ifdef MACOS
+    "⌘ ⇧ B"
+#else
+    "Ctrl + Shift + B"
+#endif
+    " 编译，但不运行。") << '\n';
     if (isCpp) {
         oss << R"(
 #include <iostream>
