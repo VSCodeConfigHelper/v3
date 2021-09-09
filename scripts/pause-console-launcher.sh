@@ -17,7 +17,7 @@ for arg in "$@"; do
     escaped_args+=($quoted)
 done
 
-cwd=$(pwd)
+cwd=$(dirname "$BASH_SOURCE")
 cwd="\"${cwd//\"/\\\"}\""
 cwd=${cwd//\\/\\\\}
 cwd=${cwd//\"/\\\"}

@@ -293,11 +293,6 @@ void Generator::generateTasksJson(const fs::path& path) {
             {"panel", "shared"},
             {"clear", true}
         })},
-#ifdef MACOS
-        {"options", json::object({
-            {"cwd", scriptPath("")}
-        })},
-#endif 
         {"problemMatcher", json::array()}
     }));
     auto asciiTask(json::object({
