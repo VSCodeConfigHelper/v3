@@ -28,15 +28,18 @@
                     <v-col md="9">
                         <v-row justify="center">
                             <v-col sm="4">
-                                <v-btn x-large rounded @click="downloadLanzou" color="primary" block>
+                                <v-btn x-large rounded color="primary" @click="downloadLanzou" block>
                                     <v-icon>mdi-download</v-icon>
-                                    <span class="text-h5 px-1 pb-1">网盘下载</span>
+                                    <span class="text-capitalize px-1 pb-1">
+                                        网盘下载
+                                        <small>（{{platformName[platform]}}）</small>
+                                    </span>
                                 </v-btn>
                             </v-col>
                             <v-col sm="3" class="d-flex flex-row justify-center align-center">
                                 <span>
                                     密码
-                                    <code id="lanzouPasscode">5sjw</code>
+                                    <code id="lanzouPasscode">{{lanzouPasscode[platform]}}</code>
                                     <v-btn icon depressed data-clipboard-target="#lanzouPasscode" id="copyPasscode">
                                         <v-icon small>mdi-content-copy</v-icon>
                                         </a>
@@ -90,15 +93,39 @@
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@0.7.28/src/ua-parser.min.js"></script>
     <script>
         const vm = new Vue({
             el: "#app",
             vuetify: new Vuetify(),
             data: {
                 latestVersion: "获取中...",
-                githubUrl: "https://github.com/Guyutongxue/VSCodeConfigHelper3"
+                githubUrl: "https://github.com/Guyutongxue/VSCodeConfigHelper3",
+                platform: "win",
+                platformName: {
+                    win: "Windows",
+                    mac: "macOS",
+                    linux: "GNU/Linux"
+                },
+                lanzouUrl: {
+                    win: "https://gytx.lanzoui.com/b01cl900j",
+                    mac: "https://gytx.lanzoui.com/b01cp82aj",
+                    linux: "https://gytx.lanzoui.com/b01cp82cb"
+                },
+                lanzouPasscode: {
+                    win: "5sjw",
+                    mac: "5xcb",
+                    linux: "5zxt"
+                }
             },
             created: function () {
+                const uaParser = new UAParser();
+                const ua = uaParser.getOS();
+                if (ua.name === "Mac OS") {
+                    this.platform = "mac";
+                } else if (["Chromium OS", "Debian", "Deepin", "Mint", "Ubuntu"].includes(ua.name)) {
+                    this.platform = "linux";
+                }
                 fetch("https://api.github.com/repos/Guyutongxue/VSCodeConfigHelper3/releases/latest")
                     .then(r => r.json())
                     .then(v => {
@@ -113,7 +140,7 @@
             },
             methods: {
                 downloadLanzou: function () {
-                    window.open("https://gytx.lanzoui.com/b01cl900j")
+                    window.open(this.lanzouUrl[this.platform]);
                 },
                 downloadGithub: function () {
                     window.open(this.githubUrl)

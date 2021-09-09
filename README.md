@@ -11,11 +11,11 @@
 
 ## Usage
 
-## GUI
+### GUI
 
 Follow the instruction on GUI, see also [Demo](https://b23.tv/av292212272).
 
-## CLI
+### CLI
 
 Example:
 
@@ -58,7 +58,7 @@ conan install .. -b missing -s build_type=Release -s compiler.runtime=MT
 cmake ..
 cmake --build . --config MinSizeRel
 ```
-## GCC (Linux)
+### GCC (Linux)
 
 ```
 mkdir build
@@ -68,7 +68,7 @@ cmake ..
 make
 ```
 
-## Apple Clang
+### Apple Clang
 
 ```
 mkdir build

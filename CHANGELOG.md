@@ -1,9 +1,10 @@
 # 更新日志 Change Log
 
-## \[3.1.0\]
-*Pending*
+## 3.1.0
+*2021.9.8*
 
 - 增加 Linux（仅 Debian 系）和 macOS 支持。仅 CLI。
+- macOS 下，工具会尝试安装 Xcode Command Line Tools。此功能未经测试。
 - 前端增设 `-fexec-charset=GBK` 编译选项。仅当操作系统使用 GBK 代码页时启用。
 - 可能的破坏性更新：
     - 更正错误的变量命名。版本 3.0.x 应尽快弃用，后续可能移除对其的支持。
