@@ -85,6 +85,7 @@ const vm = new Vue({
                     // Get folder name (not exe)
                     this.vscodePath = dirname(v.VscodePath);
                 }
+                this.loading = false;
                 // v3.1.0 above
                 if ("Gbk" in v && v.Gbk === true) {
                     this.enableGbk = true;
@@ -101,7 +102,8 @@ const vm = new Vue({
                     this.mingwTableSelected.push(this.compilers[0]);
                 }
                 this.newCompiler = this.compilers.length === 0 ? 1 : 0;
-            }).then(() => this.loadProfile());
+            })
+            .then(() => this.loadProfile());
         fetch("mingw.json").then(r => r.json()).then((/** @type {string[]} */ v) => {
             v.forEach((link, idx) => {
                 this.mingwDlLinks[idx].url = link;
@@ -110,6 +112,7 @@ const vm = new Vue({
 
     },
     data: {
+        loading: true,
         currentStep: 1,
         backendVersion: "3.0.0",
         latestVersion: null,

@@ -385,7 +385,7 @@
                             </v-stepper>
                         </v-col>
                     </v-row>
-                    <v-overlay :value="configuring" :z-index="300">
+                    <v-overlay :value="loading || configuring" :z-index="300">
                         <v-progress-circular indeterminate color="primary"></v-progress-circular>
                     </v-overlay>
                 </v-container>
