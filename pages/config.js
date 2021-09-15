@@ -458,7 +458,7 @@ const vm = new Vue({
                 })
             }).then(r => r.text()).then((v) => {
                 console.log("result: ", v);
-                window.location = "/donate.html";
+                window.location = "donate.html";
             });
         },
         getFolder: function (initDir, target) {

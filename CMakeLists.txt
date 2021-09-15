@@ -34,7 +34,7 @@ else()
   file(READ scripts/pause-console.sh PAUSE_CONSOLE_SRC)
 endif()
 
-set(DEFAULT_GUI_ADDRESS https://guyutongxue.github.io/VSCodeConfigHelper3/pages/config.html)
+set(DEFAULT_GUI_ADDRESS https://guyutongxue.gitee.io/vscodeconfighelper3/config.html)
 
 configure_file(configs/config.h.in ${CMAKE_BINARY_DIR}/include/config.h)
 target_include_directories(VSCodeConfigHelper
