@@ -1,6 +1,7 @@
 #pragma once
 
 #define PROJECT_VERSION "@PROJECT_VERSION@"
+#define DEFAULT_GUI_ADDRESS "@DEFAULT_GUI_ADDRESS@"
 
 namespace Embed {
 

@@ -159,8 +159,6 @@ bool contains(const T& c, const U& v) {
     return std::find(std::begin(c), std::end(c), v) != std::end(c);
 }
 
-constexpr const char DEFAULT_GUI_ADDRESS[]{"https://vscch3.vercel.app/config.html"};
-
 }  // namespace
 
 void init(int argc, char** argv) {
