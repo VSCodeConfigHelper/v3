@@ -112,7 +112,16 @@ std::optional<std::string> Environment::getVscodePath() {
     }
 #else
     LOG_INF("检测 VS Code 是否安装...");
-    auto path{bp::search_path("code").string()};
+    std::string path;
+#ifdef MACOS
+    constexpr const char* COMMON_VSCODE_INSTALLATION{
+        "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"};
+    if (fs::exists(COMMON_VSCODE_INSTALLATION))
+        path = COMMON_VSCODE_INSTALLATION;
+    else
+#endif
+        path = bp::search_path("code").string();
+    
     LOG_DBG("VS Code Path: ", path);
     if (!path.empty()) return path;
 #endif

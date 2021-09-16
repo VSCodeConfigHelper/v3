@@ -226,6 +226,10 @@ char getch() {
     return static_cast<char>(std::tolower(ch));
 }
 
+#ifdef MACOS
+const char* macArchitecture{"x64"};
+#endif
+
 void checkSystemVersion() {
 #ifdef WINDOWS
 # ifdef _MSC_VER
@@ -248,8 +252,14 @@ void checkSystemVersion() {
         return;
     }
     LOG_DBG("kern.version: ", versionStr);
-    if (std::string(versionStr).find("X86_64") == std::string::npos) {
-        LOG_WRN("您当前的操作系统不是 x86_64 架构：程序未经测试，可能出现问题。");
+    if (std::string(versionStr).find("X86_64") != std::string::npos) {
+        macArchitecture = "x64";
+    } else if (std::string(versionStr).find("ARM64") != std::string::npos) {
+        LOG_WRN("您当前的操作系统是 arm64 架构：程序未经广泛测试，可能出现问题。");
+        macArchitecture = "arm64";
+    } else {
+        LOG_ERR("不支持的操作系统架构 ", versionStr, "。程序将退出。");
+        std::exit(1);
     }
 #endif
 }

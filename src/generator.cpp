@@ -411,7 +411,15 @@ void Generator::generatePropertiesJson(const fs::path& path) {
         {"version", 4},
         {"configurations", json::array({
             json::object({
-                {"name", "gcc"},
+                {"name", 
+#ifdef WINDOWS
+                "Win32"
+#elif defined(LINUX)
+                "Linux"
+#else               
+                "Mac"
+#endif
+                },
                 {"includePath", json::array({
                     "${workspaceFolder}/**"
                 })},
@@ -422,7 +430,15 @@ void Generator::generatePropertiesJson(const fs::path& path) {
                 options.LanguageStandard == "c++23" ?
                     "c++20" :
                     options.LanguageStandard},
-                {"intelliSenseMode", "windows-gcc-x64"}
+                {"intelliSenseMode", 
+#ifdef WINDOWS                
+                "windows-gcc-x64"
+#elif defined(LINUX)
+                "linux-gcc-x64"
+#else
+                "macos-clang-"s + Native::macArchitecture
+#endif           
+                }
             })
         })}
     }));
@@ -439,14 +455,15 @@ std::string Generator::generateTestFile() {
             fs::path(options.WorkspacePath) / ("helloworld(" + std::to_string(i) + ")" + fileExt());
     }
     LOG_INF("正在生成测试文件 ", filepath, "...");
-    const std::string compileHotkeyComment{
-        "按下 "s + (options.UseExternalTerminal ? "F6" : 
+    const std::string compileHotkeyComment{"按下 "s +
+                                           (options.UseExternalTerminal ? "F6" :
 #ifdef MACOS
-        "⌃ F5"
+                                                                        "⌃ F5"
 #else
-        "Ctrl + F5"
-#endif       
-        ) + " 编译运行。"};
+                                                                        "Ctrl + F5"
+#endif
+                                            ) +
+                                           " 编译运行。"};
     const std::string compileResultComment{"按下 "s +
                                            (options.UseExternalTerminal
                                                 ? "F6 后，您将在弹出的"
@@ -468,11 +485,12 @@ std::string Generator::generateTestFile() {
     oss << c("按下 F5 编译调试。") << '\n';
     oss << c("按下 "
 #ifdef MACOS
-    "⌘ ⇧ B"
+             "⌘ ⇧ B"
 #else
-    "Ctrl + Shift + B"
+             "Ctrl + Shift + B"
 #endif
-    " 编译，但不运行。") << '\n';
+             " 编译，但不运行。")
+        << '\n';
     if (isCpp) {
         oss << R"(
 #include <iostream>

@@ -77,6 +77,8 @@ constexpr const char newLine{'\n'};
 #  define C_COMPILER "clang"
 #  define CXX_COMPILER "clang++" 
 
+extern const char* macArchitecture;
+
 # else
 #  define LINUX 1
 

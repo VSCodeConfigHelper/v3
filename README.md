@@ -7,7 +7,7 @@
 - GUI & CLI: Windows 10 and above
 - CLI:
     - Ubuntu or other Debian-based Linux distro
-    - Intel Mac
+    - Intel Mac (Exiperimental support for Apple silicon)
 
 ## Usage
 
