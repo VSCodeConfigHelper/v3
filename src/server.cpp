@@ -109,7 +109,11 @@ void Server::setHandlers() {
             auto config(j.at("config"));
             auto options{config.get<WindowsOptions>()};
             Generator g(options);
-            g.generate();
+            try {
+                g.generate();
+            } catch (std::exception& e) {
+                return "error: "s + e.what();
+            }
         }
         return "ok"s;
     }});

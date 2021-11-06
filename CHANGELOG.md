@@ -1,5 +1,9 @@
 # 更新日志 Change Log
 
+## [3.1.4]
+*Pending*
+- [#6](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/6)
+
 ## 3.1.3
 *2021.9.16*
 - 修复了错误的 IntelliSense Mode

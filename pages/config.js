@@ -458,7 +458,12 @@ const vm = new Vue({
                 })
             }).then(r => r.text()).then((v) => {
                 console.log("result: ", v);
-                window.location = "donate.html";
+                if (v === "ok"){
+                    window.location = "donate.html";
+                } else {
+                    alert("配置时出现错误：" + v);
+                    window.location = "about:blank";
+                }
             });
         },
         getFolder: function (initDir, target) {
