@@ -1,7 +1,7 @@
 # 更新日志 Change Log
 
-## [3.1.4]
-*Pending*
+## 3.1.4
+*2021.11.20*
 - [#6](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/6)
 
 ## 3.1.3
