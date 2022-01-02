@@ -1,5 +1,5 @@
 [requires]
-boost/1.76.0
+boost/1.77.0
 cpp-httplib/0.9.3
 nlohmann_json/3.9.1
 
