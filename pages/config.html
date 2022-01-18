@@ -267,7 +267,7 @@
                                                                 <v-switch hide-details class="mt-2" v-model="gnuEx" label="启用 GNU 扩展语法"></v-switch>
                                                             </v-tab-item>
                                                             <v-tab-item>
-                                                                <v-select class="mt-5" dense outlined hide-details clearable label="优化级别" :items="['-O1', '-O2', '-O3', '-Ofast', '-Og']" v-model="optimization"></v-select>
+                                                                <v-select class="mt-5" dense outlined hide-details clearable label="优化级别" :items="['', '-O1', '-O2', '-O3', '-Ofast', '-Og']" v-model="optimization"></v-select>
                                                                 <v-checkbox hide-details class="mt-2" v-model="wall" label="全部警告（-Wall）"></v-checkbox>
                                                                 <v-checkbox hide-details class="mt-2" v-model="wextra" label="额外警告（-Wextra）"></v-checkbox>
                                                                 <v-checkbox hide-details class="mt-2" v-model="werror" label="视警告为错误（-Werror）"></v-checkbox>
