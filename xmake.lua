@@ -81,9 +81,9 @@ target("vscch3")
         os.rm("$(buildir)/package")
         os.run(
             "7z a " ..
-            "$(buildir)/package/VSCodeConfigHelper_v" .. target:get("version") .. ".7z " ..
-            "./$(buildir)/bin/*",
-            "LICENSE"
+            "$(buildir)/package/VSCodeConfigHelper_v" .. target:get("version") .. "_$(os).7z " ..
+            "./$(buildir)/bin/* " ..
+            "./LICENSE"
         )
     end)
 target_end()
