@@ -23,34 +23,34 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+    # steps:
+    # - name: Checkout
+    #   uses: actions/checkout@v2
     
-    - name: Get Conan
-      uses: turtlebrowser/get-conan@v1.0
+    # - name: Get Conan
+    #   uses: turtlebrowser/get-conan@v1.0
 
-    - name: Conan Install
-      run: |
-        mkdir ${{ github.workspace }}/build 
-        cd ${{ github.workspace }}/build
-        conan install .. -b missing -s build_type=Release ${{ matrix.additional_conan_options }}
+    # - name: Conan Install
+    #   run: |
+    #     mkdir ${{ github.workspace }}/build 
+    #     cd ${{ github.workspace }}/build
+    #     conan install .. -b missing -s build_type=Release ${{ matrix.additional_conan_options }}
 
-    - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+    # - name: Configure
+    #   run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
-    - name: Build
-      run: cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }}
+    # - name: Build
+    #   run: cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }}
 
-    - name: Pack
-      if: ${{ startsWith(github.ref, 'refs/tags/') }}
-      run: cpack --config ${{ github.workspace }}/build/CPackConfig.cmake
+    # - name: Pack
+    #   if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    #   run: cpack --config ${{ github.workspace }}/build/CPackConfig.cmake
 
-    - name: Release
-      if: ${{ startsWith(github.ref, 'refs/tags/') }}
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ${{ github.workspace }}/build/package/*.7z
+    # - name: Release
+    #   if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    #   uses: softprops/action-gh-release@v1
+    #   with:
+    #     files: ${{ github.workspace }}/build/package/*.7z
     
 #   - name: Test
 #     working-directory: ${{ github.workspace }}/build

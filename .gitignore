@@ -1,5 +1,9 @@
 /build/
 /build_*/
+
+/.xmake/
+
 /.vscode/
+!/.vscode/c_cpp_properties.json
 
 .DS_Store
