@@ -1,4 +1,4 @@
-name: CMake
+name: xmake
 
 on:
   push:
@@ -22,20 +22,20 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     
-    - name: Setup Xmake
+    - name: Setup xmake
       uses: xmake-io/github-action-setup-xmake@v1
       with:
         xmake-version: latest
 
     - name: Configure
-      run: xmake f -m ${{ env.BUILD_TYPE }}
+      run: xmake f -y -m ${{ env.BUILD_TYPE }}
 
     - name: Build
-      run: xmake b
+      run: xmake b -y 
 
     - name: Pack
       if: ${{ startsWith(github.ref, 'refs/tags/') }}
-      run: xmake p
+      run: xmake p -y 
 
     - name: Release
       if: ${{ startsWith(github.ref, 'refs/tags/') }}
