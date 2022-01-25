@@ -24,7 +24,7 @@ add_rules("mode.debug", "mode.minsizerel")
 target("vscch3")
     set_version("3.1.5")
     set_languages("cxx20")
-    add_files("src/*.cpp", "configs/resource.rc")
+    add_files("src/*.cpp")
     add_packages("boost", "cpp-httplib", "nlohmann_json")
     -- Use "Unicode" Win32 API
     add_defines("UNICODE", "_UNICODE")
@@ -37,11 +37,12 @@ target("vscch3")
     add_defines("WIN32_LEAN_AND_MEAN")
     add_cxflags(BOOST_FLAGS)
     if is_plat("windows") then
-        add_cxflags("/utf-8")
-        add_links("shell32", "advapi32", "ole32")
+        add_files("configs/resource.rc")
         -- https://github.com/xmake-io/xmake/issues/2008
         add_ldflags("/MANIFEST:EMBED")
         add_ldflags("/MANIFESTINPUT:configs/app.manifest", { force = true })
+        add_cxflags("/utf-8")
+        add_links("shell32", "advapi32", "ole32")
     elseif is_plat("linux") then
         add_cxflags("-static-libgcc", "-static-libstdc++")
     elseif is_plat("macosx") then
