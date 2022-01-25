@@ -8,49 +8,40 @@ on:
     branches: [ main ]
 
 env:
-  BUILD_TYPE: MinSizeRel
+  BUILD_TYPE: minsizerel
 
 jobs:
   build:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        include:
-          - os: windows-latest
-            additional_conan_options: "-s compiler.runtime=MT"
-          - os: ubuntu-latest
-            additional_conan_options: "-s compiler.libcxx=libstdc++11"
 
     runs-on: ${{ matrix.os }}
 
-    # steps:
-    # - name: Checkout
-    #   uses: actions/checkout@v2
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
     
-    # - name: Get Conan
-    #   uses: turtlebrowser/get-conan@v1.0
+    - name: Setup Xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: latest
 
-    # - name: Conan Install
-    #   run: |
-    #     mkdir ${{ github.workspace }}/build 
-    #     cd ${{ github.workspace }}/build
-    #     conan install .. -b missing -s build_type=Release ${{ matrix.additional_conan_options }}
+    - name: Configure
+      run: xmake f -m ${{ env.BUILD_TYPE }}
 
-    # - name: Configure
-    #   run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+    - name: Build
+      run: xmake b
 
-    # - name: Build
-    #   run: cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }}
+    - name: Pack
+      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      run: xmake p
 
-    # - name: Pack
-    #   if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    #   run: cpack --config ${{ github.workspace }}/build/CPackConfig.cmake
-
-    # - name: Release
-    #   if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    #   uses: softprops/action-gh-release@v1
-    #   with:
-    #     files: ${{ github.workspace }}/build/package/*.7z
+    - name: Release
+      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ${{ github.workspace }}/build/package/*.7z
     
 #   - name: Test
 #     working-directory: ${{ github.workspace }}/build
