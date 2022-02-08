@@ -283,7 +283,10 @@ void Generator::generateTasksJson(const fs::path& path) {
 # endif
             scriptPath("pause-console." SCRIPT_EXT),
 #endif
-            "${fileDirname}" PATH_SLASH "${fileBasenameNoExtension}." EXE_EXT
+            json::object({
+                {"value", "${fileDirname}" PATH_SLASH "${fileBasenameNoExtension}." EXE_EXT },
+                {"quoting", "weak"} // cmd.exe do not accept escape characters
+            })
         })},
         {"presentation", json::object({
             {"reveal", "never"},

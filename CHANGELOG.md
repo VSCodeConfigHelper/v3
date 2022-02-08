@@ -1,6 +1,10 @@
 # 更新日志 Change Log
 
-## \[3.1.5\]
+## 3.1.6
+*2022.2.9*
+- [#13](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/13)
+
+## 3.1.5
 *2022.1.25*
 - 将构建系统迁移到 [xmake](https://xmake.io)
 
