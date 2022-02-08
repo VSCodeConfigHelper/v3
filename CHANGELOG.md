@@ -1,5 +1,9 @@
 # 更新日志 Change Log
 
+## \[3.1.5\]
+*2022.1.25*
+- 将构建系统迁移到 [xmake](https://xmake.io)
+
 ## 3.1.4
 *2021.11.20*
 - [#6](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/6)
@@ -47,7 +51,7 @@
 
 - 添加离线下载 C/C++ 扩展的选项
 
-## \[3.0.0~beta0805\]
+## 3.0.0~beta0805
 *2021.8.5*
 
 - 将全部后端代码迁移至 C++，以减少发布文件体积。
