@@ -1,5 +1,7 @@
 # 更新日志 Change Log
 
+*我们正在考察使用 Rust 重构项目，以提供更易用和更一致的用户体验。敬请期待*
+
 ## 3.1.6
 *2022.2.9*
 - [#13](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/13)
@@ -7,6 +9,7 @@
 ## 3.1.5
 *2022.1.25*
 - 将构建系统迁移到 [xmake](https://xmake.io)
+- [#12](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/12)
 
 ## 3.1.4
 *2021.11.20*

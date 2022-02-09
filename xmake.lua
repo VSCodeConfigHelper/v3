@@ -22,7 +22,7 @@ add_requires("cpp-httplib 0.9.2", {
 add_requires("nlohmann_json 3.10.0")
 
 target("vscch3")
-    set_version("3.1.5")
+    set_version("3.1.6")
     set_languages("cxx20")
     add_files("src/*.cpp")
     add_packages("boost", "cpp-httplib", "nlohmann_json")
