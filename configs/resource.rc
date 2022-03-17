@@ -1,6 +1,6 @@
 #ifndef RESOURCE_RC
 #define RESOURCE_RC
 
-MAINICON ICON "../pages/assets/icon.ico"
+MAINICON ICON "../docs/assets/icon.ico"
 
 #endif
