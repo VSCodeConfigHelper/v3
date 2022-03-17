@@ -2,7 +2,7 @@
 
 ## 下载工具
 
-前往[工具主页](https://vscch3.vercel.app)下载此工具；然后，解压它；得到一个 `VSCodeConfigHelper_v3.x.x_mac` 文件夹。
+前往[工具主页](https://v3.vscch.tk/)下载此工具；然后，解压它；得到一个 `VSCodeConfigHelper_v3.x.x_mac` 文件夹。
 
 [启动终端应用程序](https://support.apple.com/zh-cn/guide/terminal/apd5265185d-f365-44cb-8b09-71a064a42125/mac)。键入 `cd `（<kbd>c</kbd><kbd>d</kbd><kbd>空格</kbd>），然后将刚才的文件夹拖入终端内，最后按下回车 <kbd>return</kbd>。（即输入了以下命令：
 ```shell

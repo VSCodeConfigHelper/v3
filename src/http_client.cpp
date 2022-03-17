@@ -95,7 +95,7 @@ void checkUpdate() {
         boost::split(currentVersionNumber, PROJECT_VERSION, boost::is_any_of("."));
         if (std::lexicographical_compare(currentVersionNumber.begin(), currentVersionNumber.end(),
                                          latestVersionNumber.begin(), latestVersionNumber.end())) {
-            std::cout << "有更新可用。请前往 https://vscch3.vercel.app 获取。" << std::endl;
+            std::cout << "有更新可用。请前往 https://v3.vscch.tk/ 获取。" << std::endl;
         } else {
             std::cout << "已是最新版本。" << std::endl;
         }
