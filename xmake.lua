@@ -51,7 +51,7 @@ target("vscch3")
     end
     
     -- Set config file
-    set_configvar("DEFAULT_GUI_ADDRESS", "https://guyutongxue.gitee.io/vscodeconfighelper3/config.html")
+    set_configvar("DEFAULT_GUI_ADDRESS", "https://v3.vscch.tk/config.html")
     on_load(function (target)
         -- https://github.com/xmake-io/xmake/discussions/2006#discussioncomment-2034133
         function set_from_file(var, source)

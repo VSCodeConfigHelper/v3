@@ -75,7 +75,7 @@ const vm = new Vue({
                 }
                 if (compareVersions(MINIMUM_REQUIRED_VERSION, this.backendVersion) === 1) {
                     alert(`您的工具版本为 ${this.backendVersion}，无法继续配置。版本低于 ${MINIMUM_REQUIRED_VERSION} 的工具已不再支持，请及时更新。`);
-                    window.location = "https://vscch3.vercel.app/";
+                    window.location = "https://v3.vscch.tk/";
                 }
                 if (v.VscodePath === null) {
                     this.vscodeStatus = "unresolved";
