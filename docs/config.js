@@ -29,7 +29,7 @@ function dirname(path) {
  * @return {boolean}
  */
 function isAscii(str) {
-    return /^[\x20-\x7F]*$/.test(str);
+    return !str.includes(' ') && /^[\x20-\x7F]*$/.test(str);
 }
 
 const param = new URLSearchParams(window.location.search);
@@ -380,12 +380,17 @@ const vm = new Vue({
         ).subscribe(v => {
             this.newCompilerValid = v.valid;
             if (v.valid === true) {
-                this.newCompilerInfo = {
-                    path: dirname(v.info.Path),
-                    version: v.info.VersionNumber,
-                    packageInfo: v.info.PackageString,
-                    // v3.1.1 above
-                    not64Bit: "Not64Bit" in v.info ? v.info.Not64Bit : false,
+                if (!isAscii(v.info.Path)) {
+                    this.newCompilerInvalidReason = "路径中不建议含有空格、中文或特殊字符。";
+                    this.newCompilerInfo = {};
+                } else {
+                    this.newCompilerInfo = {
+                        path: dirname(v.info.Path),
+                        version: v.info.VersionNumber,
+                        packageInfo: v.info.PackageString,
+                        // v3.1.1 above
+                        not64Bit: "Not64Bit" in v.info ? v.info.Not64Bit : false,
+                    };
                 }
             } else {
                 switch (v.reason) {
