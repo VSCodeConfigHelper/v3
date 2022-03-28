@@ -383,6 +383,7 @@ const vm = new Vue({
                 if (!isAscii(v.info.Path)) {
                     this.newCompilerInvalidReason = "路径中不建议含有空格、中文或特殊字符。";
                     this.newCompilerInfo = {};
+                    this.newCompilerValid = false;
                 } else {
                     this.newCompilerInfo = {
                         path: dirname(v.info.Path),
