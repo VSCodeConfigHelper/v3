@@ -1,19 +1,21 @@
 # 更新日志 Change Log
 
-*我们正在考察使用 Rust 重构项目，以提供更易用和更一致的用户体验。敬请期待*
+## [4.x](https://github.com/VSCodeConfigHelper/v4/blob/main/CHANGELOG.md)
+
+- 主程序使用 Rust 重构。更加健壮的配置流程，支持更多编译环境，全平台 GUI。
 
 ## 3.1.6
 *2022.2.9*
-- [#13](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/13)
+- [#13](https://github.com/VSCodeConfigHelper/v3/issues/13)
 
 ## 3.1.5
 *2022.1.25*
 - 将构建系统迁移到 [xmake](https://xmake.io)
-- [#12](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/12)
+- [#12](https://github.com/VSCodeConfigHelper/v3/issues/12)
 
 ## 3.1.4
 *2021.11.20*
-- [#6](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/6)
+- [#6](https://github.com/VSCodeConfigHelper/v3/issues/6)
 
 ## 3.1.3
 *2021.9.16*
@@ -51,7 +53,7 @@
 ## 3.0.1
 *2021.8.8*
 
-- 修复 [#2](https://github.com/Guyutongxue/VSCodeConfigHelper3/issues/2)
+- 修复 [#2](https://github.com/VSCodeConfigHelper/v3/issues/2)
 
 ## 3.0.0
 *2021.8.7*
@@ -97,4 +99,4 @@
 移除功能：
 - 不再允许管理员权限下的全系统设置（即不会改变系统环境变量的值）
 
-## [2.x](https://github.com/Guyutongxue/VSCodeConfigHelper/blob/v2.x/CHANGELOG.md)
+## [2.x](https://github.com/VSCodeConfigHelper/v2/blob/v2.x/CHANGELOG.md)
