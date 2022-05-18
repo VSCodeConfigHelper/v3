@@ -4,6 +4,10 @@
 
 - 主程序使用 Rust 重构。更加健壮的配置流程，支持更多编译环境，全平台 GUI。
 
+## 3.1.7
+*2022.5.18*
+- 更换 GUI 地址
+
 ## 3.1.6
 *2022.2.9*
 - [#13](https://github.com/VSCodeConfigHelper/v3/issues/13)
