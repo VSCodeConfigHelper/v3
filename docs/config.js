@@ -522,7 +522,7 @@ const vm = new Vue({
                 this.dbgStyle = STYLE_EXTERNAL;
                 this.nonAsciiCheck = true;
                 this.instL10n = true;
-                this.offlineExt = true;
+                this.offlineExt = false;
                 this.uninstExt = true;
                 this.setEnv = true;
                 this.genTest = 0;
@@ -575,50 +575,24 @@ const vm = new Vue({
             });
         },
         getConfigResult: function () {
-            // match 'class ConfigOptions' in backend
-            switch (this.backendVersion) {
-                case "3.0.0":
-                case "3.0.1":
-                case "3.0.2":
-                    return {
-                        VscodePath: this.vscodePath + "\\Code.exe",
-                        MingwPath: this.mingw?.path + "\\bin" ?? null,
-                        WorkspacePath: this.workspacePath,
-                        Language: this.language,
-                        LanguageStandard: this.standardId,
-                        CompileArgs: this.compileArgs,
-                        NoSetEnv: !this.setEnv,
-                        UseExternalTerminal: this.dbgStyle === STYLE_EXTERNAL,
-                        ApplyNonAsciiCheck: this.nonAsciiCheck,
-                        ShouldInstallL11n: this.instL10n,
-                        OfflineInstallCCpp: this.offlineExt,
-                        ShouldUninstallExtensions: this.uninstExt,
-                        GenerateTestFile: this.genTest,
-                        GenerateDesktopShortcut: this.genShortcut,
-                        OpenVscodeAfterConfig: this.openVscode,
-                        NoSendAnalytics: !this.sendAnalytics
-                    };
-                case "3.1.0":
-                default:
-                    return {
-                        VscodePath: this.vscodePath + "\\Code.exe",
-                        MingwPath: this.mingw?.path + "\\bin" ?? null,
-                        WorkspacePath: this.workspacePath,
-                        Language: this.language,
-                        LanguageStandard: this.standardId,
-                        CompileArgs: this.compileArgs,
-                        NoSetEnv: !this.setEnv,
-                        UseExternalTerminal: this.dbgStyle === STYLE_EXTERNAL,
-                        ApplyNonAsciiCheck: this.nonAsciiCheck,
-                        ShouldInstallL10n: this.instL10n,
-                        OfflineInstallCCpp: this.offlineExt,
-                        ShouldUninstallExtensions: this.uninstExt,
-                        GenerateTestFile: this.genTest,
-                        GenerateDesktopShortcut: this.genShortcut,
-                        OpenVscodeAfterConfig: this.openVscode,
-                        NoSendAnalytics: !this.sendAnalytics
-                    };
-            }
+            return {
+                VscodePath: this.vscodePath + "\\Code.exe",
+                MingwPath: this.mingw?.path + "\\bin" ?? null,
+                WorkspacePath: this.workspacePath,
+                Language: this.language,
+                LanguageStandard: this.standardId,
+                CompileArgs: this.compileArgs,
+                NoSetEnv: !this.setEnv,
+                UseExternalTerminal: this.dbgStyle === STYLE_EXTERNAL,
+                ApplyNonAsciiCheck: this.nonAsciiCheck,
+                ShouldInstallL10n: this.instL10n,
+                OfflineInstallCCpp: this.offlineExt,
+                ShouldUninstallExtensions: this.uninstExt,
+                GenerateTestFile: this.genTest,
+                GenerateDesktopShortcut: this.genShortcut,
+                OpenVscodeAfterConfig: this.openVscode,
+                NoSendAnalytics: !this.sendAnalytics
+            };
         },
     },
     vuetify: new Vuetify(),

@@ -110,14 +110,6 @@ void ExtensionManager::uninstallAll() {
 
 namespace {
 
-const char offlineHost[]{"https://guyutongxue.oss-cn-beijing.aliyuncs.com"};
-#ifdef WINDOWS
-const char offlinePath[]{"/vscode-cpptools/cpptools-win32.vsix"};
-#elif defined(LINUX)
-const char offlinePath[]{"/vscode-cpptools/cpptools-linux.vsix"};
-#else
-const char offlinePath[]{"/vscode-cpptools/cpptools-osx.vsix"};
-#endif
 const char C_CPP_EXT_ID[]{"ms-vscode.cpptools"};
 
 boost::regex splitPathRegex(";(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
@@ -593,10 +585,9 @@ void Generator::generate() {
             extensions.uninstallAll();
         }
         if (options.OfflineInstallCCpp) {
-            extensions.installOffline(C_CPP_EXT_ID, offlineHost, offlinePath);
-        } else {
-            extensions.install(C_CPP_EXT_ID);
+            LOG_WRN("选项 --offline-cpptools 无作用，已弃用。");
         }
+        extensions.install(C_CPP_EXT_ID);
         if (options.ShouldInstallL10n) {
             extensions.install("ms-ceintl.vscode-language-pack-zh-hans");
         }

@@ -102,7 +102,6 @@ public:
     void uninstall(const std::string& id);
 
     void uninstallAll();
-    void installOffline(const std::string& id, const char* host, const char* path);
 };
 
 class Generator {

@@ -286,10 +286,6 @@
                                                             </v-tab-item>
                                                             <v-tab-item>
                                                                 <v-switch hide-details class="mt-2" v-model="instL10n" label="安装中文语言包扩展"></v-switch>
-                                                                <v-switch hide-details class="my-2" v-model="offlineExt" label="离线安装 C/C++ 扩展"></v-switch>
-                                                                <div>
-                                                                    在线安装 C/C++ 扩展会在第一次启用时从 GitHub 获取组件。如果您所在的地区访问 GitHub 存在困难，则建议启用该选项。
-                                                                </div>
                                                                 <v-switch hide-details class="my-2" v-model="uninstExt" label="卸载多余的 VS Code 扩展"></v-switch>
                                                                 <div>
                                                                     为避免给新手的配置造成不必要的麻烦，我们将<strong class="red--text">卸载</strong>一些扩展。这些扩展要么不提供任何功能，要么会与我们的配置冲突并造成干扰。
@@ -344,8 +340,6 @@
                                                             <dd>{{ nonAsciiCheck ? '是' : '否' }}</dd>
                                                             <dt>安装中文语言包扩展</dt>
                                                             <dd>{{ instL10n ? '是' : '否' }}</dd>
-                                                            <dt>离线安装 C/C++ 扩展</dt>
-                                                            <dd>{{ offlineExt ? '是' : '否' }}</dd>
                                                             <dt>卸载多余扩展</dt>
                                                             <dd :class="{ 'red--text' : uninstExt }">{{ uninstExt ? '是'
                                                                 : '否' }}</dd>

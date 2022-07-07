@@ -196,7 +196,7 @@ void init(int argc, char** argv) {
                  "指定语言标准。若不提供，则工具根据编译器版本选取");
     ADD_OPTION_C("external-terminal,e", UseExternalTerminal, "使用外部终端进行运行和调试");
     ADD_OPTION_C("install-chinese", ShouldInstallL10n, "为 VS Code 安装中文语言包");
-    ADD_OPTION_C("offline-cpptools", OfflineInstallCCpp, "离线安装  C/C++  扩展");
+    ADD_OPTION_C("offline-cpptools", OfflineInstallCCpp, "此选项无作用，已弃用");
     ADD_OPTION_C("uninstall-extensions", ShouldUninstallExtensions, "卸载多余的 VS Code 扩展");
     ADD_OPTION_C("compile-arg,a", CompileArgs, "指定编译选项");
     // ADD_OPTION_C("generate-test", GenerateTestFile, "");
@@ -229,7 +229,7 @@ void init(int argc, char** argv) {
         ("no-generate-test", "不生成测试文件")
         ("newbie-mode,n", po::bool_switch(&newbieMode)->default_value(false), "启用新手模式。这相当于以下选项："
             "--assume-yes --verbose --external-terminal --install-chinese"
-            " --offline-cpptools --uninstall-extensions --open-vscode"
+            " --uninstall-extensions --open-vscode"
             " -a-Wall -a-Wextra"
 #ifdef WINDOWS
             " --apply-nonascii-check"
@@ -257,7 +257,6 @@ void init(int argc, char** argv) {
         options.AssumeYes = true;
         options.UseExternalTerminal = true;
         options.ShouldInstallL10n = true;
-        options.OfflineInstallCCpp = true;
         options.ShouldUninstallExtensions = true;
         options.OpenVscodeAfterConfig = true;
         options.CompileArgs = {"-Wall", "-Wextra"};
