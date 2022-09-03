@@ -11,9 +11,6 @@
 </head>
 
 <body>
-    <header style="padding: 1rem; background: lightblue; text-align: center;">
-        VS Code Config Helper v4 已开启测试！您可以前往<a href="https://v4.vscch.tk">此处</a>下载。
-    </header>
     <main id="app">
         <v-app>
             <v-container style="margin-bottom: 70px;">
@@ -90,6 +87,40 @@
                     </v-row>
                 </v-footer>
             </v-container>
+            <v-dialog
+                v-model="dialog"
+                max-width="500"
+                persistent
+            >
+                <v-card>
+                    <v-card-title class="text-h5">
+                        此版本已过期
+                    </v-card-title>
+                    <v-card-text>
+                        第 3 版作为全平台配置工具的过渡版本，现已不提供新功能，也不再维护。建议您切换到运行更方便、功能更全面的第 4 版配置器。
+                    </v-card-text>
+
+                    <v-card-actions>
+                    <v-spacer></v-spacer>
+
+                    <v-btn
+                        color="secondary"
+                        text
+                        @click="dialog = false"
+                    >
+                        仍然使用第 3 版
+                    </v-btn>
+
+                    <v-btn
+                        color="primary"
+                        text
+                        @click="toV4()"
+                    >
+                        前往第 4 版
+                    </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
         </v-app>
     </main>
     <script src="https://unpkg.com/vue@2.x/dist/vue.js"></script>
@@ -102,6 +133,7 @@
             el: "#app",
             vuetify: new Vuetify(),
             data: {
+                dialog: !new URLSearchParams(document.location.search).get('nopopup'),
                 latestVersion: "获取中...",
                 githubUrl: "https://github.com/Guyutongxue/VSCodeConfigHelper3",
                 platform: "win",
@@ -146,7 +178,10 @@
                     window.open(this.lanzouUrl[this.platform]);
                 },
                 downloadGithub: function () {
-                    window.open(this.githubUrl)
+                    window.open(this.githubUrl);
+                },
+                toV4: function () {
+                    window.location = 'https://v4.vscch.tk/';
                 }
             }
         });
